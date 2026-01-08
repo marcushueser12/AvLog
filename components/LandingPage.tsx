@@ -115,11 +115,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
 
       {/* Hero Section */}
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 max-w-5xl mx-auto py-20">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-xs font-bold mb-8 animate-in fade-in slide-in-from-top-4 duration-700">
-            <span className="flex h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
-            POWERED BY GEMINI 3 PRO REASONING
-        </div>
-        
         <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight mb-8 leading-[1.1] animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
           Your Physical Logbook, <br />
           <span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">Digitized in Seconds.</span>
