@@ -1,0 +1,7 @@
+{
+  "name": "SkyScan Logbook",
+  "description": "An intelligent aviation logbook scanner that uses Gemini AI to convert physical logbook pages into ForeFlight-ready CSV imports.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
