@@ -104,6 +104,7 @@ const App: React.FC = () => {
   };
 
   const handleVerifyScan = (scanId: string) => {
+    // Mark scan as verified - entries are ready for export
     setScans(prev => prev.map(s => s.id === scanId ? { ...s, status: 'verified' } : s));
     setEntries(prev => prev.map(e => e.scanId === scanId ? { ...e, isVerified: true } : e));
   };
@@ -137,7 +138,7 @@ const App: React.FC = () => {
   };
 
   const handleExport = () => {
-    const csvContent = generateForeFlightCSV(entries);
+    const csvContent = generateForeFlightCSV(exportableEntries);
     downloadCSV(csvContent, `${exportName}.csv`);
     setShowExportModal(false);
   };
@@ -149,8 +150,8 @@ const App: React.FC = () => {
       .sort((a, b) => b.timestamp - a.timestamp);
   }, [scans]);
 
-  // All verified entries for the Permanent Log
-  const verifiedEntries = useMemo(() => {
+  // All entries ready for export
+  const exportableEntries = useMemo(() => {
     return entries
       .filter(e => e.isVerified || scans.find(s => s.id === e.scanId)?.status === 'verified')
       .sort((a, b) => {
@@ -210,7 +211,6 @@ const App: React.FC = () => {
 
         <nav className="flex-1 flex flex-col gap-2">
           <NavButton tab="dashboard" label="Scanner Dashboard" icon={() => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>} />
-          <NavButton tab="permanent-log" label="Permanent Log" icon={ICONS.History} />
           <NavButton tab="aircraft" label="Aircraft Profiles" icon={ICONS.Aircraft} />
           <NavButton tab="stats" label="Currency & Stats" icon={ICONS.Stats} />
           <div className="my-4 border-t border-slate-800/50"></div>
@@ -223,16 +223,6 @@ const App: React.FC = () => {
             Exit to Home
           </button>
         </nav>
-
-        <div className="mt-auto pt-6 border-t border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs text-blue-400">JD</div>
-            <div className="flex-1 overflow-hidden">
-              <p className="text-sm font-bold text-white truncate">John Doe</p>
-              <p className="text-[10px] text-slate-500 truncate">pilot@example.com</p>
-            </div>
-          </div>
-        </div>
       </aside>
 
       <main className="flex-1 flex flex-col min-w-0 bg-[#0f172a]">
@@ -241,7 +231,6 @@ const App: React.FC = () => {
             <h2 className="text-lg font-bold text-white">
               {activeTab === 'dashboard' ? 'Logbook Digitizer' : 
                activeTab === 'tutorial' ? 'Tutorial & Documentation' : 
-               activeTab === 'permanent-log' ? 'Permanent Digital Log' :
                activeTab === 'aircraft' ? 'Aircraft Management' : 'Pilot Statistics'}
             </h2>
             <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 rounded-full border border-emerald-500/20 text-emerald-400 text-[10px] font-bold">
@@ -257,10 +246,10 @@ const App: React.FC = () => {
             </div>
             <button 
               onClick={() => setShowExportModal(true)}
-              disabled={entries.length === 0}
+              disabled={exportableEntries.length === 0}
               className="px-5 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-30 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-500/20"
             >
-              Export ForeFlight CSV
+              Export ForeFlight CSV {exportableEntries.length > 0 && `(${exportableEntries.length})`}
             </button>
           </div>
         </header>
@@ -473,7 +462,7 @@ const App: React.FC = () => {
                                   className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-600/20 flex items-center gap-2"
                                 >
                                   <ICONS.Check />
-                                  Verify Page and Save to Log
+                                  Verify & Ready for Export
                                 </button>
                             </div>
                           </div>
@@ -483,90 +472,6 @@ const App: React.FC = () => {
                   </div>
                 </section>
               )}
-            </div>
-          ) : activeTab === 'permanent-log' ? (
-            <div className="space-y-10 pb-20">
-               <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold text-white">Permanent Digital Log</h3>
-                    <p className="text-sm text-slate-500">Official verified history of all flight hours.</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                     <div className="px-4 py-2 bg-slate-800 rounded-xl border border-slate-700 text-xs font-bold text-slate-300">
-                        {verifiedEntries.length} TOTAL ENTRIES
-                     </div>
-                  </div>
-               </div>
-
-               {verifiedEntries.length === 0 ? (
-                 <div className="h-64 border-2 border-dashed border-slate-800 rounded-3xl flex flex-col items-center justify-center gap-4 text-slate-600">
-                    <div className="p-6 bg-slate-900 rounded-full">
-                        <ICONS.History />
-                    </div>
-                    <div className="text-center">
-                       <p className="text-sm font-bold text-slate-400">No official entries found.</p>
-                       <p className="text-xs max-w-[240px] mt-1 mx-auto">Upload a logbook page and click 'Verify' to move entries into your permanent record.</p>
-                    </div>
-                    <button 
-                      onClick={() => setActiveTab('dashboard')}
-                      className="px-5 py-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 rounded-xl text-xs font-bold transition-all border border-blue-500/20"
-                    >
-                      Go to Scanner Dashboard
-                    </button>
-                 </div>
-               ) : (
-                 <div className="space-y-6">
-                    <EntryEditor 
-                      entries={verifiedEntries} 
-                      onUpdate={handleUpdateEntry} 
-                      onDelete={handleDeleteEntry}
-                      onAdd={() => {
-                        const newEntry: LogbookEntry = {
-                          id: `manual-${Date.now()}`,
-                          date: new Date().toISOString().slice(0, 10),
-                          aircraftId: "",
-                          aircraftType: "",
-                          from: "",
-                          to: "",
-                          route: "",
-                          totalTime: "0.0",
-                          day: "0.0",
-                          night: "0.0",
-                          crossCountry: "",
-                          pic: "",
-                          sic: "",
-                          dualReceived: "",
-                          dualGiven: "",
-                          instrument: "",
-                          simulatedInstrument: "",
-                          approaches: "",
-                          landingsDay: "",
-                          landingsNight: "",
-                          comments: "",
-                          isVerified: true
-                        };
-                        setEntries(prev => [...prev, newEntry]);
-                      }}
-                    />
-                    <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-3xl">
-                       <h4 className="text-sm font-bold text-white mb-4">Export History</h4>
-                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                          <button 
-                            onClick={() => setShowExportModal(true)}
-                            className="p-4 bg-slate-800 hover:bg-slate-750 border border-slate-700 rounded-2xl transition-all text-left flex items-center gap-3 group"
-                          >
-                             <div className="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                                <ICONS.Download />
-                             </div>
-                             <div>
-                                <div className="text-xs font-bold text-white">ForeFlight CSV</div>
-                                <div className="text-[10px] text-slate-500">Full verified backup</div>
-                             </div>
-                          </button>
-                       </div>
-                    </div>
-                 </div>
-               )}
             </div>
           ) : activeTab === 'tutorial' ? (
             <TutorialTab />
@@ -587,8 +492,10 @@ const App: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md">
           <div className="absolute inset-0 bg-slate-950/80" onClick={() => setShowExportModal(false)}></div>
           <div className="relative bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95">
-            <h3 className="text-xl font-bold mb-2">Final Export</h3>
-            <p className="text-slate-400 text-sm mb-6">Confirm your settings before generating the ForeFlight CSV.</p>
+            <h3 className="text-xl font-bold mb-2">Export to ForeFlight</h3>
+            <p className="text-slate-400 text-sm mb-6">
+              Exporting {exportableEntries.length} verified {exportableEntries.length === 1 ? 'entry' : 'entries'} to ForeFlight CSV format.
+            </p>
             <div className="relative mb-6">
                 <input 
                     type="text" 

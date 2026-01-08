@@ -1,0 +1,19 @@
+# Backend files (not needed for frontend-only Vercel deployment)
+server/
+tsconfig.server.json
+
+# Docker files
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentation
+DEPLOYMENT.md
+VERCEL_DEPLOYMENT.md
+
+# Environment files
+.env
+.env.local
+
+# Build artifacts (Vercel will build these)
+dist/
