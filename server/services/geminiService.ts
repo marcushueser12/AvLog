@@ -156,7 +156,7 @@ export const extractLogbookEntriesFromPair = async (leftImage: string, rightImag
     }
   });
 
-  const rawText = response.text.trim();
+  const rawText = response.text?.trim() || "";
   try {
     const parsed = JSON.parse(rawText || '{"entries": [], "rowChecksum": 0, "pageTotals": {}}');
     return {
@@ -211,7 +211,7 @@ export const extractLogbookEntriesSingle = async (image: string, expectedCount?:
     }
   });
 
-  const rawText = response.text.trim();
+  const rawText = response.text?.trim() || "";
   try {
     const parsed = JSON.parse(rawText || '{"entries": [], "rowChecksum": 0, "pageTotals": {}}');
     return {
