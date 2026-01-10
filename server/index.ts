@@ -26,10 +26,15 @@ const __dirname = path.dirname(__filename);
 // Trust proxy for accurate IP addresses (important for rate limiting behind reverse proxy)
 app.set('trust proxy', 1);
 
+// CORS must be applied FIRST, before any other middleware
+app.use(cors(corsOptions));
+
 // Security middleware - apply globally
 app.use(helmetConfig);
-app.use(cors(corsOptions));
 app.use(securityLogger);
+
+// Handle OPTIONS requests explicitly (preflight)
+app.options('*', cors(corsOptions));
 
 // Body parsing with size limits
 app.use(express.json({ limit: '50mb' }));
@@ -47,10 +52,12 @@ app.get('/health', (req, res) => {
     status: 'ok', 
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
+    corsOrigins: process.env.ALLOWED_ORIGINS || 'NOT SET',
   });
 });
 
 // Apply general rate limiting to all API routes
+// OPTIONS requests are automatically skipped by the rate limiter's skip function
 app.use('/api', generalLimiter);
 
 // Preprocess image endpoint - image processing rate limiter
