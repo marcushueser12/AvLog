@@ -3,7 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { extractLogbookEntriesFromPair, extractLogbookEntriesSingle, preprocessImage } from './services/geminiService';
+import { extractLogbookEntriesFromPair, extractLogbookEntriesSingle, preprocessImage } from './services/geminiService.js';
 import {
   generalLimiter,
   imageProcessingLimiter,
@@ -13,7 +13,7 @@ import {
   validateBase64Image,
   validateExpectedCount,
   securityLogger,
-} from './middleware/security';
+} from './middleware/security.js';
 
 dotenv.config();
 

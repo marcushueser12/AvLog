@@ -1,6 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { LogbookEntry, PageTotals } from "../../types";
-import { reconcileFlightTimes, reconcileIFRData } from "../../utils/logbookUtils";
+import type { LogbookEntry, PageTotals } from "../../types.js";
+import { reconcileFlightTimes, reconcileIFRData } from "../../utils/logbookUtils.js";
 import sharp from 'sharp';
 
 // Initialize Gemini AI client

@@ -1,5 +1,5 @@
 
-import { LogbookEntry } from "../types";
+import type { LogbookEntry } from "../types.js";
 
 /**
  * Reconciles day/night/total time based on the rule: 

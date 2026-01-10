@@ -1,6 +1,6 @@
 
-import { LogbookEntry } from "../types";
-import { FOREFLIGHT_FLIGHT_HEADERS, FOREFLIGHT_AIRCRAFT_HEADERS } from "../constants";
+import type { LogbookEntry } from "../types.js";
+import { FOREFLIGHT_FLIGHT_HEADERS, FOREFLIGHT_AIRCRAFT_HEADERS } from "../constants.js";
 
 /**
  * Ensures a value is safe for a CSV cell by escaping quotes and wrapping in quotes if needed.
