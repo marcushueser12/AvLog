@@ -76,12 +76,13 @@ export const helmetConfig = helmet({
  */
 export const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
-    ? process.env.ALLOWED_ORIGINS?.split(',') || false
+    ? (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()) : false)
     : true, // Allow all origins in development
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With'],
+  preflightContinue: false,
 };
 
 /**

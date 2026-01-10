@@ -149,6 +149,7 @@ app.listen(PORT, () => {
   console.log(`Health check: http://localhost:${PORT}/health`);
   if (process.env.NODE_ENV === 'production') {
     console.log(`Frontend served from: ${path.join(__dirname, '../../dist')}`);
+    console.log(`CORS Allowed Origins: ${process.env.ALLOWED_ORIGINS || 'NOT SET - CORS will block all requests!'}`);
   }
   console.log('Security features enabled: Rate limiting, Helmet, Input validation');
 });
