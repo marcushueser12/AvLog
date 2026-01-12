@@ -75,12 +75,67 @@ export const helmetConfig = helmet({
 
 /**
  * CORS configuration
- * More restrictive in production
+ * Supports wildcard patterns for Vercel preview deployments (e.g., *.vercel.app)
  */
+const parseAllowedOrigins = (): (string | RegExp)[] | boolean => {
+  if (process.env.NODE_ENV !== 'production') {
+    return true; // Allow all origins in development
+  }
+
+  if (!process.env.ALLOWED_ORIGINS) {
+    return false;
+  }
+
+  const origins = process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(o => o);
+  const parsedOrigins: (string | RegExp)[] = [];
+
+  for (const origin of origins) {
+    if (origin.includes('*')) {
+      // Convert wildcard pattern to regex
+      // Escape special regex characters except *
+      const pattern = origin
+        .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+        .replace(/\*/g, '.*');
+      parsedOrigins.push(new RegExp(`^https?://${pattern}$`));
+    } else {
+      parsedOrigins.push(origin);
+    }
+  }
+
+  return parsedOrigins.length > 0 ? parsedOrigins : false;
+};
+
 export const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()) : false)
-    : true, // Allow all origins in development
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    const allowedOrigins = parseAllowedOrigins();
+
+    // No origin (same-origin request, e.g., from Postman)
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    // Development: allow all
+    if (allowedOrigins === true) {
+      return callback(null, true);
+    }
+
+    // Production: check against allowed origins
+    if (Array.isArray(allowedOrigins)) {
+      for (const allowed of allowedOrigins) {
+        if (typeof allowed === 'string') {
+          if (origin === allowed) {
+            return callback(null, true);
+          }
+        } else if (allowed instanceof RegExp) {
+          if (allowed.test(origin)) {
+            return callback(null, true);
+          }
+        }
+      }
+    }
+
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'OPTIONS'],
