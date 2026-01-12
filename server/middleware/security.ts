@@ -91,9 +91,11 @@ const parseAllowedOrigins = (): (string | RegExp)[] | boolean => {
 
   for (const origin of origins) {
     if (origin.includes('*')) {
+      // Strip protocol from wildcard pattern before converting to regex
+      const withoutProtocol = origin.replace(/^https?:\/\//, '');
       // Convert wildcard pattern to regex
       // Escape special regex characters except *
-      const pattern = origin
+      const pattern = withoutProtocol
         .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
         .replace(/\*/g, '.*');
       parsedOrigins.push(new RegExp(`^https?://${pattern}$`));
@@ -134,7 +136,7 @@ export const corsOptions = {
       }
     }
 
-    callback(new Error('Not allowed by CORS'));
+    callback(null, false);
   },
   credentials: true,
   optionsSuccessStatus: 200,
