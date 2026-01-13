@@ -1,136 +1,102 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { BoundingBox } from '../types';
+import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 
 interface ImageViewerProps {
   images: string[]; // Array of base64 images (1 for single mode, 2 for pair mode)
-  activeBoundingBox?: BoundingBox | null;
-  fieldName?: string;
+  scrollLeft?: number; // Horizontal scroll position for sync
 }
 
-const ImageViewer: React.FC<ImageViewerProps> = ({ images, activeBoundingBox, fieldName }) => {
+export interface ImageViewerHandle {
+  scrollTo: (scrollLeft: number) => void;
+}
+
+const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({ images, scrollLeft = 0 }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRefs = useRef<(HTMLImageElement | null)[]>([]);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [zoom, setZoom] = useState(1);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const isScrollingRef = useRef(false);
 
-  // Reset transform when active bounding box changes
-  useEffect(() => {
-    if (!activeBoundingBox || !imageLoaded || !containerRef.current || images.length === 0) {
-      setZoom(1);
-      setOffset({ x: 0, y: 0 });
-      return;
+  // Expose scroll method to parent
+  useImperativeHandle(ref, () => ({
+    scrollTo: (scrollLeft: number) => {
+      if (containerRef.current && !isScrollingRef.current) {
+        isScrollingRef.current = true;
+        containerRef.current.scrollLeft = scrollLeft;
+        setTimeout(() => {
+          isScrollingRef.current = false;
+        }, 100);
+      }
     }
+  }), []);
 
-    const imageIndex = activeBoundingBox.imageIndex ?? 0;
-    if (imageIndex >= images.length) return;
+  // Sync scroll from parent
+  useEffect(() => {
+    if (containerRef.current && scrollLeft !== undefined && !isScrollingRef.current) {
+      isScrollingRef.current = true;
+      containerRef.current.scrollLeft = scrollLeft;
+      setTimeout(() => {
+        isScrollingRef.current = false;
+      }, 100);
+    }
+  }, [scrollLeft]);
 
-    const img = imageRefs.current[imageIndex];
-    if (!img || !img.complete) return;
+  const handleScroll = () => {
+    // Don't sync back to parent on manual scroll to avoid loops
+    // Parent will sync to us, not the other way around
+  };
 
-    const [ymin, xmin, ymax, xmax] = activeBoundingBox.coordinates;
-    const centerX = (xmin + xmax) / 2;
-    const centerY = (ymin + ymax) / 2;
-    const width = xmax - xmin;
-    const height = ymax - ymin;
-
-    // Calculate zoom level to fit the bounding box (with padding)
-    const padding = 0.3; // 30% padding around the box
-    const targetWidth = width * (1 + padding * 2);
-    const targetHeight = height * (1 + padding * 2);
-    
-    const containerWidth = containerRef.current.clientWidth;
-    const containerHeight = containerRef.current.clientHeight;
-    
-    // For pair mode, each image takes half the width
-    const imageDisplayWidth = images.length === 2 ? containerWidth / 2 : containerWidth;
-    
-    const zoomX = imageDisplayWidth / (img.naturalWidth * targetWidth);
-    const zoomY = containerHeight / (img.naturalHeight * targetHeight);
-    const newZoom = Math.min(zoomX, zoomY, 5); // Max zoom of 5x
-
-    // Calculate offset to center the bounding box
-    const imageCenterX = centerX * img.naturalWidth;
-    const imageCenterY = centerY * img.naturalHeight;
-    
-    const newOffsetX = imageDisplayWidth / 2 - imageCenterX * newZoom;
-    const newOffsetY = containerHeight / 2 - imageCenterY * newZoom;
-
-    setZoom(newZoom);
-    setOffset({ x: newOffsetX, y: newOffsetY });
-  }, [activeBoundingBox, imageLoaded, images.length]);
-
-  const handleImageLoad = useCallback(() => {
-    setImageLoaded(true);
-  }, []);
-
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    setZoom(prev => Math.max(0.5, Math.min(5, prev * delta)));
-  }, []);
-
-  const renderImage = (imageSrc: string, index: number) => {
-    const isActive = activeBoundingBox?.imageIndex === index || (activeBoundingBox && images.length === 1);
-    const [ymin, xmin, ymax, xmax] = activeBoundingBox?.coordinates || [0, 0, 0, 0];
-
+  if (images.length === 0) {
     return (
-      <div
-        key={index}
-        className={`relative overflow-hidden ${images.length === 2 ? 'w-1/2' : 'w-full'} h-full bg-slate-950`}
-        style={{ borderRight: images.length === 2 && index === 0 ? '1px solid #334155' : 'none' }}
-      >
-        <img
-          ref={(el) => { imageRefs.current[index] = el; }}
-          src={imageSrc}
-          alt={`Logbook page ${index + 1}`}
-          className="absolute transition-transform duration-500 ease-out"
-          style={{
-            transform: isActive
-              ? `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`
-              : 'translate(0, 0) scale(1)',
-            transformOrigin: 'top left',
-            maxWidth: 'none',
-            height: '100%',
-            width: 'auto'
-          }}
-          onLoad={index === 0 ? handleImageLoad : undefined}
-        />
-        
-        {/* Highlight overlay */}
-        {isActive && activeBoundingBox && (
-          <div
-            className="absolute border-2 border-blue-400 bg-blue-400/20 pointer-events-none transition-all duration-500"
-            style={{
-              left: `${xmin * 100}%`,
-              top: `${ymin * 100}%`,
-              width: `${(xmax - xmin) * 100}%`,
-              height: `${(ymax - ymin) * 100}%`,
-              transform: `translate(${offset.x / zoom}px, ${offset.y / zoom}px) scale(${zoom})`,
-              transformOrigin: 'top left',
-              boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)'
-            }}
-          >
-            {fieldName && (
-              <div className="absolute -top-6 left-0 bg-blue-400 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                {fieldName}
-              </div>
-            )}
-          </div>
-        )}
+      <div className="w-full h-64 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-center">
+        <div className="text-center text-slate-500">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <p className="text-xs">No images loaded</p>
+        </div>
       </div>
     );
-  };
+  }
 
   return (
     <div
       ref={containerRef}
-      className="w-full h-full bg-slate-950 flex relative overflow-hidden"
-      onWheel={handleWheel}
+      onScroll={handleScroll}
+      className="w-full h-64 bg-slate-950 rounded-xl border border-slate-800 overflow-x-auto custom-scrollbar"
     >
-      {images.map((img, index) => renderImage(img, index))}
+      <div className="flex h-full min-w-max">
+        {images.map((img, index) => (
+          <div
+            key={index}
+            className={`relative flex-shrink-0 h-full ${images.length === 2 ? 'w-1/2' : 'w-full'} bg-slate-900`}
+            style={{ borderRight: images.length === 2 && index === 0 ? '1px solid #334155' : 'none' }}
+          >
+            <img
+              ref={(el) => { imageRefs.current[index] = el; }}
+              src={img}
+              alt={`Logbook page ${index + 1}`}
+              className="h-full w-auto object-contain"
+              style={{
+                // Crop to center portion (assuming logbook entries are in middle 70% of image)
+                objectPosition: 'center center'
+              }}
+            />
+            {images.length === 2 && (
+              <div className="absolute top-2 left-2 bg-slate-900/80 text-slate-400 text-xs px-2 py-1 rounded font-mono">
+                Page {index === 0 ? '1' : '2'}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+      `}</style>
     </div>
   );
-};
+});
+
+ImageViewer.displayName = 'ImageViewer';
 
 export default ImageViewer;
