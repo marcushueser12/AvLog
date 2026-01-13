@@ -5,7 +5,7 @@ import { ICONS } from './constants';
 import EntryEditor from './components/EntryEditor';
 import LandingPage from './components/LandingPage';
 import TutorialTab from './components/TutorialTab';
-import { extractLogbookEntriesFromPair, extractLogbookEntriesSingle, preprocessImage } from './services/geminiService';
+import { extractLogbookEntriesFromPair, extractLogbookEntriesSingle } from './services/geminiService';
 import { generateForeFlightCSV, downloadCSV } from './utils/csvUtils';
 import { reconcileFlightTimes, reconcileIFRData } from './utils/logbookUtils';
 
@@ -40,6 +40,29 @@ const App: React.FC = () => {
     setScans(prev => prev.map(s => s.id === scanId ? { ...s, expectedEntries: count } : s));
   };
 
+  // Lightweight clarity score estimation based on image dimensions
+  const estimateClarityScore = (base64: string): number => {
+    return new Promise<number>((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        // Simple heuristic: larger images and landscape orientation tend to be better
+        const aspectRatio = img.width / img.height;
+        const totalPixels = img.width * img.height;
+        
+        // Base score of 70, adjusted by:
+        // - Landscape images (+10, better for logbooks)
+        // - High resolution (+10 for >2MP)
+        let score = 70;
+        if (aspectRatio > 1.2) score += 10; // Landscape
+        if (totalPixels > 2000000) score += 10; // High resolution
+        
+        resolve(Math.min(100, Math.max(0, score)));
+      };
+      img.onerror = () => resolve(75); // Default on error
+      img.src = base64;
+    });
+  };
+
   const handleImageUpload = async (scanId: string, imageIndex: number, file: File) => {
     const reader = new FileReader();
     const base64 = await new Promise<string>((resolve) => {
@@ -47,7 +70,9 @@ const App: React.FC = () => {
       reader.readAsDataURL(file);
     });
 
-    // Store image immediately (non-blocking)
+    // Store image immediately and estimate clarity score (client-side, lightweight)
+    const clarityScore = await estimateClarityScore(base64);
+    
     setScans(prev => prev.map(s => {
       if (s.id === scanId) {
         const newImages = [...s.images];
@@ -55,30 +80,12 @@ const App: React.FC = () => {
         return { 
           ...s, 
           images: newImages, 
-          status: 'pending'
+          status: 'pending',
+          clarityScore
         };
       }
       return s;
     }));
-
-    // Preprocess in background and update clarity score when done (non-blocking)
-    preprocessImage(base64).then(({ clarity }) => {
-      setScans(prev => prev.map(s => {
-        if (s.id === scanId) {
-          return { ...s, clarityScore: clarity };
-        }
-        return s;
-      }));
-    }).catch((err) => {
-      console.error('Background preprocessing error:', err);
-      // Set default clarity score on error
-      setScans(prev => prev.map(s => {
-        if (s.id === scanId) {
-          return { ...s, clarityScore: 50 };
-        }
-        return s;
-      }));
-    });
   };
 
   const processPendingScans = async () => {

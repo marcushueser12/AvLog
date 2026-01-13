@@ -61,30 +61,32 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({ images, s
       ref={containerRef}
       onScroll={handleScroll}
       className="w-full bg-slate-950 rounded-xl border border-slate-800 overflow-x-auto custom-scrollbar"
-      style={{ height: '180px' }}
+      style={{ height: '200px' }}
     >
-      <div className="flex h-full min-w-max">
+      <div className="flex h-full min-w-max items-center">
         {images.map((img, index) => (
           <div
             key={index}
-            className={`relative flex-shrink-0 ${images.length === 2 ? 'w-1/2' : 'w-full'} bg-slate-900 overflow-hidden`}
+            className="relative flex-shrink-0 bg-slate-900 flex items-center justify-center"
             style={{ 
               height: '100%',
-              aspectRatio: '16/9',
-              borderRight: images.length === 2 && index === 0 ? '1px solid #334155' : 'none' 
+              width: images.length === 2 ? '50%' : '100%',
+              borderRight: images.length === 2 && index === 0 ? '1px solid #334155' : 'none',
+              overflow: 'hidden'
             }}
           >
             <img
               ref={(el) => { imageRefs.current[index] = el; }}
               src={img}
               alt={`Logbook page ${index + 1}`}
-              className="w-full h-full object-cover"
+              className="max-h-full max-w-full object-contain"
               style={{
-                objectPosition: 'center center'
+                transform: 'rotate(90deg)',
+                transformOrigin: 'center center'
               }}
             />
             {images.length === 2 && (
-              <div className="absolute top-2 left-2 bg-slate-900/80 text-slate-400 text-xs px-2 py-1 rounded font-mono">
+              <div className="absolute top-2 left-2 bg-slate-900/80 text-slate-400 text-xs px-2 py-1 rounded font-mono z-10">
                 Page {index === 0 ? '1' : '2'}
               </div>
             )}
