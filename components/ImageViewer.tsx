@@ -61,20 +61,17 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({ images, s
       ref={containerRef}
       onScroll={handleScroll}
       className="w-full bg-slate-950 rounded-xl border border-slate-800 overflow-x-auto custom-scrollbar"
-      style={{ minHeight: '600px', maxHeight: '800px' }}
+      style={{ height: '700px' }}
     >
-      <div className="flex h-full min-w-max items-center" style={{ minWidth: '1850px' }}>
+      <div className="flex h-full items-center gap-4" style={{ padding: '20px' }}>
         {images.map((img, index) => (
           <div
             key={index}
-            className="relative flex-shrink-0 bg-slate-900 flex items-center justify-center"
+            className="relative flex-shrink-0 bg-slate-900 flex items-center justify-center rounded-lg"
             style={{ 
               height: '100%',
-              minHeight: '600px',
-              width: images.length === 2 ? '50%' : '100%',
-              minWidth: images.length === 2 ? '925px' : '1850px',
-              borderRight: images.length === 2 && index === 0 ? '1px solid #334155' : 'none',
-              overflow: 'hidden'
+              borderRight: images.length === 2 && index === 0 ? '2px solid #334155' : 'none',
+              paddingRight: images.length === 2 && index === 0 ? '20px' : '0'
             }}
           >
             <img
