@@ -42,13 +42,6 @@ const EntryEditor: React.FC<EntryEditorProps> = ({ entries, images, onUpdate, on
 
   return (
     <div className="bg-slate-900 rounded-xl overflow-hidden border border-slate-800 shadow-2xl flex flex-col">
-      {/* Images above table */}
-      {images.length > 0 && (
-        <div className="p-4 border-b border-slate-800">
-          <ImageViewer ref={imageViewerRef} images={images} />
-        </div>
-      )}
-
       {/* Table */}
       <div 
         ref={tableScrollRef}
@@ -277,6 +270,13 @@ const EntryEditor: React.FC<EntryEditorProps> = ({ entries, images, onUpdate, on
           </tbody>
         </table>
       </div>
+      
+      {/* Images below table */}
+      {images.length > 0 && (
+        <div className="p-4 border-t border-slate-800">
+          <ImageViewer ref={imageViewerRef} images={images} />
+        </div>
+      )}
       
       <div className="p-6 bg-slate-800/40 flex flex-col sm:flex-row justify-between items-center gap-4 border-t border-slate-800">
         <div className="flex flex-col">
