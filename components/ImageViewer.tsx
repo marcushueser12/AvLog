@@ -60,10 +60,10 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({ images, s
     <div
       ref={containerRef}
       onScroll={handleScroll}
-      className="w-full bg-slate-950 rounded-xl border border-slate-800 overflow-x-auto custom-scrollbar"
-      style={{ height: '700px' }}
+      className="w-full bg-slate-950 rounded-xl border border-slate-800 overflow-x-auto overflow-y-hidden custom-scrollbar"
+      style={{ height: '600px' }}
     >
-      <div className="flex h-full items-center" style={{ padding: '10px', gap: '10px' }}>
+      <div className="flex items-center" style={{ padding: '10px', gap: '10px', minHeight: '100%' }}>
         {images.map((img, index) => (
           <div
             key={index}
@@ -77,10 +77,12 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({ images, s
               ref={(el) => { imageRefs.current[index] = el; }}
               src={img}
               alt={`Logbook page ${index + 1}`}
-              className="max-h-full w-auto"
               style={{
                 transform: 'rotate(-90deg)',
-                transformOrigin: 'center center'
+                transformOrigin: 'center center',
+                maxHeight: '580px',
+                width: 'auto',
+                height: 'auto'
               }}
             />
           </div>
