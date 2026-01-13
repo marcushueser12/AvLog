@@ -63,14 +63,15 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({ images, s
       className="w-full bg-slate-950 rounded-xl border border-slate-800 overflow-x-auto overflow-y-hidden custom-scrollbar"
       style={{ height: '600px' }}
     >
-      <div className="flex items-center" style={{ padding: '10px', gap: '10px', minHeight: '100%' }}>
+      <div className="flex items-center justify-start h-full" style={{ padding: '16px', gap: '16px' }}>
         {images.map((img, index) => (
           <div
             key={index}
-            className="relative flex-shrink-0 bg-slate-900 flex items-center justify-center"
+            className="relative flex-shrink-0 flex items-center justify-center"
             style={{ 
-              borderRight: images.length === 2 && index === 0 ? '2px solid #334155' : 'none',
-              paddingRight: images.length === 2 && index === 0 ? '10px' : '0'
+              marginRight: images.length === 2 && index === 0 ? '16px' : '0',
+              paddingRight: images.length === 2 && index === 0 ? '16px' : '0',
+              borderRight: images.length === 2 && index === 0 ? '1px solid rgba(51, 65, 85, 0.5)' : 'none'
             }}
           >
             <img
@@ -80,9 +81,10 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({ images, s
               style={{
                 transform: 'rotate(-90deg)',
                 transformOrigin: 'center center',
-                maxHeight: '580px',
+                maxHeight: '568px',
                 width: 'auto',
-                height: 'auto'
+                height: 'auto',
+                display: 'block'
               }}
             />
           </div>
