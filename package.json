@@ -24,6 +24,7 @@
     "helmet": "^7.1.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
+    "react-resizable-panels": "^4.4.0",
     "sharp": "^0.33.0"
   },
   "devDependencies": {

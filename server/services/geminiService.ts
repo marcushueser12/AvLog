@@ -80,7 +80,26 @@ const LOGBOOK_RESPONSE_SCHEMA = {
           approaches: { type: Type.STRING },
           landingsDay: { type: Type.STRING },
           landingsNight: { type: Type.STRING },
-          uncertainFields: { type: Type.ARRAY, items: { type: Type.STRING } }
+          uncertainFields: { type: Type.ARRAY, items: { type: Type.STRING } },
+          fieldBoundingBoxes: {
+            type: Type.OBJECT,
+            description: "Bounding box coordinates for each field. Each field name maps to an object with 'coordinates' array [ymin, xmin, ymax, xmax] normalized 0-1, and optional 'imageIndex' (0 for left image, 1 for right image in pair mode).",
+            additionalProperties: {
+              type: Type.OBJECT,
+              properties: {
+                coordinates: {
+                  type: Type.ARRAY,
+                  items: { type: Type.NUMBER },
+                  description: "Normalized bounding box coordinates [ymin, xmin, ymax, xmax] in range 0-1"
+                },
+                imageIndex: {
+                  type: Type.INTEGER,
+                  description: "For pair mode: 0 = left image, 1 = right image. For single mode: omit or use 0"
+                }
+              },
+              required: ["coordinates"]
+            }
+          }
         },
         required: ["rowAnchor", "reconciliationConfidence", "date", "aircraftId", "totalTime", "uncertainFields"]
       }
@@ -111,12 +130,21 @@ const SYSTEM_INSTRUCTION = `
      - REASONING FROM REMARKS MUST NEVER REDUCE THE TRANSCRIPTION OF DEDICATED IFR COLUMNS. 
      - Columns always represent the "Minimum Found".
   
+  BOUNDING BOX REQUIREMENTS:
+  For each transcribed field, provide its bounding box coordinates in the fieldBoundingBoxes object.
+  - Format: [ymin, xmin, ymax, xmax] normalized to 0-1 range (0,0 is top-left, 1,1 is bottom-right)
+  - For pair mode (left/right pages): Include imageIndex (0 = left image, 1 = right image)
+  - For single mode: Omit imageIndex or use 0
+  - Include bounding boxes for all non-empty fields
+  - Coordinates should tightly bound the text/cell for that field
+  
   STRICT RECONCILIATION PROTOCOL:
   1. ANCHORING: Use printed line numbers (1, 2, 3...) at margins.
   2. ZERO-INFERENCE: Blank paper = "". 
   3. ARTIFACT REJECTION: Ignore ink bleeding.
   4. CHECKSUM: Count entries first.
   5. FORMAT: Produce a single compact JSON object.
+  6. BOUNDING BOXES: Include fieldBoundingBoxes for each entry with coordinates for transcribed fields.
 `;
 
 const EXTRACTION_MODEL = 'gemini-3-flash-preview';

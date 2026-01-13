@@ -422,7 +422,8 @@ const App: React.FC = () => {
 
                           <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden p-1">
                             <EntryEditor 
-                              entries={scanEntries} 
+                              entries={scanEntries}
+                              images={scan.images}
                               onUpdate={handleUpdateEntry} 
                               onDelete={(id) => {
                                   setEntries(prev => prev.filter(e => e.id !== id));

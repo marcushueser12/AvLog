@@ -7,6 +7,21 @@ export interface PageTotals {
   pic?: string;
 }
 
+/**
+ * Bounding box coordinates normalized to [0, 1] range
+ * Format: [ymin, xmin, ymax, xmax]
+ * For pair mode: imageIndex indicates which image (0 = left, 1 = right)
+ */
+export interface BoundingBox {
+  coordinates: [number, number, number, number]; // [ymin, xmin, ymax, xmax]
+  imageIndex?: number; // For pair mode: 0 = left image, 1 = right image. For single mode: undefined or 0
+}
+
+/**
+ * Map of field names to their bounding boxes on the image
+ */
+export type FieldBoundingBoxes = Partial<Record<keyof LogbookEntry, BoundingBox>>;
+
 export interface LogbookEntry {
   id: string;
   scanId?: string; 
@@ -36,6 +51,7 @@ export interface LogbookEntry {
   uncertainFields?: string[]; 
   validationError?: string;
   rowAnchor?: string; // The physical line number from the page
+  fieldBoundingBoxes?: FieldBoundingBoxes; // Bounding boxes for each field on the image
 }
 
 export type ScanMode = 'single' | 'spread';
