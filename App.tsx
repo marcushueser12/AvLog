@@ -47,8 +47,7 @@ const App: React.FC = () => {
       reader.readAsDataURL(file);
     });
 
-    const { clarity } = await preprocessImage(base64);
-
+    // Store image immediately (non-blocking)
     setScans(prev => prev.map(s => {
       if (s.id === scanId) {
         const newImages = [...s.images];
@@ -56,12 +55,30 @@ const App: React.FC = () => {
         return { 
           ...s, 
           images: newImages, 
-          status: 'pending',
-          clarityScore: clarity 
+          status: 'pending'
         };
       }
       return s;
     }));
+
+    // Preprocess in background and update clarity score when done (non-blocking)
+    preprocessImage(base64).then(({ clarity }) => {
+      setScans(prev => prev.map(s => {
+        if (s.id === scanId) {
+          return { ...s, clarityScore: clarity };
+        }
+        return s;
+      }));
+    }).catch((err) => {
+      console.error('Background preprocessing error:', err);
+      // Set default clarity score on error
+      setScans(prev => prev.map(s => {
+        if (s.id === scanId) {
+          return { ...s, clarityScore: 50 };
+        }
+        return s;
+      }));
+    });
   };
 
   const processPendingScans = async () => {

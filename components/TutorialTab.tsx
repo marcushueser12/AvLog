@@ -97,6 +97,16 @@ const TutorialTab: React.FC = () => {
             </div>
 
             <div className="flex gap-4">
+              <div className="shrink-0 w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-purple-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" ry="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-bold text-white">Landscape Orientation</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">Use landscape (horizontal) orientation when capturing logbook pages. This orientation provides better coverage of the page width and improves OCR accuracy for column extraction.</p>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
               <div className="shrink-0 w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-amber-400">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               </div>
