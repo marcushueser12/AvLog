@@ -63,32 +63,26 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({ images, s
       className="w-full bg-slate-950 rounded-xl border border-slate-800 overflow-x-auto custom-scrollbar"
       style={{ height: '700px' }}
     >
-      <div className="flex h-full items-center gap-4" style={{ padding: '20px' }}>
+      <div className="flex h-full items-center" style={{ padding: '10px', gap: '10px' }}>
         {images.map((img, index) => (
           <div
             key={index}
-            className="relative flex-shrink-0 bg-slate-900 flex items-center justify-center rounded-lg"
+            className="relative flex-shrink-0 bg-slate-900 flex items-center justify-center"
             style={{ 
-              height: '100%',
               borderRight: images.length === 2 && index === 0 ? '2px solid #334155' : 'none',
-              paddingRight: images.length === 2 && index === 0 ? '20px' : '0'
+              paddingRight: images.length === 2 && index === 0 ? '10px' : '0'
             }}
           >
             <img
               ref={(el) => { imageRefs.current[index] = el; }}
               src={img}
               alt={`Logbook page ${index + 1}`}
-              className="h-full w-auto object-contain"
+              className="max-h-full w-auto"
               style={{
                 transform: 'rotate(-90deg)',
                 transformOrigin: 'center center'
               }}
             />
-            {images.length === 2 && (
-              <div className="absolute top-2 left-2 bg-slate-900/80 text-slate-400 text-xs px-2 py-1 rounded font-mono z-10">
-                Page {index === 0 ? '1' : '2'}
-              </div>
-            )}
           </div>
         ))}
       </div>
