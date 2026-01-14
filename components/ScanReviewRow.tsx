@@ -39,7 +39,7 @@ const ScanReviewRow: React.FC<ScanReviewRowProps> = ({
               onToggleVerify(e.target.checked);
             }}
             onClick={(e) => e.stopPropagation()}
-            className="w-5 h-5 rounded border-2 border-slate-600 bg-slate-800 text-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
+            className="w-5 h-5 rounded border-2 border-slate-600 bg-slate-900 text-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer accent-blue-500"
           />
           <span className="text-sm font-bold text-slate-400 min-w-[2rem]">#{pageNumber}</span>
         </div>
