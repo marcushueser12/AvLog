@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { LogbookEntry, ScanDocument, ScanMode, AppTab } from './types';
 import { ICONS } from './constants';
 import EntryEditor from './components/EntryEditor';
+import ScanReviewRow from './components/ScanReviewRow';
 import LandingPage from './components/LandingPage';
 import TutorialTab from './components/TutorialTab';
 import { extractLogbookEntriesFromPair, extractLogbookEntriesSingle } from './services/geminiService';
@@ -18,6 +19,7 @@ const App: React.FC = () => {
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
   const [exportName, setExportName] = useState<string>(`Logbook_Export_${new Date().toISOString().slice(0, 10)}`);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [expandedScans, setExpandedScans] = useState<Set<string>>(new Set());
 
   const handleSignIn = (tab: AppTab = 'dashboard') => {
     setView('app');
@@ -123,12 +125,21 @@ const App: React.FC = () => {
         const entriesWithScanRef = result.entries.map((e: any) => ({ ...e, scanId: scan.id }));
         
         setEntries(prev => [...prev, ...entriesWithScanRef]);
-        setScans(prev => prev.map(s => s.id === scan.id ? { 
-          ...s, 
-          status: 'completed', 
-          resultsCount: result.entries.length,
-          extractedTotals: result.pageTotals
-        } : s));
+        
+        // Assign page number - count completed scans before this one
+        setScans(prev => {
+          const completedScans = prev.filter(s => s.status === 'completed').length;
+          const pageNumber = completedScans + 1; // Start at 1
+          
+          return prev.map(s => s.id === scan.id ? { 
+            ...s, 
+            status: 'completed', 
+            resultsCount: result.entries.length,
+            extractedTotals: result.pageTotals,
+            pageNumber,
+            isVerified: false
+          } : s);
+        });
       } catch (err) {
         console.error("Extraction error:", err);
         setScans(prev => prev.map(s => s.id === scan.id ? { ...s, status: 'error', error: 'Extraction failed' } : s));
@@ -138,10 +149,22 @@ const App: React.FC = () => {
     setIsBatchProcessing(false);
   };
 
-  const handleVerifyScan = (scanId: string) => {
+  const handleVerifyScan = (scanId: string, verified: boolean) => {
     // Mark scan as verified - entries are ready for export
-    setScans(prev => prev.map(s => s.id === scanId ? { ...s, status: 'verified' } : s));
-    setEntries(prev => prev.map(e => e.scanId === scanId ? { ...e, isVerified: true } : e));
+    setScans(prev => prev.map(s => s.id === scanId ? { ...s, isVerified: verified } : s));
+    setEntries(prev => prev.map(e => e.scanId === scanId ? { ...e, isVerified: verified } : e));
+  };
+
+  const toggleScanExpand = (scanId: string) => {
+    setExpandedScans(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(scanId)) {
+        newSet.delete(scanId);
+      } else {
+        newSet.add(scanId);
+      }
+      return newSet;
+    });
   };
 
   const deleteScan = (id: string) => {
@@ -426,93 +449,129 @@ const App: React.FC = () => {
                       const scanEntries = entriesByScan[scan.id] || [];
                       if (scanEntries.length === 0) return null;
 
+                      const isExpanded = expandedScans.has(scan.id);
+                      const pageNumber = scan.pageNumber || 1;
+                      const totals = scan.extractedTotals || {};
+                      const isVerified = scan.isVerified || false;
+
                       return (
                         <div key={scan.id} className="space-y-4">
-                          <div className="flex items-center justify-between px-2">
-                            <div className="flex items-center gap-3">
-                              <div className="bg-blue-600/20 text-blue-400 p-2 rounded-lg">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                              </div>
-                              <div>
-                                <h4 className="font-bold text-white text-sm">
-                                  Scan Group #{scan.id.slice(-4).toUpperCase()} 
-                                  <span className="ml-2 text-slate-500 font-normal">
-                                    ({scan.mode === 'single' ? 'Single Page' : 'Spread Pair'})
-                                  </span>
-                                </h4>
-                                <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-0.5">
-                                  {scanEntries.length} {scanEntries.length === 1 ? 'Entry' : 'Entries'} Extracted
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                              <button 
-                                onClick={() => deleteScan(scan.id)}
-                                className="text-[10px] font-bold text-red-400/60 hover:text-red-400 uppercase tracking-widest transition-colors flex items-center gap-1.5"
-                              >
-                                <ICONS.Trash /> Remove Page
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden p-1">
-                            <EntryEditor 
-                              entries={scanEntries}
-                              images={scan.images}
-                              rotations={scan.imageRotations}
-                              onUpdate={handleUpdateEntry}
-                              onRotationChange={(imageIndex, newRotation) => {
-                                setScans(prev => prev.map(s => {
-                                  if (s.id === scan.id) {
-                                    const newRotations = [...(s.imageRotations || [0, 0])];
-                                    newRotations[imageIndex] = newRotation;
-                                    return { ...s, imageRotations: newRotations };
-                                  }
-                                  return s;
-                                }));
-                              }} 
-                              onDelete={(id) => {
-                                  setEntries(prev => prev.filter(e => e.id !== id));
-                              }}
-                              onAdd={() => {
-                                const newEntry: LogbookEntry = {
-                                  id: `manual-${Date.now()}`,
-                                  scanId: scan.id,
-                                  date: scanEntries.length > 0 ? scanEntries[scanEntries.length - 1].date : new Date().toISOString().slice(0, 10),
-                                  aircraftId: "",
-                                  aircraftType: "",
-                                  from: "",
-                                  to: "",
-                                  route: "",
-                                  totalTime: "0.0",
-                                  day: "0.0",
-                                  night: "0.0",
-                                  crossCountry: "",
-                                  pic: "",
-                                  sic: "",
-                                  dualReceived: "",
-                                  dualGiven: "",
-                                  instrument: "",
-                                  simulatedInstrument: "",
-                                  approaches: "",
-                                  landingsDay: "",
-                                  landingsNight: "",
-                                  comments: "",
-                                  isVerified: false
-                                };
-                                setEntries(prev => [...prev, newEntry]);
-                              }}
+                          {/* Collapsed summary row */}
+                          {!isExpanded && (
+                            <ScanReviewRow
+                              pageNumber={pageNumber}
+                              totals={totals}
+                              isExpanded={isExpanded}
+                              isVerified={isVerified}
+                              onToggleExpand={() => toggleScanExpand(scan.id)}
+                              onToggleVerify={(checked) => handleVerifyScan(scan.id, checked)}
                             />
-                            <div className="p-4 bg-slate-950/50 flex justify-end">
-                                <button 
-                                  onClick={() => handleVerifyScan(scan.id)}
-                                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-600/20 flex items-center gap-2"
-                                >
-                                  <ICONS.Check />
-                                  Verify & Ready for Export
-                                </button>
-                            </div>
-                          </div>
+                          )}
+
+                          {/* Expanded EntryEditor */}
+                          {isExpanded && (
+                            <>
+                              <div className="flex items-center justify-between px-2">
+                                <div className="flex items-center gap-3">
+                                  <div className="bg-blue-600/20 text-blue-400 p-2 rounded-lg">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                                  </div>
+                                  <div>
+                                    <h4 className="font-bold text-white text-sm">
+                                      Page #{pageNumber}
+                                      <span className="ml-2 text-slate-500 font-normal">
+                                        ({scan.mode === 'single' ? 'Single Page' : 'Spread Pair'})
+                                      </span>
+                                    </h4>
+                                    <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-0.5">
+                                      {scanEntries.length} {scanEntries.length === 1 ? 'Entry' : 'Entries'} Extracted
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                  <button 
+                                    onClick={() => toggleScanExpand(scan.id)}
+                                    className="text-[10px] font-bold text-slate-500 hover:text-slate-400 uppercase tracking-widest transition-colors flex items-center gap-1.5"
+                                  >
+                                    Collapse
+                                  </button>
+                                  <button 
+                                    onClick={() => deleteScan(scan.id)}
+                                    className="text-[10px] font-bold text-red-400/60 hover:text-red-400 uppercase tracking-widest transition-colors flex items-center gap-1.5"
+                                  >
+                                    <ICONS.Trash /> Remove Page
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden p-1">
+                                <EntryEditor 
+                                  entries={scanEntries}
+                                  images={scan.images}
+                                  rotations={scan.imageRotations}
+                                  onUpdate={handleUpdateEntry}
+                                  onRotationChange={(imageIndex, newRotation) => {
+                                    setScans(prev => prev.map(s => {
+                                      if (s.id === scan.id) {
+                                        const newRotations = [...(s.imageRotations || [0, 0])];
+                                        newRotations[imageIndex] = newRotation;
+                                        return { ...s, imageRotations: newRotations };
+                                      }
+                                      return s;
+                                    }));
+                                  }} 
+                                  onDelete={(id) => {
+                                      setEntries(prev => prev.filter(e => e.id !== id));
+                                  }}
+                                  onAdd={() => {
+                                    const newEntry: LogbookEntry = {
+                                      id: `manual-${Date.now()}`,
+                                      scanId: scan.id,
+                                      date: scanEntries.length > 0 ? scanEntries[scanEntries.length - 1].date : new Date().toISOString().slice(0, 10),
+                                      aircraftId: "",
+                                      aircraftType: "",
+                                      from: "",
+                                      to: "",
+                                      route: "",
+                                      totalTime: "0.0",
+                                      day: "0.0",
+                                      night: "0.0",
+                                      crossCountry: "",
+                                      pic: "",
+                                      sic: "",
+                                      dualReceived: "",
+                                      dualGiven: "",
+                                      instrument: "",
+                                      simulatedInstrument: "",
+                                      approaches: "",
+                                      landingsDay: "",
+                                      landingsNight: "",
+                                      comments: "",
+                                      isVerified: false
+                                    };
+                                    setEntries(prev => [...prev, newEntry]);
+                                  }}
+                                />
+                                <div className="p-4 bg-slate-950/50 flex justify-between items-center">
+                                  <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={isVerified}
+                                      onChange={(e) => handleVerifyScan(scan.id, e.target.checked)}
+                                      className="w-5 h-5 rounded border-2 border-slate-600 bg-slate-800 text-emerald-600 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-0"
+                                    />
+                                    <span className="text-sm font-bold text-slate-400">Mark as Verified</span>
+                                  </label>
+                                  <button 
+                                    onClick={() => toggleScanExpand(scan.id)}
+                                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-sm font-bold transition-all flex items-center gap-2"
+                                  >
+                                    Collapse Review
+                                  </button>
+                                </div>
+                              </div>
+                            </>
+                          )}
                         </div>
                       );
                     })}
