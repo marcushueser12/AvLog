@@ -18,116 +18,119 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({ images, s
   useEffect(() => {
     if (images.length === 2) {
       const stitchImages = async () => {
-        const img1 = new Image();
-        const img2 = new Image();
-        
-        // Load both images with error handling
-        await Promise.all([
-          new Promise<void>((resolve, reject) => {
-            img1.onload = () => resolve();
-            img1.onerror = () => reject(new Error('Failed to load image 1'));
-            img1.src = images[0];
-          }),
-          new Promise<void>((resolve, reject) => {
-            img2.onload = () => resolve();
-            img2.onerror = () => reject(new Error('Failed to load image 2'));
-            img2.src = images[1];
-          })
-        ]);
-
-        // Verify images loaded correctly
-        if (!img1.complete || !img2.complete || img1.width === 0 || img2.width === 0) {
-          console.error('Images failed to load properly');
-          return;
-        }
-
-        // First, rotate each image -90deg to landscape
-        const rotateImage = (img: HTMLImageElement): Promise<HTMLImageElement> => {
-          return new Promise((resolve, reject) => {
-            try {
-              // Ensure image is fully loaded (Safari requirement)
-              if (!img.complete || img.naturalWidth === 0 || img.naturalHeight === 0) {
-                reject(new Error('Image not fully loaded'));
-                return;
-              }
-
-              const canvas = document.createElement('canvas');
-              // Set dimensions first (Safari requirement)
-              canvas.width = img.height;
-              canvas.height = img.width;
-              
-              const ctx = canvas.getContext('2d', { 
-                willReadFrequently: false,
-                alpha: true 
-              });
-              if (!ctx) {
+        try {
+          // Load images with proper error handling
+          const loadImage = (src: string): Promise<HTMLImageElement> => {
+            return new Promise((resolve, reject) => {
+              const img = new Image();
+              img.onload = () => {
+                // Verify image loaded correctly
+                if (img.naturalWidth === 0 || img.naturalHeight === 0) {
+                  reject(new Error('Image has zero dimensions'));
+                  return;
+                }
                 resolve(img);
-                return;
+              };
+              img.onerror = () => reject(new Error('Failed to load image'));
+              img.src = src;
+            });
+          };
+
+          const [img1, img2] = await Promise.all([
+            loadImage(images[0]),
+            loadImage(images[1])
+          ]);
+
+          // Rotate each image -90deg to landscape
+          const rotateImage = (img: HTMLImageElement): Promise<string> => {
+            return new Promise((resolve, reject) => {
+              try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                if (!ctx) {
+                  reject(new Error('Could not get canvas context'));
+                  return;
+                }
+
+                // After -90deg rotation: width becomes height, height becomes width
+                canvas.width = img.height;
+                canvas.height = img.width;
+
+                // Standard rotation: translate to center, rotate, translate back, draw
+                ctx.translate(canvas.width / 2, canvas.height / 2);
+                ctx.rotate(-Math.PI / 2);
+                ctx.translate(-img.width / 2, -img.height / 2);
+                ctx.drawImage(img, 0, 0);
+
+                // Convert to data URL - try JPEG first, fallback to PNG
+                let dataUrl: string;
+                try {
+                  dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+                } catch (e) {
+                  dataUrl = canvas.toDataURL('image/png');
+                }
+
+                if (!dataUrl || dataUrl.length < 100) {
+                  reject(new Error('Invalid canvas data'));
+                  return;
+                }
+
+                resolve(dataUrl);
+              } catch (error) {
+                reject(error);
               }
+            });
+          };
 
-              // Safari: Enable image smoothing for better quality
-              ctx.imageSmoothingEnabled = true;
-              ctx.imageSmoothingQuality = 'high';
+          // Rotate both images
+          const [rotatedDataUrl1, rotatedDataUrl2] = await Promise.all([
+            rotateImage(img1),
+            rotateImage(img2)
+          ]);
 
-              ctx.save();
-              ctx.translate(canvas.width / 2, canvas.height / 2);
-              ctx.rotate(-90 * Math.PI / 180);
-              ctx.translate(-img.width / 2, -img.height / 2);
-              ctx.drawImage(img, 0, 0, img.width, img.height);
-              ctx.restore();
+          // Load rotated images to get dimensions for stitching
+          const [rotatedImg1, rotatedImg2] = await Promise.all([
+            loadImage(rotatedDataUrl1),
+            loadImage(rotatedDataUrl2)
+          ]);
 
-              // Safari: Use PNG which is more reliable
-              const dataUrl = canvas.toDataURL('image/png');
-              
-              if (!dataUrl || dataUrl === 'data:,') {
-                reject(new Error('Failed to generate rotated image data'));
-                return;
-              }
+          // Stitch the rotated images horizontally
+          const stitchCanvas = document.createElement('canvas');
+          const stitchCtx = stitchCanvas.getContext('2d');
+          
+          if (!stitchCtx) {
+            console.error('Could not get stitch canvas context');
+            return;
+          }
 
-              const rotatedImg = new Image();
-              rotatedImg.onload = () => resolve(rotatedImg);
-              rotatedImg.onerror = () => reject(new Error('Failed to load rotated image'));
-              rotatedImg.src = dataUrl;
-            } catch (error) {
-              reject(error);
-            }
-          });
-        };
+          // Calculate dimensions
+          const maxHeight = Math.max(rotatedImg1.height, rotatedImg2.height);
+          stitchCanvas.width = rotatedImg1.width + rotatedImg2.width;
+          stitchCanvas.height = maxHeight;
 
-        // Rotate both images first
-        const rotated1 = await rotateImage(img1);
-        const rotated2 = await rotateImage(img2);
+          // Draw both rotated images side by side
+          stitchCtx.drawImage(rotatedImg1, 0, 0);
+          stitchCtx.drawImage(rotatedImg2, rotatedImg1.width, 0);
 
-        // Now stitch the rotated (landscape) images horizontally
-        const stitchCanvas = document.createElement('canvas');
-        
-        // Calculate dimensions - use the maximum height and sum of widths
-        const maxHeight = Math.max(rotated1.height, rotated2.height);
-        stitchCanvas.width = rotated1.width + rotated2.width;
-        stitchCanvas.height = maxHeight;
-        
-        const stitchCtx = stitchCanvas.getContext('2d', {
-          willReadFrequently: false,
-          alpha: true
-        });
-        if (!stitchCtx) return;
+          // Convert to data URL
+          let stitchedDataUrl: string;
+          try {
+            stitchedDataUrl = stitchCanvas.toDataURL('image/jpeg', 0.92);
+          } catch (e) {
+            stitchedDataUrl = stitchCanvas.toDataURL('image/png');
+          }
 
-        // Safari: Enable image smoothing
-        stitchCtx.imageSmoothingEnabled = true;
-        stitchCtx.imageSmoothingQuality = 'high';
-
-        // Draw both rotated images side by side horizontally
-        stitchCtx.drawImage(rotated1, 0, 0);
-        stitchCtx.drawImage(rotated2, rotated1.width, 0);
-
-        // Safari: Use PNG which is more reliable
-        const stitchedDataUrl = stitchCanvas.toDataURL('image/png');
-        setStitchedImage(stitchedDataUrl);
+          setStitchedImage(stitchedDataUrl);
+        } catch (error) {
+          console.error('Error stitching images:', error);
+          setStitchedImage(null);
+        }
       };
 
       stitchImages();
     } else {
-      setStitchedImage(null); // Use original image for single mode
+      setStitchedImage(null);
     }
   }, [images]);
 
