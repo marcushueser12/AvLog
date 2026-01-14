@@ -3,7 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { extractLogbookEntriesFromPair, extractLogbookEntriesSingle, preprocessImage } from './services/geminiService.js';
+import { extractLogbookEntriesFromPair, extractLogbookEntriesSingle, preprocessImage, GeminiRetryableError } from './services/geminiService.js';
 import {
   generalLimiter,
   imageProcessingLimiter,
@@ -105,6 +105,26 @@ app.post(
       res.json(result);
     } catch (error: any) {
       console.error('Extraction error:', error);
+      
+      // Check if this is a retryable Gemini API error (503, 429)
+      if (error instanceof GeminiRetryableError || error.name === 'GeminiRetryableError') {
+        const statusCode = error.statusCode || 503;
+        return res.status(statusCode).json({ 
+          error: 'Server busy, retrying...',
+          message: error.message || 'Gemini API is temporarily unavailable'
+        });
+      }
+      
+      // Check for 503/429 status codes in error
+      const statusCode = error?.statusCode || error?.status || error?.code;
+      if (statusCode === 503 || statusCode === 429) {
+        return res.status(503).json({ 
+          error: 'Server busy, retrying...',
+          message: error.message || 'Service temporarily unavailable'
+        });
+      }
+      
+      // Other errors return 500
       res.status(500).json({ error: error.message || 'Extraction failed' });
     }
   }
@@ -129,6 +149,26 @@ app.post(
       res.json(result);
     } catch (error: any) {
       console.error('Extraction error:', error);
+      
+      // Check if this is a retryable Gemini API error (503, 429)
+      if (error instanceof GeminiRetryableError || error.name === 'GeminiRetryableError') {
+        const statusCode = error.statusCode || 503;
+        return res.status(statusCode).json({ 
+          error: 'Server busy, retrying...',
+          message: error.message || 'Gemini API is temporarily unavailable'
+        });
+      }
+      
+      // Check for 503/429 status codes in error
+      const statusCode = error?.statusCode || error?.status || error?.code;
+      if (statusCode === 503 || statusCode === 429) {
+        return res.status(503).json({ 
+          error: 'Server busy, retrying...',
+          message: error.message || 'Service temporarily unavailable'
+        });
+      }
+      
+      // Other errors return 500
       res.status(500).json({ error: error.message || 'Extraction failed' });
     }
   }

@@ -2,6 +2,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import type { LogbookEntry, PageTotals } from "../../types.js";
 import { reconcileFlightTimes, reconcileIFRData } from "../../utils/logbookUtils.js";
 import sharp from 'sharp';
+import pRetry from 'p-retry';
 
 // Initialize Gemini AI client
 const getGeminiClient = () => {
@@ -121,7 +122,61 @@ const SYSTEM_INSTRUCTION = `
 
 const EXTRACTION_MODEL = 'gemini-3-flash-preview';
 const MAX_OUTPUT_TOKENS = 64000;
-const FLASH_THINKING_BUDGET = 0; 
+const FLASH_THINKING_BUDGET = 0;
+
+/**
+ * Custom error class for Gemini API errors that should be retried
+ */
+export class GeminiRetryableError extends Error {
+  statusCode?: number;
+  constructor(message: string, statusCode?: number) {
+    super(message);
+    this.name = 'GeminiRetryableError';
+    this.statusCode = statusCode;
+  }
+}
+
+/**
+ * Check if an error is a retryable Gemini API error (503, 429)
+ */
+const isRetryableError = (error: any): boolean => {
+  // Check for status code in error object
+  const statusCode = error?.statusCode || error?.status || error?.code;
+  if (statusCode === 503 || statusCode === 429) {
+    return true;
+  }
+  
+  // Check error message for common retryable patterns
+  const message = error?.message || '';
+  if (message.includes('503') || message.includes('429') || 
+      message.includes('overloaded') || message.includes('rate limit') ||
+      message.includes('RESOURCE_EXHAUSTED') || message.includes('UNAVAILABLE')) {
+    return true;
+  }
+  
+  return false;
+};
+
+/**
+ * Retry wrapper with exponential backoff for Gemini API calls
+ * Retries on 503 and 429 errors with exponential backoff (2s, 4s, 8s, ...)
+ */
+const withRetry = async <T>(fn: () => Promise<T>): Promise<T> => {
+  return pRetry(fn, {
+    retries: 4, // Max 4 retries (5 total attempts)
+    minTimeout: 2000, // Initial delay: 2 seconds
+    maxTimeout: 16000, // Max delay: 16 seconds
+    factor: 2, // Exponential factor: 2s, 4s, 8s, 16s
+    shouldRetry: (error: any) => {
+      // Only retry if it's a retryable error
+      return isRetryableError(error);
+    },
+    onFailedAttempt: (error: any) => {
+      const errorMessage = error?.message || error?.error?.message || String(error);
+      console.warn(`Gemini API call failed (attempt ${error.attemptNumber}/${error.retriesLeft + error.attemptNumber}):`, errorMessage);
+    }
+  });
+}; 
 
 export const extractLogbookEntriesFromPair = async (leftImage: string, rightImage: string, expectedCount?: number): Promise<any> => {
   const ai = getGeminiClient();
@@ -137,22 +192,35 @@ export const extractLogbookEntriesFromPair = async (leftImage: string, rightImag
   const leftBase64 = pLeft.data.includes(',') ? pLeft.data.split(',')[1] : pLeft.data;
   const rightBase64 = pRight.data.includes(',') ? pRight.data.split(',')[1] : pRight.data;
 
-  const response = await ai.models.generateContent({
-    model: EXTRACTION_MODEL,
-    contents: { 
-      parts: [
-        { text: `TRANSCRIBE PAIR: Match row numbers. Apply ADDITIVE-ONLY IFR cross-referencing from remarks. Blank = "".${countHint}` },
-        { inlineData: { mimeType: 'image/jpeg', data: leftBase64 } },
-        { inlineData: { mimeType: 'image/jpeg', data: rightBase64 } }
-      ] 
-    },
-    config: {
-      systemInstruction: SYSTEM_INSTRUCTION,
-      responseMimeType: "application/json",
-      responseSchema: LOGBOOK_RESPONSE_SCHEMA as any,
-      temperature: 0,
-      maxOutputTokens: MAX_OUTPUT_TOKENS,
-      thinkingConfig: { thinkingBudget: FLASH_THINKING_BUDGET }
+  // Wrap API call with retry logic
+  const response = await withRetry(async () => {
+    try {
+      return await ai.models.generateContent({
+        model: EXTRACTION_MODEL,
+        contents: { 
+          parts: [
+            { text: `TRANSCRIBE PAIR: Match row numbers. Apply ADDITIVE-ONLY IFR cross-referencing from remarks. Blank = "".${countHint}` },
+            { inlineData: { mimeType: 'image/jpeg', data: leftBase64 } },
+            { inlineData: { mimeType: 'image/jpeg', data: rightBase64 } }
+          ] 
+        },
+        config: {
+          systemInstruction: SYSTEM_INSTRUCTION,
+          responseMimeType: "application/json",
+          responseSchema: LOGBOOK_RESPONSE_SCHEMA as any,
+          temperature: 0,
+          maxOutputTokens: MAX_OUTPUT_TOKENS,
+          thinkingConfig: { thinkingBudget: FLASH_THINKING_BUDGET }
+        }
+      });
+    } catch (error: any) {
+      // Check if this is a retryable error
+      if (isRetryableError(error)) {
+        const statusCode = error?.statusCode || error?.status || error?.code || 503;
+        throw new GeminiRetryableError(error.message || 'Gemini API is temporarily unavailable', statusCode);
+      }
+      // Non-retryable errors are rethrown immediately
+      throw error;
     }
   });
 
@@ -193,21 +261,34 @@ export const extractLogbookEntriesSingle = async (image: string, expectedCount?:
   // Extract base64 data from data URL
   const imageBase64 = clean.data.includes(',') ? clean.data.split(',')[1] : clean.data;
 
-  const response = await ai.models.generateContent({
-    model: EXTRACTION_MODEL,
-    contents: { 
-      parts: [
-        { text: `TRANSCRIBE SINGLE: Apply ADDITIVE-ONLY IFR cross-referencing from remarks. Blank = "".${countHint}` },
-        { inlineData: { mimeType: 'image/jpeg', data: imageBase64 } }
-      ] 
-    },
-    config: {
-      systemInstruction: SYSTEM_INSTRUCTION,
-      responseMimeType: "application/json",
-      responseSchema: LOGBOOK_RESPONSE_SCHEMA as any,
-      temperature: 0,
-      maxOutputTokens: MAX_OUTPUT_TOKENS,
-      thinkingConfig: { thinkingBudget: FLASH_THINKING_BUDGET }
+  // Wrap API call with retry logic
+  const response = await withRetry(async () => {
+    try {
+      return await ai.models.generateContent({
+        model: EXTRACTION_MODEL,
+        contents: { 
+          parts: [
+            { text: `TRANSCRIBE SINGLE: Apply ADDITIVE-ONLY IFR cross-referencing from remarks. Blank = "".${countHint}` },
+            { inlineData: { mimeType: 'image/jpeg', data: imageBase64 } }
+          ] 
+        },
+        config: {
+          systemInstruction: SYSTEM_INSTRUCTION,
+          responseMimeType: "application/json",
+          responseSchema: LOGBOOK_RESPONSE_SCHEMA as any,
+          temperature: 0,
+          maxOutputTokens: MAX_OUTPUT_TOKENS,
+          thinkingConfig: { thinkingBudget: FLASH_THINKING_BUDGET }
+        }
+      });
+    } catch (error: any) {
+      // Check if this is a retryable error
+      if (isRetryableError(error)) {
+        const statusCode = error?.statusCode || error?.status || error?.code || 503;
+        throw new GeminiRetryableError(error.message || 'Gemini API is temporarily unavailable', statusCode);
+      }
+      // Non-retryable errors are rethrown immediately
+      throw error;
     }
   });
 
