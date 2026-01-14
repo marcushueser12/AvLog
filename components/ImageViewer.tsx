@@ -3,16 +3,27 @@ import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } f
 interface ImageViewerProps {
   images: string[]; // Array of base64 images (1 for single mode, 2 for pair mode)
   scrollLeft?: number; // Horizontal scroll position for sync
+  rotations?: number[]; // Rotation in degrees for each image (defaults to [0, 0])
+  onRotationChange?: (imageIndex: number, newRotation: number) => void; // Callback when rotation changes
 }
 
 export interface ImageViewerHandle {
   scrollTo: (scrollLeft: number) => void;
 }
 
-const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({ images, scrollLeft = 0 }, ref) => {
+const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({ 
+  images, 
+  scrollLeft = 0, 
+  rotations = [0, 0],
+  onRotationChange 
+}, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [stitchedImage, setStitchedImage] = useState<string | null>(null);
   const isScrollingRef = useRef(false);
+  
+  // Get rotation for each image (default to 0 if not provided)
+  const rotation1 = rotations[0] || 0;
+  const rotation2 = rotations[1] || 0;
 
   // Rotate images first, then stitch them together horizontally when there are 2 images
   useEffect(() => {
@@ -41,8 +52,8 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({ images, s
             loadImage(images[1])
           ]);
 
-          // Rotate each image -90deg to landscape
-          const rotateImage = (img: HTMLImageElement): Promise<string> => {
+          // Rotate each image based on rotation value
+          const rotateImage = (img: HTMLImageElement, rotationDegrees: number): Promise<string> => {
             return new Promise((resolve, reject) => {
               try {
                 const canvas = document.createElement('canvas');
@@ -53,13 +64,29 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({ images, s
                   return;
                 }
 
-                // After -90deg rotation: width becomes height, height becomes width
-                canvas.width = img.height;
-                canvas.height = img.width;
+                // Normalize rotation to 0-360 range
+                const normalizedRotation = ((rotationDegrees % 360) + 360) % 360;
+                const rotationRad = (normalizedRotation * Math.PI) / 180;
+
+                // Calculate canvas dimensions based on rotation
+                // For 90/270 degree rotations, swap width and height
+                let canvasWidth: number;
+                let canvasHeight: number;
+                
+                if (normalizedRotation === 90 || normalizedRotation === 270) {
+                  canvasWidth = img.height;
+                  canvasHeight = img.width;
+                } else {
+                  canvasWidth = img.width;
+                  canvasHeight = img.height;
+                }
+
+                canvas.width = canvasWidth;
+                canvas.height = canvasHeight;
 
                 // Standard rotation: translate to center, rotate, translate back, draw
                 ctx.translate(canvas.width / 2, canvas.height / 2);
-                ctx.rotate(-Math.PI / 2);
+                ctx.rotate(rotationRad);
                 ctx.translate(-img.width / 2, -img.height / 2);
                 ctx.drawImage(img, 0, 0);
 
@@ -83,10 +110,10 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({ images, s
             });
           };
 
-          // Rotate both images
+          // Rotate both images with their respective rotations
           const [rotatedDataUrl1, rotatedDataUrl2] = await Promise.all([
-            rotateImage(img1),
-            rotateImage(img2)
+            rotateImage(img1, rotation1),
+            rotateImage(img2, rotation2)
           ]);
 
           // Load rotated images to get dimensions for stitching
@@ -129,10 +156,63 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({ images, s
       };
 
       stitchImages();
+    } else if (images.length === 1) {
+      // Handle single image with rotation
+      const rotateSingleImage = async () => {
+        try {
+          const img = new Image();
+          await new Promise<void>((resolve, reject) => {
+            img.onload = () => resolve();
+            img.onerror = () => reject(new Error('Failed to load image'));
+            img.src = images[0];
+          });
+
+          const rotation = rotations[0] || 0;
+          const normalizedRotation = ((rotation % 360) + 360) % 360;
+          const rotationRad = (normalizedRotation * Math.PI) / 180;
+
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
+
+          let canvasWidth: number;
+          let canvasHeight: number;
+          
+          if (normalizedRotation === 90 || normalizedRotation === 270) {
+            canvasWidth = img.height;
+            canvasHeight = img.width;
+          } else {
+            canvasWidth = img.width;
+            canvasHeight = img.height;
+          }
+
+          canvas.width = canvasWidth;
+          canvas.height = canvasHeight;
+
+          ctx.translate(canvas.width / 2, canvas.height / 2);
+          ctx.rotate(rotationRad);
+          ctx.translate(-img.width / 2, -img.height / 2);
+          ctx.drawImage(img, 0, 0);
+
+          let dataUrl: string;
+          try {
+            dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+          } catch (e) {
+            dataUrl = canvas.toDataURL('image/png');
+          }
+
+          setStitchedImage(dataUrl);
+        } catch (error) {
+          console.error('Error rotating single image:', error);
+          setStitchedImage(null);
+        }
+      };
+
+      rotateSingleImage();
     } else {
       setStitchedImage(null);
     }
-  }, [images]);
+  }, [images, rotation1, rotation2, rotations]);
 
   // Expose scroll method to parent
   useImperativeHandle(ref, () => ({
@@ -191,35 +271,82 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({ images, s
     );
   }
 
+  const handleRotate = (imageIndex: number, direction: 'left' | 'right') => {
+    if (!onRotationChange) return;
+    const currentRotation = rotations[imageIndex] || 0;
+    const rotationChange = direction === 'left' ? -90 : 90;
+    const newRotation = ((currentRotation + rotationChange) % 360 + 360) % 360;
+    onRotationChange(imageIndex, newRotation);
+  };
+
   return (
-    <div
-      ref={containerRef}
-      onScroll={handleScroll}
-      className="w-full bg-slate-950 rounded-xl border border-slate-800 overflow-x-auto overflow-y-hidden custom-scrollbar"
-      style={{ height: '600px' }}
-    >
-      <div className="flex items-center justify-start h-full" style={{ padding: '16px' }}>
-        <div className="flex items-center justify-center">
-          <img
-            src={displayImage}
-            alt={images.length === 2 ? 'Stitched logbook pages' : 'Logbook page'}
-            style={{
-              transform: images.length === 2 ? 'none' : 'rotate(-90deg)',
-              transformOrigin: 'center center',
-              maxHeight: '568px',
-              width: 'auto',
-              height: 'auto',
-              display: 'block'
-            }}
-          />
+    <div className="w-full">
+      {/* Rotation controls */}
+      {onRotationChange && images.length > 0 && (
+        <div className="flex items-center justify-between px-4 py-2 bg-slate-900 border-b border-slate-800">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-400 font-medium">Image Orientation:</span>
+            {images.map((_, index) => (
+              <div key={index} className="flex items-center gap-1">
+                {images.length === 2 && (
+                  <span className="text-xs text-slate-500 mr-1">Page {index + 1}:</span>
+                )}
+                <button
+                  onClick={() => handleRotate(index, 'left')}
+                  className="p-1.5 hover:bg-slate-800 rounded border border-slate-700 hover:border-slate-600 transition-colors"
+                  title="Rotate 90° counterclockwise"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
+                    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                  </svg>
+                </button>
+                <button
+                  onClick={() => handleRotate(index, 'right')}
+                  className="p-1.5 hover:bg-slate-800 rounded border border-slate-700 hover:border-slate-600 transition-colors"
+                  title="Rotate 90° clockwise"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
+                    <path d="M21.5 2v6h-6M2.5 22v-6h6M22 11.5a10 10 0 0 1-18.8 4.3M2 12.5a10 10 0 0 1 18.8-4.2"/>
+                  </svg>
+                </button>
+                <span className="text-xs text-slate-500 ml-1 min-w-[3rem]">
+                  {rotations[index] || 0}°
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
+      )}
+      
+      <div
+        ref={containerRef}
+        onScroll={handleScroll}
+        className="w-full bg-slate-950 rounded-xl border border-slate-800 overflow-x-auto overflow-y-hidden custom-scrollbar"
+        style={{ height: '600px' }}
+      >
+        <div className="flex items-center justify-start h-full" style={{ padding: '16px' }}>
+          <div className="flex items-center justify-center">
+            <img
+              src={displayImage}
+              alt={images.length === 2 ? 'Stitched logbook pages' : 'Logbook page'}
+              style={{
+                transform: 'none', // Rotation is applied in canvas
+                transformOrigin: 'center center',
+                maxHeight: '568px',
+                width: 'auto',
+                height: 'auto',
+                display: 'block'
+              }}
+            />
+          </div>
+        </div>
+        <style>{`
+          .custom-scrollbar::-webkit-scrollbar { height: 8px; }
+          .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
+          .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+        `}</style>
       </div>
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar { height: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
-      `}</style>
     </div>
   );
 });

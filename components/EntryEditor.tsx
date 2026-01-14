@@ -6,12 +6,22 @@ import ImageViewer, { ImageViewerHandle } from './ImageViewer';
 interface EntryEditorProps {
   entries: LogbookEntry[];
   images: string[]; // Array of base64 images (1 for single mode, 2 for pair mode)
+  rotations?: number[]; // Rotation in degrees for each image
   onUpdate: (id: string, field: keyof LogbookEntry, value: string) => void;
   onDelete: (id: string) => void;
   onAdd: () => void;
+  onRotationChange?: (imageIndex: number, newRotation: number) => void; // Callback when rotation changes
 }
 
-const EntryEditor: React.FC<EntryEditorProps> = ({ entries, images, onUpdate, onDelete, onAdd }) => {
+const EntryEditor: React.FC<EntryEditorProps> = ({ 
+  entries, 
+  images, 
+  rotations = [0, 0],
+  onUpdate, 
+  onDelete, 
+  onAdd,
+  onRotationChange 
+}) => {
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const imageViewerRef = useRef<ImageViewerHandle>(null);
   const isSyncingRef = useRef(false);
@@ -274,7 +284,12 @@ const EntryEditor: React.FC<EntryEditorProps> = ({ entries, images, onUpdate, on
       {/* Images below table */}
       {images.length > 0 && (
         <div className="p-4 border-t border-slate-800">
-          <ImageViewer ref={imageViewerRef} images={images} />
+          <ImageViewer 
+            ref={imageViewerRef} 
+            images={images} 
+            rotations={rotations}
+            onRotationChange={onRotationChange}
+          />
         </div>
       )}
       

@@ -8,6 +8,7 @@ import TutorialTab from './components/TutorialTab';
 import { extractLogbookEntriesFromPair, extractLogbookEntriesSingle } from './services/geminiService';
 import { generateForeFlightCSV, downloadCSV } from './utils/csvUtils';
 import { reconcileFlightTimes, reconcileIFRData } from './utils/logbookUtils';
+import { getExifOrientation } from './utils/exifUtils';
 
 const App: React.FC = () => {
   const [view, setView] = useState<'landing' | 'app'>('landing');
@@ -70,18 +71,28 @@ const App: React.FC = () => {
       reader.readAsDataURL(file);
     });
 
-    // Store image immediately and estimate clarity score (client-side, lightweight)
-    const clarityScore = await estimateClarityScore(base64);
+    // Extract EXIF orientation and estimate clarity score in parallel
+    const [exifRotation, clarityScore] = await Promise.all([
+      getExifOrientation(file),
+      estimateClarityScore(base64)
+    ]);
     
     setScans(prev => prev.map(s => {
       if (s.id === scanId) {
         const newImages = [...s.images];
         newImages[imageIndex] = base64;
+        
+        // Initialize or update rotation array
+        const currentRotations = s.imageRotations || [];
+        const newRotations = [...currentRotations];
+        newRotations[imageIndex] = exifRotation; // Set initial rotation from EXIF
+        
         return { 
           ...s, 
           images: newImages, 
           status: 'pending',
-          clarityScore
+          clarityScore,
+          imageRotations: newRotations
         };
       }
       return s;
@@ -448,7 +459,18 @@ const App: React.FC = () => {
                             <EntryEditor 
                               entries={scanEntries}
                               images={scan.images}
-                              onUpdate={handleUpdateEntry} 
+                              rotations={scan.imageRotations}
+                              onUpdate={handleUpdateEntry}
+                              onRotationChange={(imageIndex, newRotation) => {
+                                setScans(prev => prev.map(s => {
+                                  if (s.id === scan.id) {
+                                    const newRotations = [...(s.imageRotations || [0, 0])];
+                                    newRotations[imageIndex] = newRotation;
+                                    return { ...s, imageRotations: newRotations };
+                                  }
+                                  return s;
+                                }));
+                              }} 
                               onDelete={(id) => {
                                   setEntries(prev => prev.filter(e => e.id !== id));
                               }}

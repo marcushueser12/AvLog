@@ -69,6 +69,7 @@ export interface ScanDocument {
   extractedTotals?: PageTotals;
   clarityScore?: number; // 0-100 score of image contrast/sharpness
   expectedEntries?: number; // User-provided hint for the AI
+  imageRotations?: number[]; // Rotation in degrees for each image (e.g., [0, 0] or [90, -90]). Defaults to [0, 0]
 }
 
 export type AppTab = 'dashboard' | 'tutorial' | 'permanent-log' | 'aircraft' | 'stats';
