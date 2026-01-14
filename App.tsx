@@ -451,8 +451,16 @@ const App: React.FC = () => {
 
                       const isExpanded = expandedScans.has(scan.id);
                       const pageNumber = scan.pageNumber || 1;
-                      const totals = scan.extractedTotals || {};
                       const isVerified = scan.isVerified || false;
+                      
+                      // Calculate totals from entries (same as EntryEditor does)
+                      const calculatedTotals: PageTotals = {
+                        totalTime: scanEntries.reduce((acc, e) => acc + (parseFloat(e.totalTime) || 0), 0).toFixed(1),
+                        pic: scanEntries.reduce((acc, e) => acc + (parseFloat(e.pic) || 0), 0).toFixed(1),
+                        instrument: scanEntries.reduce((acc, e) => acc + (parseFloat(e.instrument) || 0), 0).toFixed(1),
+                        simulatedInstrument: scanEntries.reduce((acc, e) => acc + (parseFloat(e.simulatedInstrument) || 0), 0).toFixed(1),
+                        approaches: scanEntries.reduce((acc, e) => acc + (parseInt(e.approaches) || 0), 0).toString()
+                      };
 
                       return (
                         <div key={scan.id} className="space-y-4">
@@ -460,7 +468,7 @@ const App: React.FC = () => {
                           {!isExpanded && (
                             <ScanReviewRow
                               pageNumber={pageNumber}
-                              totals={totals}
+                              totals={calculatedTotals}
                               isExpanded={isExpanded}
                               isVerified={isVerified}
                               onToggleExpand={() => toggleScanExpand(scan.id)}
