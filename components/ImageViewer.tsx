@@ -21,45 +21,80 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({ images, s
         const img1 = new Image();
         const img2 = new Image();
         
+        // Load both images with error handling
         await Promise.all([
-          new Promise<void>((resolve) => {
+          new Promise<void>((resolve, reject) => {
             img1.onload = () => resolve();
+            img1.onerror = () => reject(new Error('Failed to load image 1'));
             img1.src = images[0];
           }),
-          new Promise<void>((resolve) => {
+          new Promise<void>((resolve, reject) => {
             img2.onload = () => resolve();
+            img2.onerror = () => reject(new Error('Failed to load image 2'));
             img2.src = images[1];
           })
         ]);
 
+        // Verify images loaded correctly
+        if (!img1.complete || !img2.complete || img1.width === 0 || img2.width === 0) {
+          console.error('Images failed to load properly');
+          return;
+        }
+
         // First, rotate each image -90deg to landscape
         const rotateImage = (img: HTMLImageElement): Promise<HTMLImageElement> => {
-          return new Promise((resolve) => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            if (!ctx) {
-              resolve(img);
-              return;
+          return new Promise((resolve, reject) => {
+            try {
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              if (!ctx) {
+                resolve(img);
+                return;
+              }
+
+              // After -90deg rotation: width becomes height, height becomes width
+              canvas.width = img.height;
+              canvas.height = img.width;
+
+              // Rotate -90 degrees counterclockwise around the center
+              ctx.save();
+              // Move to center of destination canvas
+              ctx.translate(canvas.width / 2, canvas.height / 2);
+              // Rotate -90 degrees
+              ctx.rotate(-Math.PI / 2);
+              // Move back by half of original image dimensions
+              ctx.translate(-img.width / 2, -img.height / 2);
+              // Draw the image
+              ctx.drawImage(img, 0, 0, img.width, img.height);
+              ctx.restore();
+
+              const rotatedImg = new Image();
+              rotatedImg.onload = () => resolve(rotatedImg);
+              rotatedImg.onerror = () => reject(new Error('Failed to load rotated image'));
+              rotatedImg.src = canvas.toDataURL('image/jpeg', 0.95);
+            } catch (error) {
+              reject(error);
             }
-
-            // After -90deg rotation: width becomes height, height becomes width
-            canvas.width = img.height;
-            canvas.height = img.width;
-
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.rotate(-90 * Math.PI / 180);
-            ctx.translate(-img.width / 2, -img.height / 2);
-            ctx.drawImage(img, 0, 0);
-
-            const rotatedImg = new Image();
-            rotatedImg.onload = () => resolve(rotatedImg);
-            rotatedImg.src = canvas.toDataURL('image/jpeg', 0.95);
           });
         };
 
         // Rotate both images first
-        const rotated1 = await rotateImage(img1);
-        const rotated2 = await rotateImage(img2);
+        let rotated1: HTMLImageElement;
+        let rotated2: HTMLImageElement;
+        
+        try {
+          rotated1 = await rotateImage(img1);
+          rotated2 = await rotateImage(img2);
+        } catch (error) {
+          console.error('Error rotating images:', error);
+          return;
+        }
+        
+        // Verify rotated images loaded
+        if (!rotated1.complete || !rotated2.complete || rotated1.width === 0 || rotated2.width === 0) {
+          console.error('Rotated images failed to load');
+          return;
+        }
 
         // Now stitch the rotated (landscape) images horizontally
         const stitchCanvas = document.createElement('canvas');
