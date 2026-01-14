@@ -52,33 +52,36 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({ images, s
               }
 
               const canvas = document.createElement('canvas');
-              const ctx = canvas.getContext('2d');
+              // Set dimensions first (Safari requirement)
+              canvas.width = img.height;
+              canvas.height = img.width;
+              
+              const ctx = canvas.getContext('2d', { 
+                willReadFrequently: false,
+                alpha: true 
+              });
               if (!ctx) {
                 resolve(img);
                 return;
               }
 
-              // After -90deg rotation: width becomes height, height becomes width
-              canvas.width = img.height;
-              canvas.height = img.width;
-
-              // Safari: Clear canvas before drawing
-              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              // Safari: Enable image smoothing for better quality
+              ctx.imageSmoothingEnabled = true;
+              ctx.imageSmoothingQuality = 'high';
 
               ctx.save();
               ctx.translate(canvas.width / 2, canvas.height / 2);
               ctx.rotate(-90 * Math.PI / 180);
               ctx.translate(-img.width / 2, -img.height / 2);
-              ctx.drawImage(img, 0, 0);
+              ctx.drawImage(img, 0, 0, img.width, img.height);
               ctx.restore();
 
-              // Safari: Use PNG format which is more reliable, or check if JPEG works
-              let dataUrl: string;
-              try {
-                dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-              } catch (e) {
-                // Fallback to PNG if JPEG fails (Safari sometimes has issues)
-                dataUrl = canvas.toDataURL('image/png');
+              // Safari: Use PNG which is more reliable
+              const dataUrl = canvas.toDataURL('image/png');
+              
+              if (!dataUrl || dataUrl === 'data:,') {
+                reject(new Error('Failed to generate rotated image data'));
+                return;
               }
 
               const rotatedImg = new Image();
@@ -97,29 +100,28 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({ images, s
 
         // Now stitch the rotated (landscape) images horizontally
         const stitchCanvas = document.createElement('canvas');
-        const stitchCtx = stitchCanvas.getContext('2d');
-        if (!stitchCtx) return;
-
+        
         // Calculate dimensions - use the maximum height and sum of widths
         const maxHeight = Math.max(rotated1.height, rotated2.height);
         stitchCanvas.width = rotated1.width + rotated2.width;
         stitchCanvas.height = maxHeight;
+        
+        const stitchCtx = stitchCanvas.getContext('2d', {
+          willReadFrequently: false,
+          alpha: true
+        });
+        if (!stitchCtx) return;
 
-        // Safari: Clear canvas before drawing
-        stitchCtx.clearRect(0, 0, stitchCanvas.width, stitchCanvas.height);
+        // Safari: Enable image smoothing
+        stitchCtx.imageSmoothingEnabled = true;
+        stitchCtx.imageSmoothingQuality = 'high';
 
         // Draw both rotated images side by side horizontally
         stitchCtx.drawImage(rotated1, 0, 0);
         stitchCtx.drawImage(rotated2, rotated1.width, 0);
 
-        // Convert to base64 - use try-catch for Safari compatibility
-        let stitchedDataUrl: string;
-        try {
-          stitchedDataUrl = stitchCanvas.toDataURL('image/jpeg', 0.95);
-        } catch (e) {
-          // Fallback to PNG if JPEG fails (Safari sometimes has issues)
-          stitchedDataUrl = stitchCanvas.toDataURL('image/png');
-        }
+        // Safari: Use PNG which is more reliable
+        const stitchedDataUrl = stitchCanvas.toDataURL('image/png');
         setStitchedImage(stitchedDataUrl);
       };
 
