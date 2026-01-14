@@ -1,4 +1,4 @@
-import * as exifr from 'exifr';
+import exifr from 'exifr';
 
 /**
  * EXIF Orientation values:
@@ -15,7 +15,7 @@ import * as exifr from 'exifr';
  */
 export const getExifOrientation = async (file: File): Promise<number> => {
   try {
-    const orientation = await exifr(file, { orientation: true });
+    const orientation = await exifr.orientation(file);
     
     // Convert EXIF orientation to rotation degrees
     // We want to rotate the image to correct orientation (make it upright)
