@@ -37,92 +37,41 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({ images, s
 
         // Verify images loaded correctly
         if (!img1.complete || !img2.complete || img1.width === 0 || img2.width === 0) {
-          console.error('Images failed to load properly', {
-            img1: { complete: img1.complete, width: img1.width, height: img1.height },
-            img2: { complete: img2.complete, width: img2.width, height: img2.height }
-          });
+          console.error('Images failed to load properly');
           return;
         }
-        
-        console.log('Images loaded successfully', {
-          img1: { width: img1.width, height: img1.height },
-          img2: { width: img2.width, height: img2.height }
-        });
 
         // First, rotate each image -90deg to landscape
         const rotateImage = (img: HTMLImageElement): Promise<HTMLImageElement> => {
           return new Promise((resolve, reject) => {
-            try {
-              const canvas = document.createElement('canvas');
-              const ctx = canvas.getContext('2d', { willReadFrequently: false });
-              if (!ctx) {
-                resolve(img);
-                return;
-              }
-
-              // After -90deg rotation: width becomes height, height becomes width
-              canvas.width = img.height;
-              canvas.height = img.width;
-
-              // Rotate -90 degrees counterclockwise
-              // Move origin to bottom-left of destination, rotate, then draw
-              ctx.save();
-              ctx.translate(0, canvas.height);
-              ctx.rotate(-Math.PI / 2);
-              ctx.drawImage(img, 0, 0, img.width, img.height);
-              ctx.restore();
-
-              // Convert to data URL and create new image
-              const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-              
-              // Check if data URL is valid
-              if (!dataUrl || dataUrl === 'data:,') {
-                console.error('Invalid data URL generated', { canvasWidth: canvas.width, canvasHeight: canvas.height, imgWidth: img.width, imgHeight: img.height });
-                reject(new Error('Failed to create rotated image data'));
-                return;
-              }
-              
-              console.log('Rotated image created', { original: { w: img.width, h: img.height }, rotated: { w: canvas.width, h: canvas.height } });
-
-              const rotatedImg = new Image();
-              rotatedImg.crossOrigin = 'anonymous';
-              rotatedImg.onload = () => {
-                // Verify the rotated image has content
-                if (rotatedImg.width > 0 && rotatedImg.height > 0) {
-                  resolve(rotatedImg);
-                } else {
-                  reject(new Error('Rotated image has zero dimensions'));
-                }
-              };
-              rotatedImg.onerror = (err) => {
-                console.error('Error loading rotated image:', err);
-                reject(new Error('Failed to load rotated image'));
-              };
-              rotatedImg.src = dataUrl;
-            } catch (error) {
-              console.error('Error in rotateImage:', error);
-              reject(error);
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              resolve(img);
+              return;
             }
+
+            // After -90deg rotation: width becomes height, height becomes width
+            canvas.width = img.height;
+            canvas.height = img.width;
+
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(-90 * Math.PI / 180);
+            ctx.translate(-img.width / 2, -img.height / 2);
+            ctx.drawImage(img, 0, 0);
+            ctx.restore();
+
+            const rotatedImg = new Image();
+            rotatedImg.onload = () => resolve(rotatedImg);
+            rotatedImg.onerror = () => reject(new Error('Failed to load rotated image'));
+            rotatedImg.src = canvas.toDataURL('image/jpeg', 0.95);
           });
         };
 
         // Rotate both images first
-        let rotated1: HTMLImageElement;
-        let rotated2: HTMLImageElement;
-        
-        try {
-          rotated1 = await rotateImage(img1);
-          rotated2 = await rotateImage(img2);
-        } catch (error) {
-          console.error('Error rotating images:', error);
-          return;
-        }
-        
-        // Verify rotated images loaded
-        if (!rotated1.complete || !rotated2.complete || rotated1.width === 0 || rotated2.width === 0) {
-          console.error('Rotated images failed to load');
-          return;
-        }
+        const rotated1 = await rotateImage(img1);
+        const rotated2 = await rotateImage(img2);
 
         // Now stitch the rotated (landscape) images horizontally
         const stitchCanvas = document.createElement('canvas');
