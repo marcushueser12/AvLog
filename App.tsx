@@ -440,7 +440,10 @@ const App: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-white">Verification Queue</h3>
-                      <p className="text-sm text-slate-500">Results are grouped by page scan and auto-sorted by date.</p>
+                      <p className="text-sm text-slate-500">
+                        Results are grouped by page scan and auto-sorted by date. 
+                        <span className="text-amber-400/80 font-medium"> Tip: Manually verify dates when handwriting is unclear or ambiguous.</span>
+                      </p>
                     </div>
                   </div>
                   
