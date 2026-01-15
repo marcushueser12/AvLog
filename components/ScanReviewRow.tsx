@@ -46,26 +46,58 @@ const ScanReviewRow: React.FC<ScanReviewRowProps> = ({
 
         {/* Totals row - styled similar to table rows */}
         <div className="flex-1 flex items-center gap-4 px-4 py-3 overflow-x-auto">
-          <div className="flex items-center gap-6 min-w-max">
+          <div className="flex items-center gap-4 min-w-max">
             <div className="flex flex-col">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Total Time</span>
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Total</span>
               <span className="text-sm font-bold text-blue-400">{totals.totalTime || '0.0'}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Day</span>
+              <span className="text-sm font-bold text-slate-300">{totals.day || '0.0'}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Night</span>
+              <span className="text-sm font-bold text-slate-300">{totals.night || '0.0'}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">XC</span>
+              <span className="text-sm font-bold text-slate-300">{totals.crossCountry || '0.0'}</span>
             </div>
             <div className="flex flex-col">
               <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">PIC</span>
               <span className="text-sm font-bold text-slate-300">{totals.pic || '0.0'}</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Instrument</span>
-              <span className="text-sm font-bold text-slate-300">{totals.instrument || '0.0'}</span>
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">SIC</span>
+              <span className="text-sm font-bold text-slate-300">{totals.sic || '0.0'}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Dual Rec</span>
+              <span className="text-sm font-bold text-slate-300">{totals.dualReceived || '0.0'}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Dual Giv</span>
+              <span className="text-sm font-bold text-slate-300">{totals.dualGiven || '0.0'}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Inst</span>
+              <span className="text-sm font-bold text-emerald-400">{totals.instrument || '0.0'}</span>
             </div>
             <div className="flex flex-col">
               <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Sim Inst</span>
-              <span className="text-sm font-bold text-slate-300">{totals.simulatedInstrument || '0.0'}</span>
+              <span className="text-sm font-bold text-cyan-400">{totals.simulatedInstrument || '0.0'}</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Approaches</span>
-              <span className="text-sm font-bold text-slate-300">{totals.approaches || '0'}</span>
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Appr</span>
+              <span className="text-sm font-bold text-amber-400">{totals.approaches || '0'}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Lnd D</span>
+              <span className="text-sm font-bold text-slate-300">{totals.landingsDay || '0'}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Lnd N</span>
+              <span className="text-sm font-bold text-slate-300">{totals.landingsNight || '0'}</span>
             </div>
           </div>
         </div>

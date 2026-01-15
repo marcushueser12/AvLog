@@ -1,10 +1,18 @@
 
 export interface PageTotals {
   totalTime?: string;
+  day?: string;
+  night?: string;
+  crossCountry?: string;
+  pic?: string;
+  sic?: string;
+  dualReceived?: string;
+  dualGiven?: string;
   instrument?: string;
   simulatedInstrument?: string;
   approaches?: string;
-  pic?: string;
+  landingsDay?: string;
+  landingsNight?: string;
 }
 
 /**

@@ -456,10 +456,18 @@ const App: React.FC = () => {
                       // Calculate totals from entries (same as EntryEditor does)
                       const calculatedTotals: PageTotals = {
                         totalTime: scanEntries.reduce((acc, e) => acc + (parseFloat(e.totalTime) || 0), 0).toFixed(1),
+                        day: scanEntries.reduce((acc, e) => acc + (parseFloat(e.day) || 0), 0).toFixed(1),
+                        night: scanEntries.reduce((acc, e) => acc + (parseFloat(e.night) || 0), 0).toFixed(1),
+                        crossCountry: scanEntries.reduce((acc, e) => acc + (parseFloat(e.crossCountry) || 0), 0).toFixed(1),
                         pic: scanEntries.reduce((acc, e) => acc + (parseFloat(e.pic) || 0), 0).toFixed(1),
+                        sic: scanEntries.reduce((acc, e) => acc + (parseFloat(e.sic) || 0), 0).toFixed(1),
+                        dualReceived: scanEntries.reduce((acc, e) => acc + (parseFloat(e.dualReceived) || 0), 0).toFixed(1),
+                        dualGiven: scanEntries.reduce((acc, e) => acc + (parseFloat(e.dualGiven) || 0), 0).toFixed(1),
                         instrument: scanEntries.reduce((acc, e) => acc + (parseFloat(e.instrument) || 0), 0).toFixed(1),
                         simulatedInstrument: scanEntries.reduce((acc, e) => acc + (parseFloat(e.simulatedInstrument) || 0), 0).toFixed(1),
-                        approaches: scanEntries.reduce((acc, e) => acc + (parseInt(e.approaches) || 0), 0).toString()
+                        approaches: scanEntries.reduce((acc, e) => acc + (parseInt(e.approaches) || 0), 0).toString(),
+                        landingsDay: scanEntries.reduce((acc, e) => acc + (parseInt(e.landingsDay) || 0), 0).toString(),
+                        landingsNight: scanEntries.reduce((acc, e) => acc + (parseInt(e.landingsNight) || 0), 0).toString()
                       };
 
                       return (
