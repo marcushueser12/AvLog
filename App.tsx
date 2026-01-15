@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { LogbookEntry, ScanDocument, ScanMode, AppTab } from './types';
+import { LogbookEntry, ScanDocument, ScanMode, AppTab, PageTotals } from './types';
 import { ICONS } from './constants';
 import EntryEditor from './components/EntryEditor';
 import ScanReviewRow from './components/ScanReviewRow';
@@ -44,7 +44,7 @@ const App: React.FC = () => {
   };
 
   // Lightweight clarity score estimation based on image dimensions
-  const estimateClarityScore = (base64: string): number => {
+  const estimateClarityScore = (base64: string): Promise<number> => {
     return new Promise<number>((resolve) => {
       const img = new Image();
       img.onload = () => {
