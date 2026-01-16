@@ -202,7 +202,8 @@ const App: React.FC = () => {
 
         if (!response.ok) {
           const error = await response.json();
-          throw new Error(error.error || 'Failed to save verified scan');
+          console.error('Backend error response:', error);
+          throw new Error(error.message || error.error || 'Failed to save verified scan');
         }
 
         const result = await response.json();

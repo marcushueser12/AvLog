@@ -50,47 +50,87 @@ router.post('/save-scan', verifyAuth, async (req: AuthRequest, res) => {
       return res.status(500).json({ error: 'Failed to save scan' });
     }
 
+    // Helper function to parse date string to Date object or null
+    const parseDate = (dateStr: string | null | undefined): string | null => {
+      if (!dateStr || dateStr.trim() === '') return null;
+      try {
+        // Try to parse common date formats (YYYY-MM-DD, YYYY/MM/DD, MM/DD/YYYY, etc.)
+        const parsed = new Date(dateStr);
+        if (isNaN(parsed.getTime())) return null;
+        // Return in ISO format (YYYY-MM-DD) for PostgreSQL DATE type
+        return parsed.toISOString().split('T')[0];
+      } catch {
+        return null;
+      }
+    };
+
+    // Helper function to parse float, return null if invalid
+    const parseFloatOrNull = (value: string | null | undefined): number | null => {
+      if (!value || value.trim() === '') return null;
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? null : parsed;
+    };
+
     // Transform entries to match database schema
     const dbEntries = entries.map((entry: LogbookEntry) => ({
       user_id: userId,
       scan_id: scan.id,
-      date: entry.date || null,
-      aircraft_id: entry.aircraftId || null,
-      aircraft_type: entry.aircraftType || null,
-      from_location: entry.from || null,
-      to_location: entry.to || null,
-      route: entry.route || null,
-      total_time: entry.totalTime ? parseFloat(entry.totalTime) : null,
-      day: entry.day ? parseFloat(entry.day) : null,
-      night: entry.night ? parseFloat(entry.night) : null,
-      cross_country: entry.crossCountry || null,
-      pic: entry.pic || null,
-      sic: entry.sic || null,
-      dual_received: entry.dualReceived || null,
-      dual_given: entry.dualGiven || null,
-      instrument: entry.instrument || null,
-      simulated_instrument: entry.simulatedInstrument || null,
-      approaches: entry.approaches || null,
-      landings_day: entry.landingsDay || null,
-      landings_night: entry.landingsNight || null,
-      comments: entry.comments || null,
+      date: parseDate(entry.date),
+      aircraft_id: entry.aircraftId?.trim() || null,
+      aircraft_type: entry.aircraftType?.trim() || null,
+      from_location: entry.from?.trim() || null,
+      to_location: entry.to?.trim() || null,
+      route: entry.route?.trim() || null,
+      total_time: parseFloatOrNull(entry.totalTime),
+      day: parseFloatOrNull(entry.day),
+      night: parseFloatOrNull(entry.night),
+      cross_country: entry.crossCountry?.trim() || null,
+      pic: entry.pic?.trim() || null,
+      sic: entry.sic?.trim() || null,
+      dual_received: entry.dualReceived?.trim() || null,
+      dual_given: entry.dualGiven?.trim() || null,
+      instrument: entry.instrument?.trim() || null,
+      simulated_instrument: entry.simulatedInstrument?.trim() || null,
+      approaches: entry.approaches?.trim() || null,
+      landings_day: entry.landingsDay?.trim() || null,
+      landings_night: entry.landingsNight?.trim() || null,
+      comments: entry.comments?.trim() || null,
       is_verified: entry.isVerified ?? true,
       ai_confidence: entry.aiConfidence || null,
       reconciliation_confidence: entry.reconciliationConfidence || null,
-      uncertain_fields: entry.uncertainFields || null,
-      row_anchor: entry.rowAnchor || null
+      uncertain_fields: entry.uncertainFields && entry.uncertainFields.length > 0 ? entry.uncertainFields : null,
+      row_anchor: entry.rowAnchor?.trim() || null
     }));
 
     // Insert verified entries
-    const { error: entriesError } = await supabaseAdmin
+    const { data: insertedEntries, error: entriesError } = await supabaseAdmin
       .from('verified_entries')
-      .insert(dbEntries);
+      .insert(dbEntries)
+      .select();
 
     if (entriesError) {
       console.error('Error saving entries:', entriesError);
+      console.error('Entries data that failed:', JSON.stringify(dbEntries, null, 2));
+      console.error('Error details:', {
+        message: entriesError.message,
+        details: entriesError.details,
+        hint: entriesError.hint,
+        code: entriesError.code
+      });
+      
       // Try to delete the scan if entries failed
       await supabaseAdmin.from('verified_scans').delete().eq('id', scan.id);
-      return res.status(500).json({ error: 'Failed to save entries' });
+      
+      // Return more detailed error message
+      const errorMessage = entriesError.message || 'Failed to save entries';
+      const errorDetails = entriesError.details ? ` Details: ${entriesError.details}` : '';
+      const errorHint = entriesError.hint ? ` Hint: ${entriesError.hint}` : '';
+      
+      return res.status(500).json({ 
+        error: 'Failed to save entries',
+        message: errorMessage + errorDetails + errorHint,
+        code: entriesError.code
+      });
     }
 
     res.json({

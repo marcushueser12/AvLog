@@ -26,9 +26,19 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       const result = isSignUp ? await signUp(email, password) : await signIn(email, password);
       
       if (result.error) {
-        setError(result.error.message);
+        // Handle specific error messages
+        if (result.error.message.includes('email not confirmed') || result.error.message.includes('Email not confirmed')) {
+          setError('Please check your email and click the confirmation link to verify your account before signing in.');
+        } else {
+          setError(result.error.message);
+        }
       } else {
         // Success - auth context will update automatically
+        if (isSignUp) {
+          // Show success message for signup
+          setError(null);
+          alert('Account created! Please check your email to confirm your account before signing in.');
+        }
         onClose();
         setEmail('');
         setPassword('');
