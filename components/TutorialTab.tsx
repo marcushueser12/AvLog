@@ -4,7 +4,8 @@ import { ICONS } from '../constants';
 
 const TutorialTab: React.FC = () => {
   return (
-    <div className="max-w-5xl mx-auto space-y-12 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="flex-1 overflow-y-auto p-8">
+      <div className="max-w-5xl mx-auto space-y-12 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
       <header className="space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/10 rounded-full border border-blue-500/20 text-blue-400 text-[10px] font-bold tracking-widest uppercase">
@@ -139,6 +140,7 @@ const TutorialTab: React.FC = () => {
       <footer className="pt-10 border-t border-slate-800 text-center">
         <p className="text-slate-500 text-sm italic">"A logbook is more than a record; it's the story of your life in the air."</p>
       </footer>
+      </div>
     </div>
   );
 };
