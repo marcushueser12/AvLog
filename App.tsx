@@ -17,7 +17,7 @@ import { getExifOrientation } from './utils/exifUtils';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 const App: React.FC = () => {
-  const { user, loading: authLoading, getAccessToken } = useAuth();
+  const { user, loading: authLoading, getAccessToken, signOut } = useAuth();
   const [view, setView] = useState<'landing' | 'app'>('landing');
   const [activeTab, setActiveTab] = useState<AppTab>('dashboard');
   const [scans, setScans] = useState<ScanDocument[]>([]);
@@ -28,6 +28,10 @@ const App: React.FC = () => {
   const [expandedScans, setExpandedScans] = useState<Set<string>>(new Set());
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [savingVerified, setSavingVerified] = useState<Set<string>>(new Set());
+  const [permanentLogScans, setPermanentLogScans] = useState<any[]>([]);
+  const [permanentLogEntries, setPermanentLogEntries] = useState<Record<string, LogbookEntry[]>>({});
+  const [selectedScansForExport, setSelectedScansForExport] = useState<Set<string>>(new Set());
+  const [loadingPermanentLog, setLoadingPermanentLog] = useState(false);
 
   const handleSignIn = (tab: AppTab = 'dashboard') => {
     setView('app');
@@ -269,10 +273,101 @@ const App: React.FC = () => {
     setEntries(prev => prev.filter(e => e.id !== id));
   };
 
+  // Load permanent log scans for export selection
+  const loadPermanentLogForExport = async () => {
+    if (!user) {
+      setPermanentLogScans([]);
+      setPermanentLogEntries({});
+      return;
+    }
+
+    setLoadingPermanentLog(true);
+    try {
+      const token = getAccessToken();
+      if (!token) return;
+
+      const response = await fetch(`${API_URL}/api/verified/scans`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPermanentLogScans(data.scans || []);
+        
+        // Load entries for all scans
+        const entriesMap: Record<string, LogbookEntry[]> = {};
+        for (const scan of (data.scans || [])) {
+          try {
+            const entriesResponse = await fetch(`${API_URL}/api/verified/entries/${scan.id}`, {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            if (entriesResponse.ok) {
+              const entriesData = await entriesResponse.json();
+              entriesMap[scan.id] = entriesData.entries || [];
+            }
+          } catch (err) {
+            console.error(`Error loading entries for scan ${scan.id}:`, err);
+          }
+        }
+        setPermanentLogEntries(entriesMap);
+      }
+    } catch (error) {
+      console.error('Error loading permanent log for export:', error);
+    } finally {
+      setLoadingPermanentLog(false);
+    }
+  };
+
+  const handleExportModalOpen = () => {
+    setShowExportModal(true);
+    if (user) {
+      loadPermanentLogForExport();
+    }
+    // Initialize selection with all current exportable entries' scan IDs
+    const currentScanIds = new Set(entries.filter(e => e.isVerified || scans.find(s => s.id === e.scanId)?.status === 'verified').map(e => e.scanId).filter(Boolean));
+    setSelectedScansForExport(currentScanIds);
+  };
+
   const handleExport = () => {
-    const csvContent = generateForeFlightCSV(exportableEntries);
+    // Combine current verified entries with selected permanent log entries
+    const currentVerifiedEntries = entries.filter(e => {
+      const scanId = e.scanId;
+      if (!scanId) return false;
+      // Include if verified in current session OR if scan ID is selected from permanent log
+      return (e.isVerified || scans.find(s => s.id === scanId)?.status === 'verified') || selectedScansForExport.has(scanId);
+    });
+
+    // Add selected permanent log entries
+    const permanentLogEntriesList: LogbookEntry[] = [];
+    selectedScansForExport.forEach(scanId => {
+      if (permanentLogEntries[scanId]) {
+        permanentLogEntriesList.push(...permanentLogEntries[scanId]);
+      }
+    });
+
+    // Combine and deduplicate by entry ID
+    const allEntries = [...currentVerifiedEntries, ...permanentLogEntriesList];
+    const uniqueEntries = Array.from(new Map(allEntries.map(e => [e.id, e])).values());
+    
+    // Sort by date
+    const sortedEntries = uniqueEntries.sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      return isNaN(dateA) || isNaN(dateB) ? 0 : dateA - dateB;
+    });
+
+    const csvContent = generateForeFlightCSV(sortedEntries);
     downloadCSV(csvContent, `${exportName}.csv`);
     setShowExportModal(false);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    setView('landing');
   };
 
   // Grouping logic for the verification queue (Completed but not yet Verified)
@@ -379,9 +474,20 @@ const App: React.FC = () => {
               <span className="text-sm font-mono text-blue-400 font-bold">{currentTotalTime.toFixed(1)} HRS</span>
             </div>
             {user && (
-              <div className="hidden md:flex flex-col text-right mr-2">
-                <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Signed in as</span>
-                <span className="text-sm text-slate-400 font-bold">{user.email}</span>
+              <div className="hidden md:flex items-center gap-3">
+                <div className="flex flex-col text-right">
+                  <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Signed in as</span>
+                  <span className="text-sm text-slate-400 font-bold">{user.email}</span>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-sm font-bold transition-all border border-slate-700"
+                  title="Sign Out"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                  </svg>
+                </button>
               </div>
             )}
             {!user && (
@@ -393,8 +499,8 @@ const App: React.FC = () => {
               </button>
             )}
             <button 
-              onClick={() => setShowExportModal(true)}
-              disabled={exportableEntries.length === 0}
+              onClick={handleExportModalOpen}
+              disabled={exportableEntries.length === 0 && (!user || permanentLogScans.length === 0)}
               className="px-5 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-30 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-500/20"
             >
               Export ForeFlight CSV {exportableEntries.length > 0 && `(${exportableEntries.length})`}
@@ -693,8 +799,6 @@ const App: React.FC = () => {
                 </section>
               )}
             </div>
-          ) : activeTab === 'permanent-log' ? (
-            <PermanentLogTab />
           ) : activeTab === 'tutorial' ? (
             <TutorialTab />
           ) : (
@@ -713,12 +817,81 @@ const App: React.FC = () => {
       {showExportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md">
           <div className="absolute inset-0 bg-slate-950/80" onClick={() => setShowExportModal(false)}></div>
-          <div className="relative bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95">
+          <div className="relative bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95">
             <h3 className="text-xl font-bold mb-2">Export to ForeFlight</h3>
-            <p className="text-slate-400 text-sm mb-6">
-              Exporting {exportableEntries.length} verified {exportableEntries.length === 1 ? 'entry' : 'entries'} to ForeFlight CSV format.
-            </p>
+            
+            {/* Current verified entries count */}
+            {exportableEntries.length > 0 && (
+              <p className="text-slate-400 text-sm mb-4">
+                {exportableEntries.length} verified {exportableEntries.length === 1 ? 'entry' : 'entries'} from current session will be included.
+              </p>
+            )}
+
+            {/* Permanent log selection */}
+            {user && permanentLogScans.length > 0 && (
+              <div className="mb-6">
+                <h4 className="text-sm font-bold text-white mb-3">Select from Permanent Log:</h4>
+                {loadingPermanentLog ? (
+                  <div className="text-slate-400 text-sm py-4">Loading saved entries...</div>
+                ) : (
+                  <div className="space-y-2 max-h-64 overflow-y-auto border border-slate-800 rounded-2xl p-4 bg-slate-950/50">
+                    {permanentLogScans.map(scan => {
+                      const scanEntries = permanentLogEntries[scan.id] || [];
+                      const isSelected = selectedScansForExport.has(scan.id);
+                      return (
+                        <label
+                          key={scan.id}
+                          className="flex items-center gap-3 p-3 rounded-xl border border-slate-800 hover:border-slate-700 cursor-pointer transition-all bg-slate-900/50"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              const newSet = new Set(selectedScansForExport);
+                              if (e.target.checked) {
+                                newSet.add(scan.id);
+                              } else {
+                                newSet.delete(scan.id);
+                              }
+                              setSelectedScansForExport(newSet);
+                            }}
+                            className="w-5 h-5 text-blue-600 bg-slate-950 border-slate-700 rounded focus:ring-blue-500 focus:ring-2"
+                          />
+                          <div className="flex-1">
+                            <div className="text-sm font-bold text-white">
+                              Page #{scan.page_number || 'N/A'} ({scan.mode === 'single' ? 'Single' : 'Spread'})
+                            </div>
+                            <div className="text-xs text-slate-500 mt-0.5">
+                              {scanEntries.length} {scanEntries.length === 1 ? 'entry' : 'entries'}
+                            </div>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+                {selectedScansForExport.size > 0 && (
+                  <p className="text-emerald-400 text-xs mt-3 font-medium">
+                    {Array.from(selectedScansForExport).reduce((total, scanId) => total + (permanentLogEntries[scanId]?.length || 0), 0)} entries selected from permanent log
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Total count */}
+            {(() => {
+              const currentCount = exportableEntries.length;
+              const permanentCount = Array.from(selectedScansForExport).reduce((total, scanId) => total + (permanentLogEntries[scanId]?.length || 0), 0);
+              const totalCount = currentCount + permanentCount;
+              return (
+                <p className="text-blue-400 text-sm mb-6 font-bold">
+                  Total: {totalCount} {totalCount === 1 ? 'entry' : 'entries'} will be exported
+                </p>
+              );
+            })()}
+
             <div className="relative mb-6">
+                <label className="text-xs text-slate-500 mb-2 block">Export filename:</label>
                 <input 
                     type="text" 
                     value={exportName}
@@ -728,7 +901,8 @@ const App: React.FC = () => {
             </div>
             <button 
               onClick={handleExport}
-              className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black text-lg transition-all shadow-lg"
+              disabled={exportableEntries.length === 0 && selectedScansForExport.size === 0}
+              className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-30 text-white rounded-2xl font-black text-lg transition-all shadow-lg"
             >
               Download .CSV for ForeFlight
             </button>
