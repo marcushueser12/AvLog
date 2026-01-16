@@ -6,12 +6,17 @@ import EntryEditor from './components/EntryEditor';
 import ScanReviewRow from './components/ScanReviewRow';
 import LandingPage from './components/LandingPage';
 import TutorialTab from './components/TutorialTab';
+import AuthModal from './components/AuthModal';
+import { useAuth } from './contexts/AuthContext';
 import { extractLogbookEntriesFromPair, extractLogbookEntriesSingle } from './services/geminiService';
 import { generateForeFlightCSV, downloadCSV } from './utils/csvUtils';
 import { reconcileFlightTimes, reconcileIFRData, normalizeDateSeparator } from './utils/logbookUtils';
 import { getExifOrientation } from './utils/exifUtils';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 const App: React.FC = () => {
+  const { user, loading: authLoading, getAccessToken } = useAuth();
   const [view, setView] = useState<'landing' | 'app'>('landing');
   const [activeTab, setActiveTab] = useState<AppTab>('dashboard');
   const [scans, setScans] = useState<ScanDocument[]>([]);
@@ -20,6 +25,8 @@ const App: React.FC = () => {
   const [exportName, setExportName] = useState<string>(`Logbook_Export_${new Date().toISOString().slice(0, 10)}`);
   const [showExportModal, setShowExportModal] = useState(false);
   const [expandedScans, setExpandedScans] = useState<Set<string>>(new Set());
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [savingVerified, setSavingVerified] = useState<Set<string>>(new Set());
 
   const handleSignIn = (tab: AppTab = 'dashboard') => {
     setView('app');
@@ -153,10 +160,71 @@ const App: React.FC = () => {
     setIsBatchProcessing(false);
   };
 
-  const handleVerifyScan = (scanId: string, verified: boolean) => {
-    // Mark scan as verified - entries are ready for export
+  const handleVerifyScan = async (scanId: string, verified: boolean) => {
+    // Mark scan as verified locally
     setScans(prev => prev.map(s => s.id === scanId ? { ...s, isVerified: verified } : s));
     setEntries(prev => prev.map(e => e.scanId === scanId ? { ...e, isVerified: verified } : e));
+
+    // If verified and user is authenticated, save to database
+    if (verified && user) {
+      const scan = scans.find(s => s.id === scanId);
+      if (!scan) return;
+
+      const scanEntries = entries.filter(e => e.scanId === scanId);
+      if (scanEntries.length === 0) return;
+
+      setSavingVerified(prev => new Set(prev).add(scanId));
+
+      try {
+        const token = getAccessToken();
+        if (!token) {
+          console.error('No access token available');
+          setShowAuthModal(true);
+          return;
+        }
+
+        const response = await fetch(`${API_URL}/api/verified/save-scan`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            pageNumber: scan.pageNumber || undefined,
+            mode: scan.mode,
+            timestamp: scan.timestamp,
+            imageRotations: scan.imageRotations || [],
+            expectedEntries: scan.expectedEntries || undefined,
+            clarityScore: scan.clarityScore || undefined,
+            entries: scanEntries
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to save verified scan');
+        }
+
+        const result = await response.json();
+        console.log('Verified scan saved:', result);
+      } catch (error: any) {
+        console.error('Error saving verified scan:', error);
+        // Don't un-verify on error, just log it
+        alert(`Failed to save verified entries: ${error.message}. Please try again.`);
+      } finally {
+        setSavingVerified(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(scanId);
+          return newSet;
+        });
+      }
+    } else if (verified && !user) {
+      // If user tries to verify but isn't logged in, show auth modal
+      setShowAuthModal(true);
+      // Un-verify until they log in
+      setScans(prev => prev.map(s => s.id === scanId ? { ...s, isVerified: false } : s));
+      setEntries(prev => prev.map(e => e.scanId === scanId ? { ...e, isVerified: false } : e));
+    }
   };
 
   const toggleScanExpand = (scanId: string) => {
@@ -306,6 +374,20 @@ const App: React.FC = () => {
               <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Calculated Total</span>
               <span className="text-sm font-mono text-blue-400 font-bold">{currentTotalTime.toFixed(1)} HRS</span>
             </div>
+            {user && (
+              <div className="hidden md:flex flex-col text-right mr-2">
+                <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Signed in as</span>
+                <span className="text-sm text-slate-400 font-bold">{user.email}</span>
+              </div>
+            )}
+            {!user && (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-bold transition-all"
+              >
+                Sign In to Save
+              </button>
+            )}
             <button 
               onClick={() => setShowExportModal(true)}
               disabled={exportableEntries.length === 0}
@@ -576,14 +658,17 @@ const App: React.FC = () => {
                                   }}
                                 />
                                 <div className="p-4 bg-slate-950/50 flex justify-between items-center">
-                                  <label className="flex items-center gap-2 cursor-pointer">
+                                    <label className="flex items-center gap-2 cursor-pointer">
                                     <input
                                       type="checkbox"
                                       checked={isVerified}
                                       onChange={(e) => handleVerifyScan(scan.id, e.target.checked)}
-                                      className="w-5 h-5 rounded border-2 border-slate-600 bg-slate-800 text-emerald-600 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-0"
+                                      disabled={savingVerified.has(scan.id)}
+                                      className="w-5 h-5 rounded border-2 border-slate-600 bg-slate-800 text-emerald-600 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-0 disabled:opacity-50"
                                     />
-                                    <span className="text-sm font-bold text-slate-400">Mark as Verified</span>
+                                    <span className="text-sm font-bold text-slate-400">
+                                      {savingVerified.has(scan.id) ? 'Saving...' : 'Mark as Verified'}
+                                    </span>
                                   </label>
                                   <button 
                                     onClick={() => toggleScanExpand(scan.id)}
@@ -643,6 +728,9 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Auth Modal */}
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </div>
   );
 };

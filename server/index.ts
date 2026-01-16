@@ -174,6 +174,16 @@ app.post(
   }
 );
 
+// Import new routes
+import adminRoutes from './routes/admin.js';
+import verifiedRoutes from './routes/verified.js';
+
+// Admin routes (protected by secret token)
+app.use('/api/admin', adminRoutes);
+
+// Verified entries routes (protected by auth token)
+app.use('/api/verified', verifiedRoutes);
+
 // Serve frontend for all non-API routes (SPA routing)
 if (process.env.NODE_ENV === 'production') {
   app.get('*', (req, res) => {
