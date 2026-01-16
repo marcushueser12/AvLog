@@ -500,8 +500,7 @@ const App: React.FC = () => {
             )}
             <button 
               onClick={handleExportModalOpen}
-              disabled={exportableEntries.length === 0 && (!user || permanentLogScans.length === 0)}
-              className="px-5 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-30 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-500/20"
+              className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-500/20"
             >
               Export ForeFlight CSV {exportableEntries.length > 0 && `(${exportableEntries.length})`}
             </button>
@@ -901,8 +900,7 @@ const App: React.FC = () => {
             </div>
             <button 
               onClick={handleExport}
-              disabled={exportableEntries.length === 0 && selectedScansForExport.size === 0}
-              className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-30 text-white rounded-2xl font-black text-lg transition-all shadow-lg"
+              className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black text-lg transition-all shadow-lg"
             >
               Download .CSV for ForeFlight
             </button>
