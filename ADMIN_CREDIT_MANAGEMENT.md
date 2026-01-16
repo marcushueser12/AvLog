@@ -67,7 +67,7 @@ curl -X POST https://your-backend-url.railway.app/api/admin/grant-credits \
   }'
 ```
 
-**With Variables (Easier):**
+**With Variables (zsh-compatible):**
 ```bash
 # Set these variables
 API_URL="https://your-backend-url.railway.app"
@@ -75,15 +75,50 @@ ADMIN_TOKEN="your-secret-token-here"
 USER_EMAIL="user@example.com"
 CREDIT_AMOUNT=10
 
+# Run the command (zsh-compatible - using single quotes to avoid substitution issues)
+curl -X POST "${API_URL}/api/admin/grant-credits" \
+  -H "Content-Type: application/json" \
+  -H "x-admin-token: ${ADMIN_TOKEN}" \
+  -d "{\"userEmail\": \"${USER_EMAIL}\", \"amount\": ${CREDIT_AMOUNT}, \"reason\": \"Welcome bonus\"}"
+```
+
+**Alternative (using printf for better zsh compatibility):**
+```bash
+# Set these variables
+API_URL="https://your-backend-url.railway.app"
+ADMIN_TOKEN="your-secret-token-here"
+USER_EMAIL="user@example.com"
+CREDIT_AMOUNT=10
+
+# Build JSON using printf
+JSON_BODY=$(printf '{"userEmail": "%s", "amount": %d, "reason": "Welcome bonus"}' "$USER_EMAIL" "$CREDIT_AMOUNT")
+
 # Run the command
 curl -X POST "${API_URL}/api/admin/grant-credits" \
   -H "Content-Type: application/json" \
   -H "x-admin-token: ${ADMIN_TOKEN}" \
-  -d "{
-    \"userEmail\": \"${USER_EMAIL}\",
-    \"amount\": ${CREDIT_AMOUNT},
-    \"reason\": \"Welcome bonus\"
-  }"
+  -d "$JSON_BODY"
+```
+
+**Alternative (using jq - recommended if installed):**
+```bash
+# Set these variables
+API_URL="https://your-backend-url.railway.app"
+ADMIN_TOKEN="your-secret-token-here"
+USER_EMAIL="user@example.com"
+CREDIT_AMOUNT=10
+
+# Build JSON using jq (most reliable)
+JSON_BODY=$(jq -n \
+  --arg email "$USER_EMAIL" \
+  --argjson amount "$CREDIT_AMOUNT" \
+  '{userEmail: $email, amount: $amount, reason: "Welcome bonus"}')
+
+# Run the command
+curl -X POST "${API_URL}/api/admin/grant-credits" \
+  -H "Content-Type: application/json" \
+  -H "x-admin-token: ${ADMIN_TOKEN}" \
+  -d "$JSON_BODY"
 ```
 
 ### Method 2: Using JavaScript/Node.js
