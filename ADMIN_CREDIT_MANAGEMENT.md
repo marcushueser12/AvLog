@@ -419,11 +419,11 @@ curl -X POST "${API_URL}/api/admin/grant-credits" \
   }'
 ```
 
-### Bulk Grant (Bash Script)
+### Bulk Grant (zsh-compatible Script)
 
 **Save as `bulk-grant.sh`:**
 ```bash
-#!/bin/bash
+#!/bin/zsh
 
 API_URL="https://your-backend-url.railway.app"
 ADMIN_TOKEN="your-secret-token-here"
@@ -440,20 +440,21 @@ USERS=(
 for email in "${USERS[@]}"; do
   echo "Granting ${AMOUNT} credits to ${email}..."
   
+  # Build JSON using printf (zsh-compatible)
+  JSON_BODY=$(printf '{"userEmail": "%s", "amount": %d, "reason": "%s"}' "$email" "$AMOUNT" "$REASON")
+  
   curl -X POST "${API_URL}/api/admin/grant-credits" \
     -H "Content-Type: application/json" \
     -H "x-admin-token: ${ADMIN_TOKEN}" \
-    -d "{
-      \"userEmail\": \"${email}\",
-      \"amount\": ${AMOUNT},
-      \"reason\": \"${REASON}\"
-    }"
+    -d "$JSON_BODY"
   
-  echo -e "\n"
+  echo ""
 done
 
 echo "Done!"
 ```
+
+**Note:** If you're using bash instead of zsh, change `#!/bin/zsh` to `#!/bin/bash` and the script will work the same way.
 
 **Run it:**
 ```bash
