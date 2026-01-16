@@ -184,21 +184,40 @@ const PermanentLogTab: React.FC = () => {
         return;
       }
 
-      const response = await fetch(`${API_URL}/api/verified/update-scan`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          scanId,
-          entries: scanEntries
-        })
-      });
+      let response: Response;
+      try {
+        response = await fetch(`${API_URL}/api/verified/update-scan`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            scanId,
+            entries: scanEntries
+          })
+        });
+      } catch (networkError: any) {
+        console.error('Network error:', networkError);
+        throw new Error(`Network error: ${networkError.message || 'Failed to connect to server. Please check your connection and try again.'}`);
+      }
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || error.error || 'Failed to save changes');
+        let errorMessage = `Server error: ${response.status} ${response.statusText}`;
+        try {
+          const error = await response.json();
+          errorMessage = error.message || error.error || errorMessage;
+        } catch (jsonError) {
+          // Response might not be JSON, try to get text
+          try {
+            const text = await response.text();
+            if (text) errorMessage = text;
+          } catch (textError) {
+            // Fall back to status text
+            errorMessage = `Server error: ${response.status} ${response.statusText}`;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       // Update saved entries
