@@ -146,6 +146,124 @@ router.post('/save-scan', verifyAuth, async (req: AuthRequest, res) => {
 });
 
 /**
+ * PUT /api/verified/update-scan
+ * Update verified entries for a scan
+ * Requires: Authorization Bearer token
+ */
+router.put('/update-scan', verifyAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!;
+    const { scanId, entries } = req.body;
+
+    if (!scanId || !entries || !Array.isArray(entries)) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: scanId and entries array' 
+      });
+    }
+
+    // Verify the scan belongs to the user
+    const { data: scan, error: scanError } = await supabaseAdmin
+      .from('verified_scans')
+      .select('id')
+      .eq('id', scanId)
+      .eq('user_id', userId)
+      .single();
+
+    if (scanError || !scan) {
+      return res.status(404).json({ error: 'Scan not found or access denied' });
+    }
+
+    // Helper functions (same as save-scan)
+    const parseDate = (dateStr: string | null | undefined): string | null => {
+      if (!dateStr || dateStr.trim() === '') return null;
+      try {
+        const parsed = new Date(dateStr);
+        if (isNaN(parsed.getTime())) return null;
+        return parsed.toISOString().split('T')[0];
+      } catch {
+        return null;
+      }
+    };
+
+    const parseFloatOrNull = (value: string | null | undefined): number | null => {
+      if (!value || value.trim() === '') return null;
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? null : parsed;
+    };
+
+    // Delete all existing entries for this scan
+    const { error: deleteError } = await supabaseAdmin
+      .from('verified_entries')
+      .delete()
+      .eq('scan_id', scanId)
+      .eq('user_id', userId);
+
+    if (deleteError) {
+      console.error('Error deleting existing entries:', deleteError);
+      return res.status(500).json({ error: 'Failed to update entries' });
+    }
+
+    // Transform and insert updated entries
+    const dbEntries = entries.map((entry: LogbookEntry) => ({
+      user_id: userId,
+      scan_id: scanId,
+      date: parseDate(entry.date),
+      aircraft_id: entry.aircraftId?.trim() || null,
+      aircraft_type: entry.aircraftType?.trim() || null,
+      from_location: entry.from?.trim() || null,
+      to_location: entry.to?.trim() || null,
+      route: entry.route?.trim() || null,
+      total_time: parseFloatOrNull(entry.totalTime),
+      day: parseFloatOrNull(entry.day),
+      night: parseFloatOrNull(entry.night),
+      cross_country: entry.crossCountry?.trim() || null,
+      pic: entry.pic?.trim() || null,
+      sic: entry.sic?.trim() || null,
+      dual_received: entry.dualReceived?.trim() || null,
+      dual_given: entry.dualGiven?.trim() || null,
+      instrument: entry.instrument?.trim() || null,
+      simulated_instrument: entry.simulatedInstrument?.trim() || null,
+      approaches: entry.approaches?.trim() || null,
+      landings_day: entry.landingsDay?.trim() || null,
+      landings_night: entry.landingsNight?.trim() || null,
+      comments: entry.comments?.trim() || null,
+      is_verified: entry.isVerified ?? true,
+      ai_confidence: entry.aiConfidence || null,
+      reconciliation_confidence: entry.reconciliationConfidence || null,
+      uncertain_fields: entry.uncertainFields && entry.uncertainFields.length > 0 ? entry.uncertainFields : null,
+      row_anchor: entry.rowAnchor?.trim() || null
+    }));
+
+    // If we have entries to insert, do so
+    if (dbEntries.length > 0) {
+      const { error: insertError } = await supabaseAdmin
+        .from('verified_entries')
+        .insert(dbEntries);
+
+      if (insertError) {
+        console.error('Error inserting updated entries:', insertError);
+        console.error('Entries data that failed:', JSON.stringify(dbEntries, null, 2));
+        return res.status(500).json({ 
+          error: 'Failed to save updated entries',
+          message: insertError.message,
+          details: insertError.details
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      scanId,
+      entriesCount: dbEntries.length,
+      message: 'Successfully updated verified entries'
+    });
+  } catch (error: any) {
+    console.error('Update verified scan error:', error);
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
+/**
  * GET /api/verified/scans
  * Get all verified scans for the authenticated user
  */

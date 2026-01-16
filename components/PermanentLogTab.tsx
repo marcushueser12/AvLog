@@ -3,6 +3,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { LogbookEntry } from '../types';
 import { ICONS } from '../constants';
 import AuthModal from './AuthModal';
+import EntryEditor from './EntryEditor';
+import { reconcileFlightTimes, reconcileIFRData } from '../utils/logbookUtils';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -78,9 +80,15 @@ const PermanentLogTab: React.FC = () => {
       }
 
       const data = await response.json();
+      const loadedEntries = data.entries || [];
       setEntries(prev => ({
         ...prev,
-        [scanId]: data.entries || []
+        [scanId]: loadedEntries
+      }));
+      // Initialize editable entries (copy)
+      setEditableEntries(prev => ({
+        ...prev,
+        [scanId]: loadedEntries.map(e => ({ ...e }))
       }));
     } catch (error) {
       console.error('Error loading entries:', error);
@@ -92,11 +100,172 @@ const PermanentLogTab: React.FC = () => {
       const newSet = new Set(prev);
       if (newSet.has(scanId)) {
         newSet.delete(scanId);
+        // Exit edit mode when collapsing
+        setIsEditing(prev => {
+          const newEdit = { ...prev };
+          delete newEdit[scanId];
+          return newEdit;
+        });
       } else {
         newSet.add(scanId);
         loadScanEntries(scanId);
       }
       return newSet;
+    });
+  };
+
+  const handleEditScan = (scanId: string) => {
+    setIsEditing(prev => ({ ...prev, [scanId]: true }));
+    // Initialize editable entries from saved entries if not already set
+    if (!editableEntries[scanId] && entries[scanId]) {
+      setEditableEntries(prev => ({
+        ...prev,
+        [scanId]: entries[scanId].map(e => ({ ...e }))
+      }));
+    }
+  };
+
+  const handleCancelEdit = (scanId: string) => {
+    setIsEditing(prev => {
+      const newEdit = { ...prev };
+      delete newEdit[scanId];
+      return newEdit;
+    });
+    // Restore original entries
+    if (entries[scanId]) {
+      setEditableEntries(prev => ({
+        ...prev,
+        [scanId]: entries[scanId].map(e => ({ ...e }))
+      }));
+    }
+  };
+
+  const handleUpdateEntry = (scanId: string, entryId: string, field: keyof LogbookEntry, value: string) => {
+    setEditableEntries(prev => {
+      const scanEntries = prev[scanId] || [];
+      return {
+        ...prev,
+        [scanId]: scanEntries.map(e => {
+          if (e.id === entryId) {
+            let updatedEntry: LogbookEntry = { ...e, [field]: value };
+            
+            // Apply reconciliation logic
+            if (['totalTime', 'night', 'day'].includes(field)) {
+              updatedEntry = { ...updatedEntry, ...reconcileFlightTimes(updatedEntry) } as LogbookEntry;
+            }
+            
+            if (['totalTime', 'instrument', 'simulatedInstrument', 'approaches', 'comments'].includes(field)) {
+              updatedEntry = { ...updatedEntry, ...reconcileIFRData(updatedEntry) } as LogbookEntry;
+            }
+            
+            return updatedEntry;
+          }
+          return e;
+        })
+      };
+    });
+  };
+
+  const handleSaveScan = async (scanId: string) => {
+    if (!user) return;
+
+    const scanEntries = editableEntries[scanId] || [];
+    if (scanEntries.length === 0) return;
+
+    setSaving(prev => new Set(prev).add(scanId));
+
+    try {
+      const token = getAccessToken();
+      if (!token) {
+        setShowAuthModal(true);
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/api/verified/update-scan`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          scanId,
+          entries: scanEntries
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || error.error || 'Failed to save changes');
+      }
+
+      // Update saved entries
+      setEntries(prev => ({
+        ...prev,
+        [scanId]: scanEntries.map(e => ({ ...e }))
+      }));
+      
+      // Exit edit mode
+      setIsEditing(prev => {
+        const newEdit = { ...prev };
+        delete newEdit[scanId];
+        return newEdit;
+      });
+
+      alert('Changes saved successfully!');
+    } catch (error: any) {
+      console.error('Error saving scan:', error);
+      alert(`Failed to save changes: ${error.message}. Please try again.`);
+    } finally {
+      setSaving(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(scanId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleDeleteEntry = (scanId: string, entryId: string) => {
+    setEditableEntries(prev => {
+      const scanEntries = prev[scanId] || [];
+      return {
+        ...prev,
+        [scanId]: scanEntries.filter(e => e.id !== entryId)
+      };
+    });
+  };
+
+  const handleAddEntry = (scanId: string) => {
+    setEditableEntries(prev => {
+      const scanEntries = prev[scanId] || [];
+      const newEntry: LogbookEntry = {
+        id: `new-${Date.now()}`,
+        scanId,
+        date: scanEntries.length > 0 ? scanEntries[scanEntries.length - 1].date : new Date().toISOString().slice(0, 10),
+        aircraftId: '',
+        aircraftType: '',
+        from: '',
+        to: '',
+        route: '',
+        totalTime: '0.0',
+        day: '0.0',
+        night: '0.0',
+        crossCountry: '',
+        pic: '',
+        sic: '',
+        dualReceived: '',
+        dualGiven: '',
+        instrument: '',
+        simulatedInstrument: '',
+        approaches: '',
+        landingsDay: '',
+        landingsNight: '',
+        comments: '',
+        isVerified: true
+      };
+      return {
+        ...prev,
+        [scanId]: [...scanEntries, newEntry]
+      };
     });
   };
 
@@ -187,96 +356,132 @@ const PermanentLogTab: React.FC = () => {
           </p>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           {scans.map(scan => {
             const isExpanded = expandedScans.has(scan.id);
             const scanEntries = entries[scan.id] || [];
-            const entriesCount = scanEntries.length;
+            const currentEntries = isEditing[scan.id] ? (editableEntries[scan.id] || scanEntries) : scanEntries;
+            const entriesCount = currentEntries.length;
+            const isEditingScan = isEditing[scan.id] || false;
+            const isSavingScan = saving.has(scan.id);
 
             return (
-              <div key={scan.id} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+              <div key={scan.id} className="space-y-4">
                 {/* Header */}
-                <div 
-                  className="p-4 border-b border-slate-800 cursor-pointer hover:bg-slate-800/50 transition-colors"
-                  onClick={() => toggleScanExpand(scan.id)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400">
-                          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                        </svg>
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                  <div className="p-4 border-b border-slate-800">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-white">
+                            Page #{scan.page_number || 'N/A'}
+                            <span className="ml-2 text-slate-500 font-normal text-sm">
+                              ({scan.mode === 'single' ? 'Single Page' : 'Spread Pair'})
+                            </span>
+                          </h3>
+                          <p className="text-xs text-slate-500 mt-1">
+                            {entriesCount > 0 ? `${entriesCount} entries` : 'Loading...'} • {formatDate(scan.created_at)}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-bold text-white">
-                          Page #{scan.page_number || 'N/A'}
-                          <span className="ml-2 text-slate-500 font-normal text-sm">
-                            ({scan.mode === 'single' ? 'Single Page' : 'Spread Pair'})
-                          </span>
-                        </h3>
-                        <p className="text-xs text-slate-500 mt-1">
-                          {entriesCount > 0 ? `${entriesCount} entries` : 'Loading...'} • {formatDate(scan.created_at)}
-                        </p>
+                      <div className="flex items-center gap-3">
+                        {isExpanded && !isEditingScan && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditScan(scan.id);
+                            }}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-bold transition-all flex items-center gap-2"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                            Edit
+                          </button>
+                        )}
+                        {isEditingScan && (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCancelEdit(scan.id);
+                              }}
+                              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-sm font-bold transition-all"
+                              disabled={isSavingScan}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSaveScan(scan.id);
+                              }}
+                              disabled={isSavingScan}
+                              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-all flex items-center gap-2"
+                            >
+                              {isSavingScan ? (
+                                <>
+                                  <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
+                                  Saving...
+                                </>
+                              ) : (
+                                <>
+                                  <ICONS.Check />
+                                  Save Changes
+                                </>
+                              )}
+                            </button>
+                          </>
+                        )}
+                        <button
+                          onClick={() => toggleScanExpand(scan.id)}
+                          className="text-slate-500 hover:text-slate-300 transition-colors"
+                        >
+                          {isExpanded ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="18 15 12 9 6 15"/>
+                            </svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                          )}
+                        </button>
                       </div>
-                    </div>
-                    <div className="text-slate-500">
-                      {isExpanded ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="18 15 12 9 6 15"/>
-                        </svg>
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="6 9 12 15 18 9"/>
-                        </svg>
-                      )}
                     </div>
                   </div>
-                </div>
 
-                {/* Entries Table */}
-                {isExpanded && entriesCount > 0 && (
-                  <div className="p-4">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-slate-800">
-                            <th className="text-left py-3 px-4 text-slate-400 font-bold text-xs uppercase">Date</th>
-                            <th className="text-left py-3 px-4 text-slate-400 font-bold text-xs uppercase">Aircraft</th>
-                            <th className="text-left py-3 px-4 text-slate-400 font-bold text-xs uppercase">Route</th>
-                            <th className="text-right py-3 px-4 text-slate-400 font-bold text-xs uppercase">Total</th>
-                            <th className="text-right py-3 px-4 text-slate-400 font-bold text-xs uppercase">PIC</th>
-                            <th className="text-right py-3 px-4 text-slate-400 font-bold text-xs uppercase">Day</th>
-                            <th className="text-right py-3 px-4 text-slate-400 font-bold text-xs uppercase">Night</th>
-                            <th className="text-right py-3 px-4 text-slate-400 font-bold text-xs uppercase">XC</th>
-                            <th className="text-right py-3 px-4 text-slate-400 font-bold text-xs uppercase">Inst</th>
-                            <th className="text-right py-3 px-4 text-slate-400 font-bold text-xs uppercase">Approach</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {scanEntries.map((entry, idx) => (
-                            <tr key={entry.id || idx} className="border-b border-slate-800/50 hover:bg-slate-800/30">
-                              <td className="py-3 px-4 text-slate-300 font-mono text-xs">{entry.date || '-'}</td>
-                              <td className="py-3 px-4 text-slate-300">
-                                <div className="text-xs">{entry.aircraftId || '-'}</div>
-                                <div className="text-xs text-slate-500">{entry.aircraftType || ''}</div>
-                              </td>
-                              <td className="py-3 px-4 text-slate-300 text-xs">
-                                {entry.from && entry.to ? `${entry.from} → ${entry.to}` : entry.route || '-'}
-                              </td>
-                              <td className="py-3 px-4 text-right text-blue-400 font-mono text-xs">{entry.totalTime || '0.0'}</td>
-                              <td className="py-3 px-4 text-right text-slate-300 font-mono text-xs">{entry.pic || '-'}</td>
-                              <td className="py-3 px-4 text-right text-slate-300 font-mono text-xs">{entry.day || '0.0'}</td>
-                              <td className="py-3 px-4 text-right text-slate-300 font-mono text-xs">{entry.night || '0.0'}</td>
-                              <td className="py-3 px-4 text-right text-slate-300 font-mono text-xs">{entry.crossCountry || '-'}</td>
-                              <td className="py-3 px-4 text-right text-emerald-400 font-mono text-xs">{entry.instrument || '-'}</td>
-                              <td className="py-3 px-4 text-right text-amber-400 font-mono text-xs">{entry.approaches || '-'}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                  {/* EntryEditor when expanded */}
+                  {isExpanded && entriesCount > 0 && (
+                    <div className="p-4 border-t border-slate-800">
+                      <EntryEditor
+                        entries={currentEntries}
+                        images={[]} // No images stored - just data
+                        rotations={[0, 0]}
+                        onUpdate={(entryId, field, value) => {
+                          if (isEditingScan) {
+                            handleUpdateEntry(scan.id, entryId, field, value);
+                          }
+                        }}
+                        onDelete={(entryId) => {
+                          if (isEditingScan) {
+                            handleDeleteEntry(scan.id, entryId);
+                          }
+                        }}
+                        onAdd={() => {
+                          if (isEditingScan) {
+                            handleAddEntry(scan.id);
+                          }
+                        }}
+                      />
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             );
           })}
