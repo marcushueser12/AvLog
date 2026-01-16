@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide explains how to deploy the SkyScan Logbook application with its new backend architecture.
+This guide explains how to deploy the LogExtract Logbook application with its new backend architecture.
 
 ## Architecture Overview
 
@@ -111,7 +111,7 @@ ALLOWED_ORIGINS=https://yourdomain.com
 
 1. **Build the image:**
    ```bash
-   docker build -t skyscan-logbook .
+   docker build -t logextract-logbook .
    ```
 
 2. **Run the container:**
@@ -119,8 +119,8 @@ ALLOWED_ORIGINS=https://yourdomain.com
    docker run -d \
      -p 3001:3001 \
      -e GEMINI_API_KEY=your_api_key_here \
-     --name skyscan-logbook \
-     skyscan-logbook
+     --name logextract-logbook \
+     logextract-logbook
    ```
 
 ## Platform-Specific Deployment

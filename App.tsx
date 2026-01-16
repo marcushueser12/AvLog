@@ -268,7 +268,7 @@ const App: React.FC = () => {
           <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
             <ICONS.Plane />
           </div>
-          <span className="text-xl font-black text-white tracking-tighter">SkyScan</span>
+          <span className="text-xl font-black text-white tracking-tighter">LogExtract</span>
         </div>
 
         <nav className="flex-1 flex flex-col gap-2">

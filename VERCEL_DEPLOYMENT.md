@@ -1,6 +1,6 @@
 # Deploying to Vercel
 
-This guide covers deploying your SkyScan Logbook application to Vercel. Since you have a full-stack app with an Express backend, there are two main approaches:
+This guide covers deploying your LogExtract Logbook application to Vercel. Since you have a full-stack app with an Express backend, there are two main approaches:
 
 ## Option 1: Frontend on Vercel + Backend on Railway/Render (Recommended)
 

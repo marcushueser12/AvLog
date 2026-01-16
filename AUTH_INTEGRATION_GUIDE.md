@@ -1,6 +1,6 @@
 # Authentication Integration Guide
 
-This guide explains how to integrate Supabase or Firebase authentication into your SkyScan Logbook application.
+This guide explains how to integrate Supabase or Firebase authentication into your LogExtract Logbook application.
 
 ## Overview
 

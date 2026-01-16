@@ -10,9 +10,9 @@ const TutorialTab: React.FC = () => {
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/10 rounded-full border border-blue-500/20 text-blue-400 text-[10px] font-bold tracking-widest uppercase">
           Onboarding Guide
         </div>
-        <h1 className="text-4xl font-black text-white tracking-tight">Mastering SkyScan Logbook</h1>
+        <h1 className="text-4xl font-black text-white tracking-tight">Mastering LogExtract Logbook</h1>
         <p className="text-slate-400 text-lg leading-relaxed max-w-2xl">
-          SkyScan uses forensic-grade AI to interpret your handwriting. Follow this guide to ensure 100% accuracy and seamless imports into ForeFlight.
+          LogExtract uses forensic-grade AI to interpret your handwriting. Follow this guide to ensure 100% accuracy and seamless imports into ForeFlight.
         </p>
       </header>
 
@@ -47,7 +47,7 @@ const TutorialTab: React.FC = () => {
             <div className="p-6 bg-slate-800/30 border border-slate-800 rounded-2xl group hover:border-emerald-500/30 transition-all">
               <h3 className="text-emerald-400 font-bold mb-2">Forensic IFR Cross-check</h3>
               <p className="text-sm text-slate-400 leading-relaxed">
-                SkyScan doesn't just read columns; it reads your <strong>Remarks</strong>. If you mention "ILS", "IMC", or "Approaches" in your comments, the AI cross-references this with your IFR columns.
+                LogExtract doesn't just read columns; it reads your <strong>Remarks</strong>. If you mention "ILS", "IMC", or "Approaches" in your comments, the AI cross-references this with your IFR columns.
                 <br /><br />
                 <span className="text-[10px] font-bold text-slate-500 uppercase">RULE:</span> This logic is <strong>additive only</strong>. AI will never reduce your column values based on remarks.
               </p>
@@ -56,14 +56,14 @@ const TutorialTab: React.FC = () => {
             <div className="p-6 bg-slate-800/30 border border-slate-800 rounded-2xl group hover:border-blue-500/30 transition-all">
               <h3 className="text-blue-400 font-bold mb-2">Spread Stacking (Stitch Mode)</h3>
               <p className="text-sm text-slate-400 leading-relaxed">
-                Modern logbooks span two pages. Use "New Spread Pair" to upload both. SkyScan uses the <strong>Row Anchors</strong> (the printed numbers 1-30) to perfectly align left-side dates with right-side flight times.
+                Modern logbooks span two pages. Use "New Spread Pair" to upload both. LogExtract uses the <strong>Row Anchors</strong> (the printed numbers 1-30) to perfectly align left-side dates with right-side flight times.
               </p>
             </div>
 
             <div className="p-6 bg-slate-800/30 border border-slate-800 rounded-2xl group hover:border-amber-500/30 transition-all">
               <h3 className="text-amber-400 font-bold mb-2">Auto-Reconciliation</h3>
               <p className="text-sm text-slate-400 leading-relaxed">
-                When you edit a row, SkyScan automatically maintains the math:
+                When you edit a row, LogExtract automatically maintains the math:
                 <ul className="list-disc list-inside mt-2 space-y-1 text-xs">
                   <li>Day Time = Total Time - Night Time</li>
                   <li>Total Time Checksums are validated per-page.</li>

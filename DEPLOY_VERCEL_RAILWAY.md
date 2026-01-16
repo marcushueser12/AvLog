@@ -1,6 +1,6 @@
 # Deploy to Vercel + Railway - Step by Step Guide
 
-This guide will walk you through deploying your SkyScan Logbook app to Vercel (frontend) and Railway (backend).
+This guide will walk you through deploying your LogExtract Logbook app to Vercel (frontend) and Railway (backend).
 
 ## Prerequisites
 
@@ -200,7 +200,7 @@ Vercel creates preview URLs for every PR. To allow these:
 ### Vercel Custom Domain
 
 1. In Vercel dashboard → Your Project → Settings → Domains
-2. Add your custom domain (e.g., `skyscan.com`)
+2. Add your custom domain (e.g., `logextract.com`)
 3. Follow DNS setup instructions
 4. Update `ALLOWED_ORIGINS` in Railway to include your custom domain
 
