@@ -693,6 +693,8 @@ const App: React.FC = () => {
                 </section>
               )}
             </div>
+          ) : activeTab === 'permanent-log' ? (
+            <PermanentLogTab />
           ) : activeTab === 'tutorial' ? (
             <TutorialTab />
           ) : (
