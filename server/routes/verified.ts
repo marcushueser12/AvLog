@@ -71,6 +71,13 @@ router.post('/save-scan', verifyAuth, async (req: AuthRequest, res) => {
       return isNaN(parsed) ? null : parsed;
     };
 
+    // Helper function to parse integer, return null if invalid
+    const parseIntOrNull = (value: string | null | undefined): number | null => {
+      if (!value || value.trim() === '') return null;
+      const parsed = parseInt(value, 10);
+      return isNaN(parsed) ? null : parsed;
+    };
+
     // Transform entries to match database schema
     const dbEntries = entries.map((entry: LogbookEntry) => ({
       user_id: userId,
@@ -188,6 +195,12 @@ router.put('/update-scan', verifyAuth, async (req: AuthRequest, res) => {
     const parseFloatOrNull = (value: string | null | undefined): number | null => {
       if (!value || value.trim() === '') return null;
       const parsed = parseFloat(value);
+      return isNaN(parsed) ? null : parsed;
+    };
+
+    const parseIntOrNull = (value: string | null | undefined): number | null => {
+      if (!value || value.trim() === '') return null;
+      const parsed = parseInt(value, 10);
       return isNaN(parsed) ? null : parsed;
     };
 
