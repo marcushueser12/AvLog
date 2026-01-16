@@ -291,6 +291,57 @@ const PermanentLogTab: React.FC = () => {
     });
   };
 
+  const handleDeleteScan = async (scanId: string) => {
+    if (!user) return;
+    
+    if (!confirm('Are you sure you want to delete this verified scan and all its entries? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const token = getAccessToken();
+      if (!token) {
+        setShowAuthModal(true);
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/api/verified/scan/${scanId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || error.error || 'Failed to delete scan');
+      }
+
+      // Remove from local state
+      setScans(prev => prev.filter(s => s.id !== scanId));
+      setEntries(prev => {
+        const newEntries = { ...prev };
+        delete newEntries[scanId];
+        return newEntries;
+      });
+      setEditableEntries(prev => {
+        const newEntries = { ...prev };
+        delete newEntries[scanId];
+        return newEntries;
+      });
+      setExpandedScans(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(scanId);
+        return newSet;
+      });
+
+      alert('Scan deleted successfully');
+    } catch (error: any) {
+      console.error('Error deleting scan:', error);
+      alert(`Failed to delete scan: ${error.message}. Please try again.`);
+    }
+  };
+
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return 'N/A';
     try {

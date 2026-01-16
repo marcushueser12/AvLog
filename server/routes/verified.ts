@@ -488,4 +488,60 @@ router.post('/deduct-credits', verifyAuth, async (req: AuthRequest, res) => {
   }
 });
 
+/**
+ * DELETE /api/verified/scan/:scanId
+ * Delete a verified scan and all its entries
+ * Requires: Authorization Bearer token
+ */
+router.delete('/scan/:scanId', verifyAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!;
+    const { scanId } = req.params;
+
+    // Verify the scan belongs to the user
+    const { data: scan, error: scanError } = await supabaseAdmin
+      .from('verified_scans')
+      .select('id')
+      .eq('id', scanId)
+      .eq('user_id', userId)
+      .single();
+
+    if (scanError || !scan) {
+      return res.status(404).json({ error: 'Scan not found or access denied' });
+    }
+
+    // Delete all entries for this scan first (foreign key constraint)
+    const { error: entriesError } = await supabaseAdmin
+      .from('verified_entries')
+      .delete()
+      .eq('scan_id', scanId)
+      .eq('user_id', userId);
+
+    if (entriesError) {
+      console.error('Error deleting entries:', entriesError);
+      return res.status(500).json({ error: 'Failed to delete entries' });
+    }
+
+    // Delete the scan
+    const { error: deleteError } = await supabaseAdmin
+      .from('verified_scans')
+      .delete()
+      .eq('id', scanId)
+      .eq('user_id', userId);
+
+    if (deleteError) {
+      console.error('Error deleting scan:', deleteError);
+      return res.status(500).json({ error: 'Failed to delete scan' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Scan and entries deleted successfully'
+    });
+  } catch (error: any) {
+    console.error('Delete scan error:', error);
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
 export default router;

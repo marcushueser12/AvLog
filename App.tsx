@@ -120,7 +120,7 @@ const App: React.FC = () => {
     if (user) {
       loadUserCredits();
     } else {
-      setUserCredits(null);
+      setUserCredits(0); // Show 0 credits when not logged in
     }
   }, [user]);
 
@@ -155,14 +155,14 @@ const App: React.FC = () => {
   const processPendingScans = async () => {
     // Check if user is signed in
     if (!user) {
-      alert('Please sign in to scan pages. You need credits to perform scans.');
+      alert('You must be signed in to use the extraction feature. Please sign in to continue.');
       setShowAuthModal(true);
       return;
     }
 
     // Check if user has enough credits
     if (userCredits === null || userCredits < 1) {
-      alert('Insufficient credits. You need at least 1 credit to perform a scan.');
+      alert('No credits available. You need at least 1 credit to perform a scan.');
       return;
     }
 
@@ -571,15 +571,18 @@ const App: React.FC = () => {
               <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Calculated Total</span>
               <span className="text-sm font-mono text-blue-400 font-bold">{currentTotalTime.toFixed(1)} HRS</span>
             </div>
-            {user && (
+            {user ? (
               <div className="hidden md:flex items-center gap-3">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-600/10 rounded-xl border border-blue-600/20">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400">
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border ${userCredits === 0 ? 'bg-red-600/10 border-red-600/20' : 'bg-blue-600/10 border-blue-600/20'}`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={userCredits === 0 ? 'text-red-400' : 'text-blue-400'}>
                     <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
                   </svg>
-                  <span className="text-sm font-bold text-blue-400">
-                    {loadingCredits ? '...' : (userCredits !== null ? `${userCredits} Credit${userCredits !== 1 ? 's' : ''}` : 'Loading...')}
+                  <span className={`text-sm font-bold ${userCredits === 0 ? 'text-red-400' : 'text-blue-400'}`}>
+                    {loadingCredits ? '...' : `${userCredits} Credit${userCredits !== 1 ? 's' : ''}`}
                   </span>
+                  {userCredits === 0 && (
+                    <span className="text-xs text-red-400/80 ml-1">(No credits to scan)</span>
+                  )}
                 </div>
                 <div className="flex flex-col text-right">
                   <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Signed in as</span>
@@ -595,14 +598,21 @@ const App: React.FC = () => {
                   </svg>
                 </button>
               </div>
-            )}
-            {!user && (
-              <button
-                onClick={() => setShowAuthModal(true)}
-                className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-bold transition-all"
-              >
-                Sign In to Save
-              </button>
+            ) : (
+              <div className="hidden md:flex items-center gap-3">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                  </svg>
+                  <span className="text-sm font-bold text-slate-500">0 Credits</span>
+                </div>
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-bold transition-all"
+                >
+                  Sign In to Save
+                </button>
+              </div>
             )}
             <button 
               onClick={handleExportModalOpen}
