@@ -2,6 +2,21 @@
 import type { LogbookEntry } from "../types.js";
 
 /**
+ * Normalize date separators - converts any separator (., *, -, etc.) to "/"
+ * Examples: "8.5" -> "8/5", "12.10" -> "12/10", "12*10" -> "12/10"
+ */
+export const normalizeDateSeparator = (dateStr: string): string => {
+  if (!dateStr || typeof dateStr !== 'string') return dateStr;
+  
+  // If date already has "/" separator, return as-is
+  if (dateStr.includes('/')) return dateStr;
+  
+  // Replace common non-slash separators with "/"
+  // Handles: ., *, -, space, etc.
+  return dateStr.replace(/[.*\s\-]/g, '/');
+};
+
+/**
  * Reconciles day/night/total time based on the rule: 
  * Total Time = Day + Night
  * If night is blank/zero, day = totalTime.

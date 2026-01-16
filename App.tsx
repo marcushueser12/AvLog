@@ -8,7 +8,7 @@ import LandingPage from './components/LandingPage';
 import TutorialTab from './components/TutorialTab';
 import { extractLogbookEntriesFromPair, extractLogbookEntriesSingle } from './services/geminiService';
 import { generateForeFlightCSV, downloadCSV } from './utils/csvUtils';
-import { reconcileFlightTimes, reconcileIFRData } from './utils/logbookUtils';
+import { reconcileFlightTimes, reconcileIFRData, normalizeDateSeparator } from './utils/logbookUtils';
 import { getExifOrientation } from './utils/exifUtils';
 
 const App: React.FC = () => {
@@ -122,7 +122,11 @@ const App: React.FC = () => {
           result = await extractLogbookEntriesFromPair(scan.images[0], scan.images[1], scan.expectedEntries);
         }
 
-        const entriesWithScanRef = result.entries.map((e: any) => ({ ...e, scanId: scan.id }));
+        const entriesWithScanRef = result.entries.map((e: any) => {
+          // Normalize date separator (e.g., "8.5" -> "8/5", "12*10" -> "12/10")
+          const normalizedDate = normalizeDateSeparator(e.date || '');
+          return { ...e, scanId: scan.id, date: normalizedDate };
+        });
         
         setEntries(prev => [...prev, ...entriesWithScanRef]);
         
