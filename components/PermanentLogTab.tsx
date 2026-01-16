@@ -22,6 +22,9 @@ const PermanentLogTab: React.FC = () => {
   const [scans, setScans] = useState<VerifiedScan[]>([]);
   const [selectedScan, setSelectedScan] = useState<string | null>(null);
   const [entries, setEntries] = useState<Record<string, LogbookEntry[]>>({});
+  const [editableEntries, setEditableEntries] = useState<Record<string, LogbookEntry[]>>({});
+  const [isEditing, setIsEditing] = useState<Record<string, boolean>>({});
+  const [saving, setSaving] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [expandedScans, setExpandedScans] = useState<Set<string>>(new Set());
