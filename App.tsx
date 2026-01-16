@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { LogbookEntry, ScanDocument, ScanMode, AppTab, PageTotals } from './types';
 import { ICONS } from './constants';
 import EntryEditor from './components/EntryEditor';
@@ -32,6 +32,8 @@ const App: React.FC = () => {
   const [permanentLogEntries, setPermanentLogEntries] = useState<Record<string, LogbookEntry[]>>({});
   const [selectedScansForExport, setSelectedScansForExport] = useState<Set<string>>(new Set());
   const [loadingPermanentLog, setLoadingPermanentLog] = useState(false);
+  const [userCredits, setUserCredits] = useState<number | null>(null);
+  const [loadingCredits, setLoadingCredits] = useState(false);
 
   const handleSignIn = (tab: AppTab = 'dashboard') => {
     setView('app');
@@ -113,7 +115,57 @@ const App: React.FC = () => {
     }));
   };
 
+  // Load user credits when user changes
+  useEffect(() => {
+    if (user) {
+      loadUserCredits();
+    } else {
+      setUserCredits(null);
+    }
+  }, [user]);
+
+  const loadUserCredits = async () => {
+    if (!user) {
+      setUserCredits(null);
+      return;
+    }
+
+    setLoadingCredits(true);
+    try {
+      const token = getAccessToken();
+      if (!token) return;
+
+      const response = await fetch(`${API_URL}/api/verified/credits`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUserCredits(data.credits || 0);
+      }
+    } catch (error) {
+      console.error('Error loading credits:', error);
+    } finally {
+      setLoadingCredits(false);
+    }
+  };
+
   const processPendingScans = async () => {
+    // Check if user is signed in
+    if (!user) {
+      alert('Please sign in to scan pages. You need credits to perform scans.');
+      setShowAuthModal(true);
+      return;
+    }
+
+    // Check if user has enough credits
+    if (userCredits === null || userCredits < 1) {
+      alert('Insufficient credits. You need at least 1 credit to perform a scan.');
+      return;
+    }
+
     const readyScans = scans.filter(s => 
       s.status === 'pending' && 
       (s.mode === 'single' ? s.images.length >= 1 : s.images.length === 2)
@@ -121,12 +173,46 @@ const App: React.FC = () => {
     
     if (readyScans.length === 0) return;
 
+    // Check if we have enough credits for all scans
+    if (userCredits < readyScans.length) {
+      alert(`Insufficient credits. You need ${readyScans.length} credit${readyScans.length > 1 ? 's' : ''} but only have ${userCredits}.`);
+      return;
+    }
+
     setIsBatchProcessing(true);
 
     for (const scan of readyScans) {
       setScans(prev => prev.map(s => s.id === scan.id ? { ...s, status: 'processing' } : s));
 
       try {
+        // Deduct 1 credit for this scan (before processing)
+        const token = getAccessToken();
+        if (!token) {
+          setScans(prev => prev.map(s => s.id === scan.id ? { ...s, status: 'error', error: 'Authentication required' } : s));
+          continue;
+        }
+
+        const deductResponse = await fetch(`${API_URL}/api/verified/deduct-credits`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            amount: 1,
+            reason: `Scan extraction - ${scan.mode === 'single' ? 'single page' : 'spread pair'}`
+          })
+        });
+
+        if (!deductResponse.ok) {
+          const errorData = await deductResponse.json();
+          throw new Error(errorData.message || errorData.error || 'Failed to deduct credits');
+        }
+
+        const deductData = await deductResponse.json();
+        setUserCredits(deductData.newBalance);
+
+        // Now process the scan
         let result;
         if (scan.mode === 'single') {
           result = await extractLogbookEntriesSingle(scan.images[0], scan.expectedEntries);
@@ -156,13 +242,25 @@ const App: React.FC = () => {
             isVerified: false
           } : s);
         });
-      } catch (err) {
+      } catch (err: any) {
         console.error("Extraction error:", err);
-        setScans(prev => prev.map(s => s.id === scan.id ? { ...s, status: 'error', error: 'Extraction failed' } : s));
+        const errorMessage = err.message || 'Extraction failed';
+        setScans(prev => prev.map(s => s.id === scan.id ? { ...s, status: 'error', error: errorMessage } : s));
+        
+        // Show error to user
+        if (errorMessage.includes('credit')) {
+          alert(errorMessage);
+        } else {
+          alert(`Scan failed: ${errorMessage}`);
+        }
       }
     }
 
     setIsBatchProcessing(false);
+    // Reload credits after processing
+    if (user) {
+      loadUserCredits();
+    }
   };
 
   const handleVerifyScan = async (scanId: string, verified: boolean) => {
@@ -475,6 +573,14 @@ const App: React.FC = () => {
             </div>
             {user && (
               <div className="hidden md:flex items-center gap-3">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-600/10 rounded-xl border border-blue-600/20">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                  </svg>
+                  <span className="text-sm font-bold text-blue-400">
+                    {loadingCredits ? '...' : (userCredits !== null ? `${userCredits} Credit${userCredits !== 1 ? 's' : ''}` : 'Loading...')}
+                  </span>
+                </div>
                 <div className="flex flex-col text-right">
                   <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Signed in as</span>
                   <span className="text-sm text-slate-400 font-bold">{user.email}</span>
@@ -534,8 +640,9 @@ const App: React.FC = () => {
                     <div className="w-[1px] bg-slate-800 h-8 mx-1 hidden lg:block"></div>
                     <button 
                       onClick={processPendingScans}
-                      disabled={isBatchProcessing || !scans.some(s => s.status === 'pending' && (s.mode === 'single' ? s.images.length >= 1 : s.images.length === 2))}
-                      className="flex items-center gap-2 px-6 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-30 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-500/20"
+                      disabled={isBatchProcessing || !user || (userCredits !== null && userCredits < 1) || !scans.some(s => s.status === 'pending' && (s.mode === 'single' ? s.images.length >= 1 : s.images.length === 2))}
+                      className="flex items-center gap-2 px-6 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-500/20"
+                      title={!user ? 'Sign in required' : (userCredits !== null && userCredits < 1) ? 'Insufficient credits' : 'Start extraction (1 credit per scan)'}
                     >
                       {isBatchProcessing ? (
                         <><span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></span> Reconciling...</>

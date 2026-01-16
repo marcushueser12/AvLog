@@ -373,4 +373,119 @@ router.get('/entries/:scanId', verifyAuth, async (req: AuthRequest, res) => {
   }
 });
 
+/**
+ * GET /api/verified/credits
+ * Get user credit balance
+ * Requires: Authorization Bearer token
+ */
+router.get('/credits', verifyAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!;
+
+    const { data: profile, error } = await supabaseAdmin
+      .from('user_profiles')
+      .select('credits')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // Profile doesn't exist yet, return default credits
+        return res.json({ credits: 0 });
+      }
+      console.error('Error fetching credits:', error);
+      return res.status(500).json({ error: 'Failed to fetch credits' });
+    }
+
+    res.json({ credits: profile?.credits || 0 });
+  } catch (error: any) {
+    console.error('Get credits error:', error);
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
+/**
+ * POST /api/verified/deduct-credits
+ * Deduct credits for a scan (1 credit per scan, single or spread)
+ * Requires: Authorization Bearer token
+ * Body: { amount: number (optional, defaults to 1), reason?: string }
+ */
+router.post('/deduct-credits', verifyAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!;
+    const { amount = 1, reason } = req.body;
+
+    if (typeof amount !== 'number' || amount <= 0) {
+      return res.status(400).json({ error: 'Amount must be a positive number' });
+    }
+
+    // Get current credits
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from('user_profiles')
+      .select('credits')
+      .eq('user_id', userId)
+      .single();
+
+    if (profileError && profileError.code !== 'PGRST116') {
+      console.error('Error fetching profile:', profileError);
+      return res.status(500).json({ error: 'Failed to fetch user profile' });
+    }
+
+    const currentCredits = profile?.credits || 0;
+
+    if (currentCredits < amount) {
+      return res.status(400).json({ 
+        error: 'Insufficient credits',
+        currentCredits,
+        required: amount,
+        message: `You need ${amount} credit${amount > 1 ? 's' : ''} but only have ${currentCredits}.`
+      });
+    }
+
+    const newCredits = currentCredits - amount;
+
+    // Update credits
+    const { error: updateError } = await supabaseAdmin
+      .from('user_profiles')
+      .upsert({
+        user_id: userId,
+        credits: newCredits,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'user_id'
+      });
+
+    if (updateError) {
+      console.error('Error updating credits:', updateError);
+      return res.status(500).json({ error: 'Failed to deduct credits' });
+    }
+
+    // Log transaction
+    const { error: transactionError } = await supabaseAdmin
+      .from('credit_transactions')
+      .insert({
+        user_id: userId,
+        amount: -amount, // Negative for deduction
+        type: 'scan_deduction',
+        description: reason || `Used ${amount} credit${amount > 1 ? 's' : ''} for scan extraction`
+      });
+
+    if (transactionError) {
+      console.error('Error logging transaction:', transactionError);
+      // Don't fail the request if logging fails
+    }
+
+    res.json({
+      success: true,
+      previousBalance: currentCredits,
+      creditsDeducted: amount,
+      newBalance: newCredits,
+      message: `Successfully deducted ${amount} credit${amount > 1 ? 's' : ''}`
+    });
+  } catch (error: any) {
+    console.error('Deduct credits error:', error);
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
 export default router;
