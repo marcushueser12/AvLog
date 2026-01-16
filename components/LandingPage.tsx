@@ -219,7 +219,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             <p>© {new Date().getFullYear()} LogExtract Technologies. All rights reserved.</p>
         </div>
       </footer>
-      </main>
 
       {/* Auth Modal */}
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
