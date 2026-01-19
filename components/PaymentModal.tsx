@@ -76,6 +76,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSuccess 
       const data = await response.json();
       
       // Redirect to Stripe Checkout
+      // Note: Scans and entries are automatically saved to localStorage via useEffect in App.tsx
+      // They will be restored when the user returns from payment
       if (data.url) {
         window.location.href = data.url;
       } else {

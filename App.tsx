@@ -21,8 +21,30 @@ const App: React.FC = () => {
   const { user, loading: authLoading, getAccessToken, signOut } = useAuth();
   const [view, setView] = useState<'landing' | 'app'>('landing');
   const [activeTab, setActiveTab] = useState<AppTab>('dashboard');
-  const [scans, setScans] = useState<ScanDocument[]>([]);
-  const [entries, setEntries] = useState<LogbookEntry[]>([]);
+  
+  // Load scans and entries from localStorage on mount
+  const loadFromLocalStorage = (): { scans: ScanDocument[], entries: LogbookEntry[] } => {
+    try {
+      const savedScans = localStorage.getItem('logextract_scans');
+      const savedEntries = localStorage.getItem('logextract_entries');
+      
+      if (savedScans) {
+        const parsedScans = JSON.parse(savedScans);
+        // Filter out verified scans (they're saved to database)
+        return {
+          scans: parsedScans.filter((s: ScanDocument) => s.status !== 'verified'),
+          entries: savedEntries ? JSON.parse(savedEntries).filter((e: LogbookEntry) => !e.isVerified) : []
+        };
+      }
+    } catch (error) {
+      console.error('Error loading from localStorage:', error);
+    }
+    return { scans: [], entries: [] };
+  };
+
+  const { scans: initialScans, entries: initialEntries } = loadFromLocalStorage();
+  const [scans, setScans] = useState<ScanDocument[]>(initialScans);
+  const [entries, setEntries] = useState<LogbookEntry[]>(initialEntries);
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
   const [exportName, setExportName] = useState<string>(`Logbook_Export_${new Date().toISOString().slice(0, 10)}`);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -117,12 +139,75 @@ const App: React.FC = () => {
     }));
   };
 
-  // Load user credits when user changes
+  // Save scans and entries to localStorage whenever they change
+  useEffect(() => {
+    try {
+      // Only save non-verified scans and entries
+      const unverifiedScans = scans.filter(s => s.status !== 'verified');
+      const unverifiedEntries = entries.filter(e => !e.isVerified);
+      
+      if (unverifiedScans.length > 0 || unverifiedEntries.length > 0) {
+        localStorage.setItem('logextract_scans', JSON.stringify(unverifiedScans));
+        localStorage.setItem('logextract_entries', JSON.stringify(unverifiedEntries));
+      } else {
+        // Clear localStorage if all scans are verified
+        localStorage.removeItem('logextract_scans');
+        localStorage.removeItem('logextract_entries');
+      }
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
+  }, [scans, entries]);
+
+  // Check for payment success redirect and reload credits
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+    
+    if (sessionId && user) {
+      // Payment successful, reload credits
+      // Using setTimeout to ensure user state is fully loaded
+      setTimeout(() => {
+        loadUserCredits();
+      }, 500);
+      
+      // Clean up URL by removing query params
+      window.history.replaceState({}, '', window.location.pathname);
+      
+      // Show success message (you could replace console.log with a toast notification)
+      console.log('Payment successful! Credits have been added to your account.');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]); // Only depend on user, loadUserCredits is stable
+
+  // Load user credits when user changes, and handle user switching
   useEffect(() => {
     if (user) {
+      // Check if localStorage has data from a different user
+      try {
+        const savedUserId = localStorage.getItem('logextract_user_id');
+        if (savedUserId && savedUserId !== user.id) {
+          // Different user, clear old data
+          localStorage.removeItem('logextract_scans');
+          localStorage.removeItem('logextract_entries');
+          setScans([]);
+          setEntries([]);
+        }
+        // Store current user ID
+        localStorage.setItem('logextract_user_id', user.id);
+      } catch (error) {
+        console.error('Error checking user ID in localStorage:', error);
+      }
+      
       loadUserCredits();
     } else {
       setUserCredits(0); // Show 0 credits when not logged in
+      // Clear user ID from localStorage when signed out
+      try {
+        localStorage.removeItem('logextract_user_id');
+      } catch (error) {
+        console.error('Error clearing user ID from localStorage:', error);
+      }
     }
   }, [user]);
 
@@ -466,8 +551,20 @@ const App: React.FC = () => {
   };
 
   const handleSignOut = async () => {
+    // Clear localStorage on sign out (scans are tied to session)
+    try {
+      localStorage.removeItem('logextract_scans');
+      localStorage.removeItem('logextract_entries');
+      localStorage.removeItem('logextract_user_id');
+    } catch (error) {
+      console.error('Error clearing localStorage:', error);
+    }
+    
     await signOut();
     setView('landing');
+    // Reset state
+    setScans([]);
+    setEntries([]);
   };
 
   // Grouping logic for the verification queue (Completed but not yet Verified)
