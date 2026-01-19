@@ -28,7 +28,8 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-resizable-panels": "^4.4.0",
-    "sharp": "^0.33.0"
+    "sharp": "^0.33.0",
+    "stripe": "^17.7.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

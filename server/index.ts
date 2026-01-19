@@ -37,7 +37,15 @@ app.use(securityLogger);
 app.options('*', cors(corsOptions));
 
 // Body parsing with size limits
-app.use(express.json({ limit: '50mb' }));
+// Note: Webhook route uses raw body, so we need to exclude it from JSON parsing
+app.use((req, res, next) => {
+  if (req.path === '/api/payments/webhook') {
+    // Skip JSON parsing for webhook - it needs raw body
+    next();
+  } else {
+    express.json({ limit: '50mb' })(req, res, next);
+  }
+});
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Serve static files from the frontend build in production
@@ -177,12 +185,16 @@ app.post(
 // Import new routes
 import adminRoutes from './routes/admin.js';
 import verifiedRoutes from './routes/verified.js';
+import paymentRoutes from './routes/payments.js';
 
 // Admin routes (protected by secret token)
 app.use('/api/admin', adminRoutes);
 
 // Verified entries routes (protected by auth token)
 app.use('/api/verified', verifiedRoutes);
+
+// Payment routes (checkout session requires auth, webhook is public)
+app.use('/api/payments', paymentRoutes);
 
 // Serve frontend for all non-API routes (SPA routing)
 if (process.env.NODE_ENV === 'production') {

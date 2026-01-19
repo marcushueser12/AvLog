@@ -7,7 +7,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- User profiles (extends auth.users)
 CREATE TABLE IF NOT EXISTS user_profiles (
   user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  credits INTEGER DEFAULT 10 NOT NULL, -- Starting credits for new users
+  credits INTEGER DEFAULT 3 NOT NULL, -- Starting credits for new users
   plan_type TEXT DEFAULT 'free' NOT NULL, -- 'free', 'basic', 'premium'
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
