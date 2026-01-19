@@ -17,6 +17,26 @@ export const normalizeDateSeparator = (dateStr: string): string => {
 };
 
 /**
+ * Convert date from DD/MM format to MM/DD format
+ * Examples: "25/12" -> "12/25", "01/05" -> "05/01"
+ */
+export const convertDDMMtoMMDD = (dateStr: string): string => {
+  if (!dateStr || typeof dateStr !== 'string') return dateStr;
+  
+  // Only process dates with "/" separator and two parts
+  const parts = dateStr.trim().split('/');
+  if (parts.length !== 2) return dateStr;
+  
+  const [first, second] = parts;
+  
+  // If either part is not numeric, don't convert
+  if (!/^\d+$/.test(first) || !/^\d+$/.test(second)) return dateStr;
+  
+  // Swap the parts: DD/MM -> MM/DD
+  return `${second}/${first}`;
+};
+
+/**
  * Reconciles day/night/total time based on the rule: 
  * Total Time = Day + Night
  * If night is blank/zero, day = totalTime.

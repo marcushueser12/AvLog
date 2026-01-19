@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { LogbookEntry } from '../types';
 import { ICONS } from '../constants';
 import ImageViewer, { ImageViewerHandle } from './ImageViewer';
+import { convertDDMMtoMMDD } from '../utils/logbookUtils';
 
 interface EntryEditorProps {
   entries: LogbookEntry[];
@@ -25,12 +26,32 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const imageViewerRef = useRef<ImageViewerHandle>(null);
   const isSyncingRef = useRef(false);
+  const [dateFormat, setDateFormat] = useState<'MM/DD' | 'DD/MM'>('MM/DD');
 
   const sumTotal = entries.reduce((acc, e) => acc + (parseFloat(e.totalTime) || 0), 0);
   const sumPIC = entries.reduce((acc, e) => acc + (parseFloat(e.pic) || 0), 0);
   const sumInst = entries.reduce((acc, e) => acc + (parseFloat(e.instrument) || 0), 0);
   const sumSim = entries.reduce((acc, e) => acc + (parseFloat(e.simulatedInstrument) || 0), 0);
   const sumAppr = entries.reduce((acc, e) => acc + (parseInt(e.approaches) || 0), 0);
+
+  // Handle date format conversion
+  // Dates are always stored in MM/DD format. This dropdown lets users indicate
+  // if their dates were originally written in DD/MM format so we can convert them.
+  const handleDateFormatChange = (newFormat: 'MM/DD' | 'DD/MM') => {
+    if (newFormat === 'DD/MM' && dateFormat === 'MM/DD') {
+      // User indicates dates were originally written as DD/MM, convert all dates to MM/DD (US standard)
+      entries.forEach(entry => {
+        if (entry.date && entry.date.includes('/')) {
+          const converted = convertDDMMtoMMDD(entry.date);
+          if (converted !== entry.date) {
+            onUpdate(entry.id, 'date', converted);
+          }
+        }
+      });
+    }
+    // If changing back to MM/DD, no conversion needed (dates should already be in MM/DD)
+    setDateFormat(newFormat);
+  };
 
   // Sync table scroll to images
   const handleTableScroll = useCallback(() => {
@@ -52,6 +73,26 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
 
   return (
     <div className="bg-slate-900 rounded-xl overflow-hidden border border-slate-800 shadow-2xl flex flex-col">
+      {/* Date Format Selector */}
+      <div className="px-6 py-3 bg-slate-800/50 border-b border-slate-800 flex items-center justify-between">
+        <div className="flex items-center gap-3 flex-wrap">
+          <label className="text-xs text-slate-400 font-semibold uppercase tracking-wide">
+            If dates were not written in MM/DD format:
+          </label>
+          <select
+            value={dateFormat}
+            onChange={(e) => handleDateFormatChange(e.target.value as 'MM/DD' | 'DD/MM')}
+            className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg text-sm font-semibold text-white cursor-pointer outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+          >
+            <option value="MM/DD">MM/DD (Default - No conversion needed)</option>
+            <option value="DD/MM">DD/MM (Convert to MM/DD)</option>
+          </select>
+          <span className="text-xs text-slate-500">
+            Dates will be converted to MM/DD (US standard) format
+          </span>
+        </div>
+      </div>
+      
       {/* Table */}
       <div 
         ref={tableScrollRef}
@@ -65,7 +106,6 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
               <th className="px-3 py-4 w-12 sticky left-12 bg-slate-800 z-40 border-r border-slate-700 text-center">Sync</th>
               <th className="px-3 py-4 w-32 sticky left-24 bg-slate-800 z-30 border-r border-slate-700">Date</th>
               <th className="px-3 py-4 w-32 sticky left-56 bg-slate-800 z-30 border-r border-slate-700 shadow-[4px_0_8px_rgba(0,0,0,0.3)]">Tail #</th>
-              <th className="px-3 py-4 w-32">Comments / Remarks</th>
               <th className="px-3 py-4 w-24">From</th>
               <th className="px-3 py-4 w-24">To</th>
               <th className="px-3 py-4 w-24 text-blue-400">Total</th>
@@ -83,6 +123,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
               <th className="px-3 py-4 w-20 text-amber-400 bg-amber-400/5">Appr</th>
               <th className="px-3 py-4 w-20">Lnd D</th>
               <th className="px-3 py-4 w-20">Lnd N</th>
+              <th className="px-3 py-4 w-32">Comments / Remarks</th>
               <th className="px-3 py-4 w-16 text-center sticky right-0 bg-slate-800 z-30 border-l border-slate-700 shadow-[-4px_0_8px_rgba(0,0,0,0.3)]">Actions</th>
             </tr>
           </thead>
@@ -127,15 +168,6 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.aircraftId}
                       onChange={(e) => onUpdate(entry.id, 'aircraftId', e.target.value)}
                       className={getFieldClass(entry, 'aircraftId', "bg-transparent hover:border-slate-700 focus:border-blue-500 rounded px-2 py-1.5 w-full outline-none text-xs font-bold uppercase")}
-                    />
-                  </td>
-                  <td className="p-1">
-                    <input 
-                      type="text" 
-                      value={entry.comments} 
-                      placeholder="Remarks..."
-                      onChange={(e) => onUpdate(entry.id, 'comments', e.target.value)} 
-                      className={getFieldClass(entry, 'comments', "bg-transparent w-full outline-none text-xs px-2 py-1.5 rounded truncate focus:bg-slate-800")} 
                     />
                   </td>
                   <td className="p-1">
@@ -258,6 +290,15 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       className={getFieldClass(entry, 'landingsNight', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
                     />
                   </td>
+                  <td className="p-1">
+                    <input 
+                      type="text" 
+                      value={entry.comments} 
+                      placeholder="Remarks..."
+                      onChange={(e) => onUpdate(entry.id, 'comments', e.target.value)} 
+                      className={getFieldClass(entry, 'comments', "bg-transparent w-full outline-none text-xs px-2 py-1.5 rounded truncate focus:bg-slate-800")} 
+                    />
+                  </td>
                   <td className="px-2 py-2 text-center sticky right-0 bg-slate-900 group-hover:bg-slate-800 z-20 border-l border-slate-700 shadow-[-4px_0_8px_rgba(0,0,0,0.3)]">
                     <button onClick={() => onDelete(entry.id)} className="p-2 text-slate-500 hover:text-red-400 transition-colors"><ICONS.Trash /></button>
                   </td>
@@ -267,7 +308,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
             
             <tr className="bg-slate-950/90 font-mono text-[11px] border-t-2 border-slate-700 shadow-inner">
                 <td colSpan={2} className="p-3 sticky left-0 bg-slate-950 z-40 border-r border-slate-700 text-center text-slate-500 uppercase font-black tracking-tighter">OCR</td>
-                <td colSpan={3} className="p-3 sticky left-24 bg-slate-950 z-30 border-r border-slate-700 text-slate-400 font-bold uppercase tracking-tight">Digital Sync Checks</td>
+                <td colSpan={2} className="p-3 sticky left-24 bg-slate-950 z-30 border-r border-slate-700 text-slate-400 font-bold uppercase tracking-tight">Digital Sync Checks</td>
                 <td colSpan={2} className="px-3 py-3"></td>
                 <td className="p-3 text-center text-blue-400 font-bold bg-blue-500/10 border-r border-slate-800 ring-1 ring-inset ring-blue-500/20">{sumTotal.toFixed(1)}</td>
                 <td className="w-10"></td>
