@@ -20,14 +20,14 @@ const PRICING_TIERS = {
   },
   commercial: {
     name: 'Commercial Pack',
-    price: 6500, // $65.00 in cents
-    credits: 100,
+    price: 1625, // $16.25 in cents ($0.65 per credit)
+    credits: 25,
     description: 'Ideal for commercial pilots and flight schools'
   },
   atp: {
     name: 'ATP Pack',
-    price: 15000, // $150.00 in cents
-    credits: 300,
+    price: 5000, // $50.00 in cents ($0.50 per credit)
+    credits: 100,
     description: 'Best value for ATP and professional pilots'
   }
 };

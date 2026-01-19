@@ -7,8 +7,8 @@ This guide explains how to integrate Stripe payments for purchasing credits in L
 The integration uses **Stripe Checkout** (prebuilt hosted payment pages) for secure, PCI-compliant credit purchases. Users can buy credits through three pricing tiers:
 
 - **Private Pack**: $8 for 10 credits
-- **Commercial Pack**: $65 for 100 credits  
-- **ATP Pack**: $150 for 300 credits
+- **Commercial Pack**: $16.25 for 25 credits ($0.65 per credit)
+- **ATP Pack**: $50 for 100 credits ($0.50 per credit)
 
 ---
 
@@ -200,8 +200,8 @@ Stripe webhook endpoint (called by Stripe, not your frontend).
 | Package | Price | Credits | Price per Credit |
 |---------|-------|---------|------------------|
 | Private Pack | $8 | 10 | $0.80 |
-| Commercial Pack | $65 | 100 | $0.65 |
-| ATP Pack | $150 | 300 | $0.50 |
+| Commercial Pack | $16.25 | 25 | $0.65 |
+| ATP Pack | $50 | 100 | $0.50 |
 
 ---
 
@@ -368,8 +368,8 @@ Monitor payments in Stripe Dashboard:
 │                                                         │
 │  Pricing Tiers:                                         │
 │  - Private: $8 for 10 credits                          │
-│  - Commercial: $65 for 100 credits                      │
-│  - ATP: $150 for 300 credits                           │
+│  - Commercial: $16.25 for 25 credits                    │
+│  - ATP: $50 for 100 credits                            │
 │                                                         │
 │  Endpoints:                                             │
 │  - POST /api/payments/create-checkout-session         │

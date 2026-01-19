@@ -20,15 +20,15 @@ const PRICING_TIERS = {
   },
   commercial: {
     name: 'Commercial Pack',
-    price: 65,
-    credits: 100,
+    price: 16.25,
+    credits: 25,
     description: 'Ideal for commercial pilots and flight schools',
     popular: true
   },
   atp: {
     name: 'ATP Pack',
-    price: 150,
-    credits: 300,
+    price: 50,
+    credits: 100,
     description: 'Best value for ATP and professional pilots',
     popular: false
   }
