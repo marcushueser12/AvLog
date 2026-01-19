@@ -554,82 +554,89 @@ const App: React.FC = () => {
       </aside>
 
       <main className="flex-1 flex flex-col min-w-0 bg-[#0f172a]">
-        <header className="h-16 px-8 border-b border-slate-800 flex items-center justify-between bg-slate-900/30 backdrop-blur-xl sticky top-0 z-20 shrink-0">
-          <div className="flex items-center gap-4">
-            <h2 className="text-lg font-bold text-white">
+        <header className="h-14 px-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/30 backdrop-blur-xl sticky top-0 z-20 shrink-0">
+          <div className="flex items-center gap-3">
+            <h2 className="text-base font-bold text-white">
               {activeTab === 'dashboard' ? 'Logbook Digitizer' : 
                activeTab === 'permanent-log' ? 'Permanent Log' :
                activeTab === 'tutorial' ? 'Tutorial & Documentation' : 
                activeTab === 'aircraft' ? 'Aircraft Management' : 'Pilot Statistics'}
             </h2>
-            <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 rounded-full border border-emerald-500/20 text-emerald-400 text-[10px] font-bold">
+            <div className="hidden md:flex items-center gap-2 px-2.5 py-1 bg-emerald-500/10 rounded-lg border border-emerald-500/20 text-emerald-400 text-[10px] font-bold">
               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-              PRECISION OCR ACTIVE
+              OCR
             </div>
           </div>
           
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex flex-col text-right">
-              <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Calculated Total</span>
-              <span className="text-sm font-mono text-blue-400 font-bold">{currentTotalTime.toFixed(1)} HRS</span>
+          <div className="flex items-center gap-2.5">
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-lg border border-slate-700/50">
+              <span className="text-xs text-slate-500 font-medium">Total:</span>
+              <span className="text-sm font-mono text-blue-400 font-bold">{currentTotalTime.toFixed(1)}h</span>
             </div>
+            
             {user ? (
-              <div className="hidden md:flex items-center gap-3">
+              <>
                 <button
-                  onClick={() => setShowPaymentModal(true)}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-600/20 flex items-center gap-2"
+                  onClick={() => userCredits === 0 ? setShowPaymentModal(true) : null}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-sm font-semibold ${
+                    userCredits === 0 
+                      ? 'bg-red-600/10 border-red-600/30 text-red-400 hover:bg-red-600/20 cursor-pointer' 
+                      : 'bg-blue-600/10 border-blue-600/30 text-blue-400 cursor-default'
+                  }`}
+                  title={userCredits === 0 ? 'Click to buy credits' : `${userCredits} credit${userCredits !== 1 ? 's' : ''} available`}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 7h-4M4 7h4m0 0a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2M8 7v10a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V7M8 7H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"/>
-                  </svg>
-                  Buy Credits
-                </button>
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border ${userCredits === 0 ? 'bg-red-600/10 border-red-600/20' : 'bg-blue-600/10 border-blue-600/20'}`}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={userCredits === 0 ? 'text-red-400' : 'text-blue-400'}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
                   </svg>
-                  <span className={`text-sm font-bold ${userCredits === 0 ? 'text-red-400' : 'text-blue-400'}`}>
-                    {loadingCredits ? '...' : `${userCredits} Credit${userCredits !== 1 ? 's' : ''}`}
-                  </span>
+                  <span>{loadingCredits ? '...' : `${userCredits || 0}`}</span>
                   {userCredits === 0 && (
-                    <span className="text-xs text-red-400/80 ml-1">(No credits to scan)</span>
+                    <span className="text-[10px] ml-0.5 opacity-75">• Buy</span>
                   )}
-                </div>
-                <div className="flex flex-col text-right">
-                  <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Signed in as</span>
-                  <span className="text-sm text-slate-400 font-bold">{user.email}</span>
+                </button>
+                {userCredits !== 0 && (
+                  <button
+                    onClick={() => setShowPaymentModal(true)}
+                    className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-600/30 text-emerald-400 rounded-lg text-xs font-semibold transition-all"
+                    title="Buy more credits"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    <span>Add</span>
+                  </button>
+                )}
+                <div className="hidden md:flex items-center gap-2 px-2.5 py-1.5 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                  <span className="text-xs text-slate-400 font-medium truncate max-w-[120px]">{user.email?.split('@')[0]}</span>
                 </div>
                 <button
                   onClick={handleSignOut}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-sm font-bold transition-all border border-slate-700"
+                  className="px-2.5 py-1.5 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400 hover:text-slate-300 rounded-lg transition-all border border-slate-700/50"
                   title="Sign Out"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
                   </svg>
                 </button>
-              </div>
+              </>
             ) : (
-              <div className="hidden md:flex items-center gap-3">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-xl border border-slate-700/50">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500">
-                    <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
-                  </svg>
-                  <span className="text-sm font-bold text-slate-500">0 Credits</span>
-                </div>
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-bold transition-all"
-                >
-                  Sign In to Save
-                </button>
-              </div>
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-semibold transition-all border border-slate-700"
+              >
+                Sign In
+              </button>
             )}
             <button 
               onClick={handleExportModalOpen}
-              className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-500/20"
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-blue-500/20 flex items-center gap-1.5"
             >
-              Export ForeFlight CSV {exportableEntries.length > 0 && `(${exportableEntries.length})`}
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <span className="hidden sm:inline">Export</span>
+              {exportableEntries.length > 0 && (
+                <span className="text-xs bg-blue-700 px-1.5 py-0.5 rounded font-bold">{exportableEntries.length}</span>
+              )}
             </button>
           </div>
         </header>
