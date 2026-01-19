@@ -19,21 +19,136 @@ export const normalizeDateSeparator = (dateStr: string): string => {
 /**
  * Convert date from DD/MM format to MM/DD format
  * Examples: "25/12" -> "12/25", "01/05" -> "05/01"
+ * Also handles YYYY: "25/12/2023" -> "12/25/2023"
  */
 export const convertDDMMtoMMDD = (dateStr: string): string => {
   if (!dateStr || typeof dateStr !== 'string') return dateStr;
   
-  // Only process dates with "/" separator and two parts
+  // Process dates with "/" separator
   const parts = dateStr.trim().split('/');
-  if (parts.length !== 2) return dateStr;
+  if (parts.length < 2 || parts.length > 3) return dateStr;
   
-  const [first, second] = parts;
+  const [first, second, third] = parts;
   
-  // If either part is not numeric, don't convert
+  // If first two parts are not numeric, don't convert
   if (!/^\d+$/.test(first) || !/^\d+$/.test(second)) return dateStr;
   
-  // Swap the parts: DD/MM -> MM/DD
+  // Swap the first two parts: DD/MM or DD/MM/YYYY -> MM/DD or MM/DD/YYYY
+  if (parts.length === 3 && third) {
+    return `${second}/${first}/${third}`;
+  }
   return `${second}/${first}`;
+};
+
+/**
+ * Convert date from YYYY-MM-DD (database format) to MM/DD/YYYY (display format)
+ * Example: "2023-12-25" -> "12/25/2023"
+ */
+export const formatDateForDisplay = (dateStr: string | null | undefined): string => {
+  if (!dateStr || typeof dateStr !== 'string') return dateStr || '';
+  
+  // If already in MM/DD/YYYY format, return as-is
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) return dateStr;
+  
+  // If in YYYY-MM-DD format (database format), convert to MM/DD/YYYY
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [year, month, day] = dateStr.split('-');
+    return `${month}/${day}/${year}`;
+  }
+  
+  // Try to parse as Date and format
+  try {
+    const parsed = new Date(dateStr);
+    if (!isNaN(parsed.getTime())) {
+      const month = String(parsed.getMonth() + 1).padStart(2, '0');
+      const day = String(parsed.getDate()).padStart(2, '0');
+      const year = parsed.getFullYear();
+      return `${month}/${day}/${year}`;
+    }
+  } catch {
+    // If parsing fails, return original
+  }
+  
+  return dateStr;
+};
+
+/**
+ * Convert date from MM/DD/YYYY (display format) to YYYY-MM-DD (database format)
+ * Example: "12/25/2023" -> "2023-12-25"
+ */
+export const formatDateForDatabase = (dateStr: string | null | undefined): string | null => {
+  if (!dateStr || typeof dateStr !== 'string' || dateStr.trim() === '') return null;
+  
+  const trimmed = dateStr.trim();
+  
+  // If already in YYYY-MM-DD format, return as-is
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+  
+  // Parse MM/DD/YYYY format
+  const parts = trimmed.split('/');
+  if (parts.length === 3) {
+    const [month, day, year] = parts;
+    if (/^\d+$/.test(month) && /^\d+$/.test(day) && /^\d+$/.test(year)) {
+      const monthNum = parseInt(month, 10);
+      const dayNum = parseInt(day, 10);
+      const yearNum = parseInt(year, 10);
+      
+      // Basic validation
+      if (monthNum >= 1 && monthNum <= 12 && dayNum >= 1 && dayNum <= 31 && yearNum >= 1900 && yearNum <= 2100) {
+        return `${yearNum}-${String(monthNum).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+      }
+    }
+  }
+  
+  // Try to parse as Date and format
+  try {
+    const parsed = new Date(trimmed);
+    if (!isNaN(parsed.getTime())) {
+      return parsed.toISOString().split('T')[0];
+    }
+  } catch {
+    // If parsing fails, return null
+  }
+  
+  return null;
+};
+
+/**
+ * Adjust the year for a date string (MM/DD/YYYY format)
+ * Example: adjustYearForDate("12/25/2023", 2024) -> "12/25/2024"
+ * Also handles dates without year: "12/25" -> "12/25/2024"
+ */
+export const adjustYearForDate = (dateStr: string, newYear: number): string => {
+  if (!dateStr || typeof dateStr !== 'string') return dateStr;
+  
+  const trimmed = dateStr.trim();
+  const parts = trimmed.split('/');
+  
+  // If already has year (MM/DD/YYYY), replace it
+  if (parts.length === 3) {
+    const [month, day] = parts;
+    return `${month}/${day}/${newYear}`;
+  }
+  
+  // If no year (MM/DD), add year
+  if (parts.length === 2) {
+    const [month, day] = parts;
+    return `${month}/${day}/${newYear}`;
+  }
+  
+  // If format doesn't match, try to parse and reformat
+  try {
+    const parsed = new Date(trimmed);
+    if (!isNaN(parsed.getTime())) {
+      const month = String(parsed.getMonth() + 1).padStart(2, '0');
+      const day = String(parsed.getDate()).padStart(2, '0');
+      return `${month}/${day}/${newYear}`;
+    }
+  } catch {
+    // If parsing fails, return original
+  }
+  
+  return dateStr;
 };
 
 /**

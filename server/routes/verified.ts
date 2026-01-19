@@ -51,17 +51,42 @@ router.post('/save-scan', verifyAuth, async (req: AuthRequest, res) => {
     }
 
     // Helper function to parse date string to Date object or null
+    // Accepts MM/DD/YYYY format and converts to YYYY-MM-DD for database
     const parseDate = (dateStr: string | null | undefined): string | null => {
       if (!dateStr || dateStr.trim() === '') return null;
+      
+      const trimmed = dateStr.trim();
+      
+      // If already in YYYY-MM-DD format (database format), return as-is
+      if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+      
+      // Parse MM/DD/YYYY format (display format)
+      const parts = trimmed.split('/');
+      if (parts.length === 3) {
+        const [month, day, year] = parts;
+        if (/^\d+$/.test(month) && /^\d+$/.test(day) && /^\d+$/.test(year)) {
+          const monthNum = parseInt(month, 10);
+          const dayNum = parseInt(day, 10);
+          const yearNum = parseInt(year, 10);
+          
+          // Basic validation
+          if (monthNum >= 1 && monthNum <= 12 && dayNum >= 1 && dayNum <= 31 && yearNum >= 1900 && yearNum <= 2100) {
+            return `${yearNum}-${String(monthNum).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+          }
+        }
+      }
+      
+      // Try to parse as Date and format
       try {
-        // Try to parse common date formats (YYYY-MM-DD, YYYY/MM/DD, MM/DD/YYYY, etc.)
-        const parsed = new Date(dateStr);
-        if (isNaN(parsed.getTime())) return null;
-        // Return in ISO format (YYYY-MM-DD) for PostgreSQL DATE type
-        return parsed.toISOString().split('T')[0];
+        const parsed = new Date(trimmed);
+        if (!isNaN(parsed.getTime())) {
+          return parsed.toISOString().split('T')[0];
+        }
       } catch {
         return null;
       }
+      
+      return null;
     };
 
     // Helper function to parse float, return null if invalid
@@ -181,15 +206,42 @@ router.put('/update-scan', verifyAuth, async (req: AuthRequest, res) => {
     }
 
     // Helper functions (same as save-scan)
+    // Accepts MM/DD/YYYY format and converts to YYYY-MM-DD for database
     const parseDate = (dateStr: string | null | undefined): string | null => {
       if (!dateStr || dateStr.trim() === '') return null;
+      
+      const trimmed = dateStr.trim();
+      
+      // If already in YYYY-MM-DD format (database format), return as-is
+      if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+      
+      // Parse MM/DD/YYYY format (display format)
+      const parts = trimmed.split('/');
+      if (parts.length === 3) {
+        const [month, day, year] = parts;
+        if (/^\d+$/.test(month) && /^\d+$/.test(day) && /^\d+$/.test(year)) {
+          const monthNum = parseInt(month, 10);
+          const dayNum = parseInt(day, 10);
+          const yearNum = parseInt(year, 10);
+          
+          // Basic validation
+          if (monthNum >= 1 && monthNum <= 12 && dayNum >= 1 && dayNum <= 31 && yearNum >= 1900 && yearNum <= 2100) {
+            return `${yearNum}-${String(monthNum).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+          }
+        }
+      }
+      
+      // Try to parse as Date and format
       try {
-        const parsed = new Date(dateStr);
-        if (isNaN(parsed.getTime())) return null;
-        return parsed.toISOString().split('T')[0];
+        const parsed = new Date(trimmed);
+        if (!isNaN(parsed.getTime())) {
+          return parsed.toISOString().split('T')[0];
+        }
       } catch {
         return null;
       }
+      
+      return null;
     };
 
     const parseFloatOrNull = (value: string | null | undefined): number | null => {
@@ -335,11 +387,24 @@ router.get('/entries/:scanId', verifyAuth, async (req: AuthRequest, res) => {
       return res.status(500).json({ error: 'Failed to fetch entries' });
     }
 
+    // Helper function to format date from YYYY-MM-DD (database) to MM/DD/YYYY (display)
+    const formatDateForDisplay = (dateStr: string | null): string => {
+      if (!dateStr) return '';
+      // If already in MM/DD/YYYY format, return as-is
+      if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) return dateStr;
+      // Convert YYYY-MM-DD to MM/DD/YYYY
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        const [year, month, day] = dateStr.split('-');
+        return `${month}/${day}/${year}`;
+      }
+      return dateStr;
+    };
+
     // Transform back to frontend format
     const transformedEntries = (entries || []).map((entry: any) => ({
       id: entry.id,
       scanId: entry.scan_id,
-      date: entry.date,
+      date: formatDateForDisplay(entry.date),
       aircraftId: entry.aircraft_id || '',
       aircraftType: entry.aircraft_type || '',
       from: entry.from_location || '',

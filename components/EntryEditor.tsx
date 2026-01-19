@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { LogbookEntry } from '../types';
 import { ICONS } from '../constants';
 import ImageViewer, { ImageViewerHandle } from './ImageViewer';
-import { convertDDMMtoMMDD } from '../utils/logbookUtils';
+import { convertDDMMtoMMDD, formatDateForDisplay, adjustYearForDate } from '../utils/logbookUtils';
 
 interface EntryEditorProps {
   entries: LogbookEntry[];
@@ -27,6 +27,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   const imageViewerRef = useRef<ImageViewerHandle>(null);
   const isSyncingRef = useRef(false);
   const [dateFormat, setDateFormat] = useState<'MM/DD' | 'DD/MM'>('MM/DD');
+  const [yearAdjustment, setYearAdjustment] = useState<string>('');
 
   const sumTotal = entries.reduce((acc, e) => acc + (parseFloat(e.totalTime) || 0), 0);
   const sumPIC = entries.reduce((acc, e) => acc + (parseFloat(e.pic) || 0), 0);
@@ -35,11 +36,11 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   const sumAppr = entries.reduce((acc, e) => acc + (parseInt(e.approaches) || 0), 0);
 
   // Handle date format conversion
-  // Dates are always stored in MM/DD format. This dropdown lets users indicate
+  // Dates are always stored in MM/DD/YYYY format. This dropdown lets users indicate
   // if their dates were originally written in DD/MM format so we can convert them.
   const handleDateFormatChange = (newFormat: 'MM/DD' | 'DD/MM') => {
     if (newFormat === 'DD/MM' && dateFormat === 'MM/DD') {
-      // User indicates dates were originally written as DD/MM, convert all dates to MM/DD (US standard)
+      // User indicates dates were originally written as DD/MM, convert all dates to MM/DD/YYYY (US standard)
       entries.forEach(entry => {
         if (entry.date && entry.date.includes('/')) {
           const converted = convertDDMMtoMMDD(entry.date);
@@ -49,8 +50,26 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
         }
       });
     }
-    // If changing back to MM/DD, no conversion needed (dates should already be in MM/DD)
+    // If changing back to MM/DD, no conversion needed (dates should already be in MM/DD/YYYY)
     setDateFormat(newFormat);
+  };
+
+  // Handle year adjustment for all dates
+  const handleYearAdjustment = (newYear: string) => {
+    setYearAdjustment(newYear);
+    
+    // Only apply if year is valid (4 digits, between 1900 and 2100)
+    const yearNum = parseInt(newYear, 10);
+    if (newYear.length === 4 && !isNaN(yearNum) && yearNum >= 1900 && yearNum <= 2100) {
+      entries.forEach(entry => {
+        if (entry.date) {
+          const adjusted = adjustYearForDate(entry.date, yearNum);
+          if (adjusted !== entry.date) {
+            onUpdate(entry.id, 'date', adjusted);
+          }
+        }
+      });
+    }
   };
 
   // Sync table scroll to images
@@ -73,8 +92,8 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
 
   return (
     <div className="bg-slate-900 rounded-xl overflow-hidden border border-slate-800 shadow-2xl flex flex-col">
-      {/* Date Format Selector */}
-      <div className="px-6 py-3 bg-slate-800/50 border-b border-slate-800 flex items-center justify-between">
+      {/* Date Format Selector & Year Adjustment */}
+      <div className="px-6 py-3 bg-slate-800/50 border-b border-slate-800 flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3 flex-wrap">
           <label className="text-xs text-slate-400 font-semibold uppercase tracking-wide">
             If dates were not written in MM/DD format:
@@ -88,7 +107,28 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
             <option value="DD/MM">DD/MM (Convert to MM/DD)</option>
           </select>
           <span className="text-xs text-slate-500">
-            Dates will be converted to MM/DD (US standard) format
+            Dates will be converted to MM/DD/YYYY (US standard) format
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <label className="text-xs text-slate-400 font-semibold uppercase tracking-wide">
+            Adjust year for all dates:
+          </label>
+          <input
+            type="text"
+            value={yearAdjustment}
+            onChange={(e) => {
+              const value = e.target.value.replace(/\D/g, ''); // Only allow digits
+              if (value.length <= 4) {
+                handleYearAdjustment(value);
+              }
+            }}
+            placeholder="YYYY"
+            maxLength={4}
+            className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg text-sm font-semibold text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all w-20 text-center"
+          />
+          <span className="text-xs text-slate-500">
+            Enter year (e.g., 2024) to update all dates
           </span>
         </div>
       </div>
@@ -157,8 +197,9 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                   <td className="p-1 sticky left-24 bg-slate-900 group-hover:bg-slate-800 z-20 border-r border-slate-700">
                     <input 
                       type="text"
-                      value={entry.date}
+                      value={formatDateForDisplay(entry.date)}
                       onChange={(e) => onUpdate(entry.id, 'date', e.target.value)}
+                      placeholder="MM/DD/YYYY"
                       className={getFieldClass(entry, 'date', "bg-transparent hover:border-slate-700 focus:border-blue-500 rounded px-2 py-1.5 w-full outline-none text-xs")}
                     />
                   </td>

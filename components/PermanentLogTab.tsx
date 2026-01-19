@@ -552,7 +552,16 @@ const PermanentLogTab: React.FC = () => {
                         images={[]} // No images stored - just data
                         rotations={[0, 0]}
                         onUpdate={(entryId, field, value) => {
-                          if (isEditingScan) {
+                          // Allow year adjustment (date field updates) even when not in edit mode
+                          // This enables bulk year adjustment functionality
+                          if (!isEditingScan && field === 'date') {
+                            // Enter edit mode first if not already editing
+                            handleEditScan(scan.id);
+                            // Small delay to ensure edit mode is set before updating
+                            setTimeout(() => {
+                              handleUpdateEntry(scan.id, entryId, field, value);
+                            }, 0);
+                          } else if (isEditingScan) {
                             handleUpdateEntry(scan.id, entryId, field, value);
                           }
                         }}
