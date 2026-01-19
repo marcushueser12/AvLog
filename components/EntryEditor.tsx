@@ -93,43 +93,48 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   return (
     <div className="bg-slate-900 rounded-xl overflow-hidden border border-slate-800 shadow-2xl flex flex-col">
       {/* Date Format Selector & Year Adjustment */}
-      <div className="px-6 py-3 bg-slate-800/50 border-b border-slate-800 flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3 flex-wrap">
-          <label className="text-xs text-slate-400 font-semibold uppercase tracking-wide">
+      <div className="px-3 sm:px-6 py-3 bg-slate-800/50 border-b border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          <label className="text-[10px] sm:text-xs text-slate-400 font-semibold uppercase tracking-wide whitespace-nowrap">
             If dates were not written in MM/DD format:
           </label>
-          <select
-            value={dateFormat}
-            onChange={(e) => handleDateFormatChange(e.target.value as 'MM/DD' | 'DD/MM')}
-            className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg text-sm font-semibold text-white cursor-pointer outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-          >
-            <option value="MM/DD">MM/DD (Default - No conversion needed)</option>
-            <option value="DD/MM">DD/MM (Convert to MM/DD)</option>
-          </select>
-          <span className="text-xs text-slate-500">
-            Dates will be converted to MM/DD/YYYY (US standard) format
-          </span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <select
+              value={dateFormat}
+              onChange={(e) => handleDateFormatChange(e.target.value as 'MM/DD' | 'DD/MM')}
+              className="px-3 py-2 sm:py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg text-xs sm:text-sm font-semibold text-white cursor-pointer outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all min-h-[44px] sm:min-h-0"
+            >
+              <option value="MM/DD">MM/DD (Default)</option>
+              <option value="DD/MM">DD/MM (Convert)</option>
+            </select>
+            <span className="text-[10px] sm:text-xs text-slate-500 hidden sm:inline">
+              Dates will be converted to MM/DD/YYYY
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <label className="text-xs text-slate-400 font-semibold uppercase tracking-wide">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          <label className="text-[10px] sm:text-xs text-slate-400 font-semibold uppercase tracking-wide whitespace-nowrap">
             Adjust year for all dates:
           </label>
-          <input
-            type="text"
-            value={yearAdjustment}
-            onChange={(e) => {
-              const value = e.target.value.replace(/\D/g, ''); // Only allow digits
-              if (value.length <= 4) {
-                handleYearAdjustment(value);
-              }
-            }}
-            placeholder="YYYY"
-            maxLength={4}
-            className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg text-sm font-semibold text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all w-20 text-center"
-          />
-          <span className="text-xs text-slate-500">
-            Enter year (e.g., 2024) to update all dates
-          </span>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={yearAdjustment}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, ''); // Only allow digits
+                if (value.length <= 4) {
+                  handleYearAdjustment(value);
+                }
+              }}
+              placeholder="YYYY"
+              maxLength={4}
+              inputMode="numeric"
+              className="px-3 py-2 sm:py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg text-xs sm:text-sm font-semibold text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all w-20 sm:w-20 text-center min-h-[44px] sm:min-h-0"
+            />
+            <span className="text-[10px] sm:text-xs text-slate-500 hidden sm:inline">
+              Enter year to update all dates
+            </span>
+          </div>
         </div>
       </div>
       
@@ -137,9 +142,10 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
       <div 
         ref={tableScrollRef}
         onScroll={handleTableScroll}
-        className="overflow-x-auto custom-scrollbar flex-1"
+        className="overflow-x-auto custom-scrollbar flex-1 -webkit-overflow-scrolling-touch"
+        style={{ WebkitOverflowScrolling: 'touch' }}
       >
-        <table className="w-full text-left border-collapse min-w-[1850px]">
+        <table className="w-full text-left border-collapse min-w-[1850px] text-[11px] sm:text-xs">
           <thead>
             <tr className="bg-slate-800 text-slate-400 text-[10px] uppercase tracking-wider font-bold">
               <th className="px-3 py-4 w-12 sticky left-0 bg-slate-800 z-40 border-r border-slate-700">#</th>
@@ -200,7 +206,8 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={formatDateForDisplay(entry.date)}
                       onChange={(e) => onUpdate(entry.id, 'date', e.target.value)}
                       placeholder="MM/DD/YYYY"
-                      className={getFieldClass(entry, 'date', "bg-transparent hover:border-slate-700 focus:border-blue-500 rounded px-2 py-1.5 w-full outline-none text-xs")}
+                      inputMode="numeric"
+                      className={getFieldClass(entry, 'date', "bg-transparent hover:border-slate-700 focus:border-blue-500 rounded px-2 py-2 sm:py-1.5 w-full outline-none text-xs min-h-[44px] sm:min-h-0")}
                     />
                   </td>
                   <td className="p-1 sticky left-56 bg-slate-900 group-hover:bg-slate-800 z-20 border-r border-slate-700 shadow-[4px_0_8_rgba(0,0,0,0.3)]">
@@ -337,7 +344,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.comments} 
                       placeholder="Remarks..."
                       onChange={(e) => onUpdate(entry.id, 'comments', e.target.value)} 
-                      className={getFieldClass(entry, 'comments', "bg-transparent w-full outline-none text-xs px-2 py-1.5 rounded truncate focus:bg-slate-800")} 
+                      className={getFieldClass(entry, 'comments', "bg-transparent w-full outline-none text-xs px-2 py-2 sm:py-1.5 rounded truncate focus:bg-slate-800 min-h-[44px] sm:min-h-0")} 
                     />
                   </td>
                   <td className="px-2 py-2 text-center sticky right-0 bg-slate-900 group-hover:bg-slate-800 z-20 border-l border-slate-700 shadow-[-4px_0_8px_rgba(0,0,0,0.3)]">
@@ -387,7 +394,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
         </div>
         <button 
           onClick={onAdd}
-          className="flex items-center gap-2 px-6 py-2.5 bg-slate-700 hover:bg-slate-600 rounded-xl text-sm font-bold text-white transition-all border border-slate-600 shadow-lg active:scale-95"
+          className="flex items-center justify-center gap-2 px-6 py-3 sm:py-2.5 bg-slate-700 hover:bg-slate-600 rounded-xl text-sm font-bold text-white transition-all border border-slate-600 shadow-lg active:scale-95 min-h-[44px] sm:min-h-0 w-full sm:w-auto"
         >
           <ICONS.Plus /> Manual Row
         </button>

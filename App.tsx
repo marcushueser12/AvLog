@@ -613,7 +613,7 @@ const App: React.FC = () => {
   const NavButton = ({ tab, label, icon: Icon }: { tab: AppTab, label: string, icon: React.FC }) => (
     <button 
       onClick={() => setActiveTab(tab)}
-      className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all border ${activeTab === tab ? 'bg-blue-600/10 text-blue-400 border-blue-500/20' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800 border-transparent'}`}
+      className={`flex items-center gap-3 px-4 py-3 sm:py-3 rounded-xl font-bold text-sm transition-all border min-h-[44px] sm:min-h-0 ${activeTab === tab ? 'bg-blue-600/10 text-blue-400 border-blue-500/20' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800 border-transparent'}`}
     >
       <Icon />
       {label}
@@ -622,7 +622,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#0f172a] flex flex-col md:flex-row overflow-hidden text-slate-200">
-      <aside className="w-full md:w-64 bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 p-6 flex flex-col gap-8 shrink-0">
+      <aside className="w-full md:w-64 bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 p-4 sm:p-6 flex flex-col gap-6 sm:gap-8 shrink-0 max-h-screen md:max-h-none overflow-y-auto md:overflow-y-visible">
         <div 
           className="flex items-center gap-3 cursor-pointer group"
           onClick={() => setView('landing')}
@@ -651,13 +651,13 @@ const App: React.FC = () => {
       </aside>
 
       <main className="flex-1 flex flex-col min-w-0 bg-[#0f172a]">
-        <header className="h-14 px-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/30 backdrop-blur-xl sticky top-0 z-20 shrink-0">
-          <div className="flex items-center gap-3">
-            <h2 className="text-base font-bold text-white">
+        <header className="min-h-[56px] sm:h-14 px-3 sm:px-6 py-2 sm:py-0 border-b border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 bg-slate-900/30 backdrop-blur-xl sticky top-0 z-20 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            <h2 className="text-sm sm:text-base font-bold text-white truncate">
               {activeTab === 'dashboard' ? 'Logbook Digitizer' : 
                activeTab === 'permanent-log' ? 'Permanent Log' :
-               activeTab === 'tutorial' ? 'Tutorial & Documentation' : 
-               activeTab === 'aircraft' ? 'Aircraft Management' : 'Pilot Statistics'}
+               activeTab === 'tutorial' ? 'Tutorial' : 
+               activeTab === 'aircraft' ? 'Aircraft' : 'Statistics'}
             </h2>
             <div className="hidden md:flex items-center gap-2 px-2.5 py-1 bg-emerald-500/10 rounded-lg border border-emerald-500/20 text-emerald-400 text-[10px] font-bold">
               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
@@ -665,7 +665,7 @@ const App: React.FC = () => {
             </div>
           </div>
           
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto justify-end flex-wrap">
             <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-lg border border-slate-700/50">
               <span className="text-xs text-slate-500 font-medium">Total:</span>
               <span className="text-sm font-mono text-blue-400 font-bold">{currentTotalTime.toFixed(1)}h</span>
@@ -675,7 +675,7 @@ const App: React.FC = () => {
               <>
                 <button
                   onClick={() => userCredits === 0 ? setShowPaymentModal(true) : null}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-sm font-semibold ${
+                  className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-lg border transition-all text-xs sm:text-sm font-semibold min-h-[44px] sm:min-h-0 ${
                     userCredits === 0 
                       ? 'bg-red-600/10 border-red-600/30 text-red-400 hover:bg-red-600/20 cursor-pointer' 
                       : 'bg-blue-600/10 border-blue-600/30 text-blue-400 cursor-default'
@@ -687,7 +687,7 @@ const App: React.FC = () => {
                   </svg>
                   <span>{loadingCredits ? '...' : `${userCredits || 0}`}</span>
                   {userCredits === 0 && (
-                    <span className="text-[10px] ml-0.5 opacity-75">• Buy</span>
+                    <span className="text-[10px] ml-0.5 opacity-75 hidden sm:inline">• Buy</span>
                   )}
                 </button>
                 {userCredits !== 0 && (
@@ -707,7 +707,7 @@ const App: React.FC = () => {
                 </div>
                 <button
                   onClick={handleSignOut}
-                  className="px-2.5 py-1.5 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400 hover:text-slate-300 rounded-lg transition-all border border-slate-700/50"
+                  className="px-2.5 sm:px-2.5 py-2 sm:py-1.5 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400 hover:text-slate-300 rounded-lg transition-all border border-slate-700/50 min-h-[44px] sm:min-h-0"
                   title="Sign Out"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -718,14 +718,14 @@ const App: React.FC = () => {
             ) : (
               <button
                 onClick={() => setShowAuthModal(true)}
-                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-semibold transition-all border border-slate-700"
+                className="px-3 py-2 sm:py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-semibold transition-all border border-slate-700 min-h-[44px] sm:min-h-0"
               >
                 Sign In
               </button>
             )}
             <button 
               onClick={handleExportModalOpen}
-              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-blue-500/20 flex items-center gap-1.5"
+              className="px-3 py-2 sm:py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-blue-500/20 flex items-center gap-1.5 min-h-[44px] sm:min-h-0"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
