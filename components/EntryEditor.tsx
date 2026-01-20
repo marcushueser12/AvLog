@@ -667,7 +667,8 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
             <tr className="bg-slate-950/90 font-mono text-[11px] border-t-2 border-slate-700 shadow-inner">
                 <td className="p-3 sticky left-0 bg-slate-950 z-40 border-r border-slate-700 text-center text-slate-500 uppercase font-black tracking-tighter">OCR</td>
                 <td className="p-3 sticky left-12 bg-slate-950 z-40 border-r border-slate-700 text-center text-slate-400 font-bold uppercase tracking-tight">Sync</td>
-                <td colSpan={2} className="p-3 sticky left-24 bg-slate-950 z-30 border-r border-slate-700 text-slate-400 font-bold uppercase tracking-tight">Digital Sync Checks</td>
+                <td className="p-3 sticky left-24 bg-slate-950 z-30 border-r border-slate-700 text-slate-400 font-bold uppercase tracking-tight">Date</td>
+                <td className="p-3 sticky left-56 bg-slate-950 z-30 border-r border-slate-700 text-slate-400 font-bold uppercase tracking-tight">Tail #</td>
                 <td colSpan={2} className="px-3 py-3"></td>
                 <td className="p-3 text-center text-blue-400 font-bold bg-blue-500/10 border-r border-slate-800 ring-1 ring-inset ring-blue-500/20">{sumTotal.toFixed(1)}</td>
                 <td className="w-10"></td>
