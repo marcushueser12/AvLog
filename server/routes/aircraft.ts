@@ -1,11 +1,11 @@
 import express from 'express';
-import { supabaseAdmin } from '../lib/supabase';
-import { authenticateUser } from '../middleware/auth';
+import { supabaseAdmin } from '../lib/supabase.js';
+import { verifyAuth, AuthRequest } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // Get all aircraft profiles for the authenticated user
-router.get('/aircraft', authenticateUser, async (req, res) => {
+router.get('/aircraft', verifyAuth, async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
 
@@ -25,7 +25,7 @@ router.get('/aircraft', authenticateUser, async (req, res) => {
 });
 
 // Create or update an aircraft profile
-router.post('/aircraft', authenticateUser, async (req, res) => {
+router.post('/aircraft', verifyAuth, async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
     const {
@@ -119,7 +119,7 @@ router.post('/aircraft', authenticateUser, async (req, res) => {
 });
 
 // Delete an aircraft profile
-router.delete('/aircraft/:id', authenticateUser, async (req, res) => {
+router.delete('/aircraft/:id', verifyAuth, async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
     const { id } = req.params;
