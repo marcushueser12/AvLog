@@ -273,6 +273,7 @@ const PermanentLogTab: React.FC = () => {
         night: '0.0',
         crossCountry: '',
         pic: '',
+        solo: '',
         sic: '',
         dualReceived: '',
         dualGiven: '',
@@ -281,6 +282,8 @@ const PermanentLogTab: React.FC = () => {
         approaches: '',
         landingsDay: '',
         landingsNight: '',
+        groundReceived: '',
+        groundGiven: '',
         comments: '',
         isVerified: true
       };

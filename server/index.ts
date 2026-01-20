@@ -215,6 +215,7 @@ app.post(
 import adminRoutes from './routes/admin.js';
 import verifiedRoutes from './routes/verified.js';
 import paymentRoutes from './routes/payments.js';
+import aircraftRoutes from './routes/aircraft.js';
 
 // Admin routes (protected by secret token)
 app.use('/api/admin', adminRoutes);
@@ -224,6 +225,9 @@ app.use('/api/verified', verifiedRoutes);
 
 // Payment routes (checkout session requires auth, webhook is public)
 app.use('/api/payments', paymentRoutes);
+
+// Aircraft profiles routes (protected by auth token)
+app.use('/api', aircraftRoutes);
 
 // Serve frontend for all non-API routes (SPA routing)
 if (process.env.NODE_ENV === 'production') {

@@ -263,6 +263,16 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                   </div>
                   
                   <div>
+                    <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>Solo</label>
+                    <input
+                      type="text"
+                      value={entry.solo || ''}
+                      onChange={(e) => onUpdate(entry.id, 'solo', e.target.value)}
+                      className={getFieldClass(entry, 'solo', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
+                    />
+                  </div>
+                  
+                  <div>
                     <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>SIC</label>
                     <input
                       type="text"
@@ -342,6 +352,26 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     />
                   </div>
                   
+                  <div>
+                    <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>Gnd Rec</label>
+                    <input
+                      type="text"
+                      value={entry.groundReceived || ''}
+                      onChange={(e) => onUpdate(entry.id, 'groundReceived', e.target.value)}
+                      className={getFieldClass(entry, 'groundReceived', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>Gnd Giv</label>
+                    <input
+                      type="text"
+                      value={entry.groundGiven || ''}
+                      onChange={(e) => onUpdate(entry.id, 'groundGiven', e.target.value)}
+                      className={getFieldClass(entry, 'groundGiven', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
+                    />
+                  </div>
+                  
                   <div className="col-span-2">
                     <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>Comments / Remarks</label>
                     <input
@@ -383,7 +413,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
             maxWidth: useTableOnMobile ? '100vw' : 'none'
           }}
         >
-        <table className="w-full text-left border-collapse min-w-[1850px] text-[11px] sm:text-xs" style={{ width: 'max-content' }}>
+        <table className="w-full text-left border-collapse min-w-[2050px] text-[11px] sm:text-xs" style={{ width: 'max-content' }}>
           <thead>
             <tr className="bg-slate-800 text-slate-400 text-[10px] uppercase tracking-wider font-bold">
               <th className="px-3 py-4 w-12 sticky left-0 bg-slate-800 z-40 border-r border-slate-700">#</th>
@@ -399,6 +429,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
               <th className="px-3 py-4 w-20">Night</th>
               <th className="px-3 py-4 w-20">XC</th>
               <th className="px-3 py-4 w-20">PIC</th>
+              <th className="px-3 py-4 w-20">Solo</th>
               <th className="px-3 py-4 w-20">SIC</th>
               <th className="px-3 py-4 w-20">Dual Rec</th>
               <th className="px-3 py-4 w-20">Dual Giv</th>
@@ -407,6 +438,8 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
               <th className="px-3 py-4 w-20 text-amber-400 bg-amber-400/5">Appr</th>
               <th className="px-3 py-4 w-20">Lnd D</th>
               <th className="px-3 py-4 w-20">Lnd N</th>
+              <th className="px-3 py-4 w-20">Gnd Rec</th>
+              <th className="px-3 py-4 w-20">Gnd Giv</th>
               <th className="px-3 py-4 w-32">Comments / Remarks</th>
               <th className="px-3 py-4 w-16 text-center sticky right-0 bg-slate-800 z-30 border-l border-slate-700 shadow-[-4px_0_8px_rgba(0,0,0,0.3)]">Actions</th>
             </tr>
@@ -515,6 +548,14 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                   <td className="p-1">
                     <input 
                       type="text" 
+                      value={entry.solo || ''} 
+                      onChange={(e) => onUpdate(entry.id, 'solo', e.target.value)} 
+                      className={getFieldClass(entry, 'solo', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
+                    />
+                  </td>
+                  <td className="p-1">
+                    <input 
+                      type="text" 
                       value={entry.sic} 
                       onChange={(e) => onUpdate(entry.id, 'sic', e.target.value)} 
                       className={getFieldClass(entry, 'sic', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
@@ -574,6 +615,22 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.landingsNight} 
                       onChange={(e) => onUpdate(entry.id, 'landingsNight', e.target.value)} 
                       className={getFieldClass(entry, 'landingsNight', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
+                    />
+                  </td>
+                  <td className="p-1">
+                    <input 
+                      type="text" 
+                      value={entry.groundReceived || ''} 
+                      onChange={(e) => onUpdate(entry.id, 'groundReceived', e.target.value)} 
+                      className={getFieldClass(entry, 'groundReceived', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
+                    />
+                  </td>
+                  <td className="p-1">
+                    <input 
+                      type="text" 
+                      value={entry.groundGiven || ''} 
+                      onChange={(e) => onUpdate(entry.id, 'groundGiven', e.target.value)} 
+                      className={getFieldClass(entry, 'groundGiven', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
                     />
                   </td>
                   <td className="p-1">

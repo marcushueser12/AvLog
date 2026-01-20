@@ -1,5 +1,5 @@
 
-import type { LogbookEntry } from "../types.js";
+import type { LogbookEntry, AircraftProfile } from "../types.js";
 import { FOREFLIGHT_FLIGHT_HEADERS, FOREFLIGHT_AIRCRAFT_HEADERS } from "../constants.js";
 
 /**
@@ -23,7 +23,7 @@ const formatNumeric = (value: string): string => {
   return num.toFixed(1);
 };
 
-export const generateForeFlightCSV = (entries: LogbookEntry[]): string => {
+export const generateForeFlightCSV = (entries: LogbookEntry[], aircraftProfiles: AircraftProfile[] = []): string => {
   const csvRows: string[] = [];
 
   // 1. Mandatory Header Row
@@ -37,13 +37,36 @@ export const generateForeFlightCSV = (entries: LogbookEntry[]): string => {
   // Headers for Aircraft Table
   csvRows.push(FOREFLIGHT_AIRCRAFT_HEADERS.join(',') + ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
   
-  // Extract unique aircraft IDs to populate aircraft table if possible
-  const uniqueAircraft = Array.from(new Set(entries.map(e => e.aircraftId)));
-  uniqueAircraft.forEach(id => {
-    if (!id) return;
-    const firstMatch = entries.find(e => e.aircraftId === id);
-    const row = [
-        escapeCSV(id), 
+  // Use saved aircraft profiles, or fall back to extracting from entries
+  const uniqueAircraftIds = Array.from(new Set(entries.map(e => e.aircraftId).filter(id => id && id.trim())));
+  
+  uniqueAircraftIds.forEach(aircraftId => {
+    // Try to find saved profile first
+    const profile = aircraftProfiles.find(p => p.aircraftId === aircraftId);
+    
+    if (profile) {
+      // Use saved profile data
+      const row = [
+        escapeCSV(profile.aircraftId),
+        escapeCSV(profile.equipmentType || ''),
+        escapeCSV(profile.typeCode || ''),
+        escapeCSV(profile.year || ''),
+        escapeCSV(profile.make || ''),
+        escapeCSV(profile.model || ''),
+        escapeCSV(profile.gearType || ''),
+        escapeCSV(profile.engineType || ''),
+        escapeCSV(profile.categoryClass || ''),
+        profile.complex ? 'TRUE' : '',
+        profile.highPerformance ? 'TRUE' : '',
+        profile.pressurized ? 'TRUE' : '',
+        profile.taa ? 'TRUE' : ''
+      ];
+      csvRows.push(row.join(',') + ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
+    } else {
+      // Fall back to basic data from entries
+      const firstMatch = entries.find(e => e.aircraftId === aircraftId);
+      const row = [
+        escapeCSV(aircraftId),
         "", // EquipmentType
         escapeCSV(firstMatch?.aircraftType || ""), // TypeCode
         "", // Year
@@ -56,8 +79,9 @@ export const generateForeFlightCSV = (entries: LogbookEntry[]): string => {
         "", // High Performance
         "", // Pressurized
         ""  // TAA
-    ];
-    csvRows.push(row.join(',') + ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
+      ];
+      csvRows.push(row.join(',') + ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
+    }
   });
 
   // Space between tables
@@ -71,7 +95,7 @@ export const generateForeFlightCSV = (entries: LogbookEntry[]): string => {
   // We provide a row that tells ForeFlight which columns are Decimals, Text, etc.
   const flightDataTypes = FOREFLIGHT_FLIGHT_HEADERS.map(h => {
     if (["Date"].includes(h)) return "Date";
-    if (["TotalTime", "PIC", "SIC", "Night", "CrossCountry", "Instrument", "SimulatedInstrument", "DualGiven", "DualReceived", "Day", "SimulatedFlight"].includes(h)) return "Decimal";
+    if (["TotalTime", "PIC", "SIC", "Solo", "Night", "CrossCountry", "ActualInstrument", "SimulatedInstrument", "GroundTraining", "GroundTrainingGiven", "DualGiven", "DualReceived", "Day", "SimulatedFlight"].includes(h)) return "Decimal or HH:MM";
     if (["DayTakeoffs", "DayLandingsFullStop", "NightTakeoffs", "NightLandingsFullStop", "AllLandings", "Approaches", "Holds"].includes(h)) return "Number";
     return "Text";
   });
@@ -93,11 +117,14 @@ export const generateForeFlightCSV = (entries: LogbookEntry[]): string => {
         case "TotalTime": return formatNumeric(entry.totalTime);
         case "PIC": return formatNumeric(entry.pic);
         case "SIC": return formatNumeric(entry.sic);
+        case "Solo": return formatNumeric(entry.solo);
         case "Night": return formatNumeric(entry.night);
         case "Day": return formatNumeric(entry.day);
         case "CrossCountry": return formatNumeric(entry.crossCountry);
         case "ActualInstrument": return formatNumeric(entry.instrument);
         case "SimulatedInstrument": return formatNumeric(entry.simulatedInstrument);
+        case "GroundTraining": return formatNumeric(entry.groundReceived);
+        case "GroundTrainingGiven": return formatNumeric(entry.groundGiven);
         case "Approaches": return entry.approaches || "";
         case "DayLandingsFullStop": return entry.landingsDay || "";
         case "NightLandingsFullStop": return entry.landingsNight || "";

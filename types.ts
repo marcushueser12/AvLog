@@ -44,6 +44,7 @@ export interface LogbookEntry {
   night: string;
   crossCountry: string;
   pic: string;
+  solo: string;
   sic: string;
   dualReceived: string;
   dualGiven: string;
@@ -52,6 +53,8 @@ export interface LogbookEntry {
   approaches: string;
   landingsDay: string;
   landingsNight: string;
+  groundReceived: string;
+  groundGiven: string;
   comments: string;
   isVerified?: boolean;
   aiConfidence?: 'high' | 'low';
@@ -80,6 +83,26 @@ export interface ScanDocument {
   imageRotations?: number[]; // Rotation in degrees for each image (e.g., [0, 0] or [90, -90]). Defaults to [0, 0]
   pageNumber?: number; // Page number for this extraction (starting at 1)
   isVerified?: boolean; // Whether this scan has been verified
+}
+
+export interface AircraftProfile {
+  id: string;
+  userId: string;
+  aircraftId: string; // Tail number/registration (e.g., "N123AB")
+  equipmentType: string; // Full equipment description
+  typeCode: string; // ICAO type code (e.g., "C172", "SR22")
+  year: string; // Year (YYYY format)
+  make: string; // Manufacturer (e.g., "Cessna")
+  model: string; // Model name (e.g., "172S")
+  gearType: string; // "Fixed", "Retractable", etc.
+  engineType: string; // "Single", "Twin", "Turbo", etc.
+  categoryClass: string; // "Airplane/Single Engine Land", etc.
+  complex: boolean; // Complex aircraft
+  highPerformance: boolean; // High performance
+  pressurized: boolean; // Pressurized
+  taa: boolean; // Technically Advanced Aircraft
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export type AppTab = 'dashboard' | 'tutorial' | 'permanent-log' | 'aircraft' | 'stats';

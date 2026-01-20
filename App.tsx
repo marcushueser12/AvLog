@@ -1,12 +1,13 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { LogbookEntry, ScanDocument, ScanMode, AppTab, PageTotals } from './types';
+import { LogbookEntry, ScanDocument, ScanMode, AppTab, PageTotals, AircraftProfile } from './types';
 import { ICONS } from './constants';
 import EntryEditor from './components/EntryEditor';
 import ScanReviewRow from './components/ScanReviewRow';
 import LandingPage from './components/LandingPage';
 import TutorialTab from './components/TutorialTab';
 import PermanentLogTab from './components/PermanentLogTab';
+import AircraftProfilesTab from './components/AircraftProfilesTab';
 import AuthModal from './components/AuthModal';
 import PaymentModal from './components/PaymentModal';
 import { useAuth } from './contexts/AuthContext';
@@ -400,6 +401,55 @@ const App: React.FC = () => {
 
         const result = await response.json();
         console.log('Verified scan saved:', result);
+        
+        // Auto-extract aircraft from saved entries and create profiles if they don't exist
+        const uniqueAircraft = new Map<string, { aircraftId: string; aircraftType: string }>();
+        scanEntries.forEach(entry => {
+          if (entry.aircraftId && entry.aircraftId.trim()) {
+            const id = entry.aircraftId.trim().toUpperCase();
+            if (!uniqueAircraft.has(id)) {
+              uniqueAircraft.set(id, {
+                aircraftId: id,
+                aircraftType: entry.aircraftType?.trim() || ''
+              });
+            }
+          }
+        });
+
+        // Create aircraft profiles for any new aircraft
+        for (const [aircraftId, aircraftData] of uniqueAircraft.entries()) {
+          try {
+            const aircraftResponse = await fetch(`${API_URL}/api/aircraft`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                aircraftId: aircraftData.aircraftId,
+                typeCode: aircraftData.aircraftType,
+                equipmentType: '',
+                year: '',
+                make: '',
+                model: '',
+                gearType: '',
+                engineType: '',
+                categoryClass: '',
+                complex: false,
+                highPerformance: false,
+                pressurized: false,
+                taa: false
+              })
+            });
+            // Don't throw on error - profile might already exist
+            if (aircraftResponse.ok) {
+              console.log(`Auto-created aircraft profile for ${aircraftId}`);
+            }
+          } catch (aircraftError) {
+            // Silently continue - aircraft profile might already exist
+            console.log(`Aircraft profile for ${aircraftId} may already exist`);
+          }
+        }
       } catch (error: any) {
         console.error('Error saving verified scan:', error);
         // Don't un-verify on error, just log it
@@ -519,7 +569,7 @@ const App: React.FC = () => {
     setSelectedScansForExport(currentScanIds);
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     // Combine current verified entries with selected permanent log entries
     const currentVerifiedEntries = entries.filter(e => {
       const scanId = e.scanId;
@@ -547,7 +597,29 @@ const App: React.FC = () => {
       return isNaN(dateA) || isNaN(dateB) ? 0 : dateA - dateB;
     });
 
-    const csvContent = generateForeFlightCSV(sortedEntries);
+    // Load aircraft profiles for export
+    let aircraftProfiles: AircraftProfile[] = [];
+    if (user) {
+      try {
+        const token = getAccessToken();
+        if (token) {
+          const response = await fetch(`${API_URL}/api/aircraft`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (response.ok) {
+            const data = await response.json();
+            aircraftProfiles = data.aircraft || [];
+          }
+        }
+      } catch (error) {
+        console.error('Error loading aircraft profiles for export:', error);
+        // Continue export even if aircraft profiles fail to load
+      }
+    }
+
+    const csvContent = generateForeFlightCSV(sortedEntries, aircraftProfiles);
     downloadCSV(csvContent, `${exportName}.csv`);
     setShowExportModal(false);
   };
@@ -1047,6 +1119,7 @@ const App: React.FC = () => {
                                       night: "0.0",
                                       crossCountry: "",
                                       pic: "",
+                                      solo: "",
                                       sic: "",
                                       dualReceived: "",
                                       dualGiven: "",
@@ -1055,6 +1128,8 @@ const App: React.FC = () => {
                                       approaches: "",
                                       landingsDay: "",
                                       landingsNight: "",
+                                      groundReceived: "",
+                                      groundGiven: "",
                                       comments: "",
                                       isVerified: false
                                     };
@@ -1093,6 +1168,8 @@ const App: React.FC = () => {
             </div>
           ) : activeTab === 'tutorial' ? (
             <TutorialTab />
+          ) : activeTab === 'aircraft' ? (
+            <AircraftProfilesTab />
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-center p-12 space-y-4">
                <div className="w-20 h-20 bg-slate-800 rounded-3xl flex items-center justify-center text-slate-600">

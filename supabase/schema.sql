@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS verified_entries (
   night DECIMAL(4,1),
   cross_country TEXT,
   pic TEXT,
+  solo TEXT,
   sic TEXT,
   dual_received TEXT,
   dual_given TEXT,
@@ -54,6 +55,8 @@ CREATE TABLE IF NOT EXISTS verified_entries (
   approaches TEXT,
   landings_day TEXT,
   landings_night TEXT,
+  ground_received TEXT,
+  ground_given TEXT,
   comments TEXT,
   
   -- Metadata
@@ -65,6 +68,28 @@ CREATE TABLE IF NOT EXISTS verified_entries (
   
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Aircraft profiles (ForeFlight-compatible aircraft information)
+CREATE TABLE IF NOT EXISTS aircraft_profiles (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  aircraft_id TEXT NOT NULL, -- Tail number/registration (e.g., "N123AB")
+  equipment_type TEXT, -- Full equipment description
+  type_code TEXT, -- ICAO type code (e.g., "C172", "SR22")
+  year TEXT, -- Year (YYYY format)
+  make TEXT, -- Manufacturer (e.g., "Cessna")
+  model TEXT, -- Model name (e.g., "172S")
+  gear_type TEXT, -- "Fixed", "Retractable", etc.
+  engine_type TEXT, -- "Single", "Twin", "Turbo", etc.
+  category_class TEXT, -- "Airplane/Single Engine Land", etc.
+  complex BOOLEAN DEFAULT false,
+  high_performance BOOLEAN DEFAULT false,
+  pressurized BOOLEAN DEFAULT false,
+  taa BOOLEAN DEFAULT false, -- Technically Advanced Aircraft
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, aircraft_id) -- One profile per aircraft per user
 );
 
 -- Credit transactions (audit trail for all credit changes)
@@ -86,12 +111,15 @@ CREATE INDEX IF NOT EXISTS idx_verified_entries_scan_id ON verified_entries(scan
 CREATE INDEX IF NOT EXISTS idx_verified_entries_date ON verified_entries(date DESC);
 CREATE INDEX IF NOT EXISTS idx_credit_transactions_user_id ON credit_transactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_credit_transactions_created_at ON credit_transactions(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_aircraft_profiles_user_id ON aircraft_profiles(user_id);
+CREATE INDEX IF NOT EXISTS idx_aircraft_profiles_aircraft_id ON aircraft_profiles(aircraft_id);
 
 -- Row Level Security (RLS) - Enable for all tables
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE verified_scans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE verified_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE credit_transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE aircraft_profiles ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies: Users can only see/modify their own data
 
@@ -150,6 +178,23 @@ CREATE POLICY "Users can view own transactions"
 -- Note: Credit transactions are INSERTED by the backend (not by users directly)
 -- The backend uses service role key, which bypasses RLS
 
+-- Aircraft profiles policies
+CREATE POLICY "Users can view own aircraft profiles"
+  ON aircraft_profiles FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own aircraft profiles"
+  ON aircraft_profiles FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own aircraft profiles"
+  ON aircraft_profiles FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own aircraft profiles"
+  ON aircraft_profiles FOR DELETE
+  USING (auth.uid() = user_id);
+
 -- Function to automatically create user profile on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
@@ -191,5 +236,11 @@ CREATE TRIGGER update_verified_scans_updated_at
 DROP TRIGGER IF EXISTS update_verified_entries_updated_at ON verified_entries;
 CREATE TRIGGER update_verified_entries_updated_at
   BEFORE UPDATE ON verified_entries
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_aircraft_profiles_updated_at ON aircraft_profiles;
+CREATE TRIGGER update_aircraft_profiles_updated_at
+  BEFORE UPDATE ON aircraft_profiles
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
