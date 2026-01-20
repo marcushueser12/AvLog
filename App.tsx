@@ -14,6 +14,7 @@ import { extractLogbookEntriesFromPair, extractLogbookEntriesSingle } from './se
 import { generateForeFlightCSV, downloadCSV } from './utils/csvUtils';
 import { reconcileFlightTimes, reconcileIFRData, normalizeDateSeparator } from './utils/logbookUtils';
 import { getExifOrientation } from './utils/exifUtils';
+import { useMobile } from './utils/useMobile';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -21,6 +22,7 @@ const App: React.FC = () => {
   const { user, loading: authLoading, getAccessToken, signOut } = useAuth();
   const [view, setView] = useState<'landing' | 'app'>('landing');
   const [activeTab, setActiveTab] = useState<AppTab>('dashboard');
+  const isMobile = useMobile();
   
   // Load scans and entries from localStorage on mount
   const loadFromLocalStorage = (): { scans: ScanDocument[], entries: LogbookEntry[] } => {
@@ -633,8 +635,9 @@ const App: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#0f172a] flex flex-col md:flex-row overflow-hidden text-slate-200">
-      <aside className="w-full md:w-64 bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 p-4 sm:p-6 flex flex-col gap-6 sm:gap-8 shrink-0 max-h-screen md:max-h-none overflow-y-auto md:overflow-y-visible">
+    <div className="min-h-screen bg-[#0f172a] flex flex-col md:flex-row overflow-hidden text-slate-200 pb-16 md:pb-0">
+      {/* Desktop Sidebar - Hidden on Mobile */}
+      <aside className="hidden md:flex w-64 bg-slate-900 border-r border-slate-800 p-6 flex-col gap-8 shrink-0">
         <div 
           className="flex items-center gap-3 cursor-pointer group"
           onClick={() => setView('landing')}
@@ -662,8 +665,52 @@ const App: React.FC = () => {
         </nav>
       </aside>
 
+      {/* Mobile Top Bar */}
+      {isMobile && (
+        <header className="md:hidden bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
+          <div className="flex items-center gap-2">
+            <div className="bg-blue-600 p-1.5 rounded-lg">
+              <ICONS.Plane />
+            </div>
+            <span className="text-lg font-black text-white">LogExtract</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {user ? (
+              <>
+                <button
+                  onClick={() => userCredits === 0 ? setShowPaymentModal(true) : null}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-semibold ${
+                    userCredits === 0 
+                      ? 'bg-red-600/10 border-red-600/30 text-red-400' 
+                      : 'bg-blue-600/10 border-blue-600/30 text-blue-400'
+                  }`}
+                >
+                  <span>{loadingCredits ? '...' : `${userCredits || 0}`}</span>
+                </button>
+                <button
+                  onClick={handleSignOut}
+                  className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-lg"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                  </svg>
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold"
+              >
+                Sign In
+              </button>
+            )}
+          </div>
+        </header>
+      )}
+
       <main className="flex-1 flex flex-col min-w-0 bg-[#0f172a]">
-        <header className="min-h-[56px] sm:h-14 px-3 sm:px-6 py-2 sm:py-0 border-b border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 bg-slate-900/30 backdrop-blur-xl sticky top-0 z-20 shrink-0">
+        {/* Desktop Header */}
+        <header className="hidden md:flex h-14 px-6 border-b border-slate-800 items-center justify-between bg-slate-900/30 backdrop-blur-xl sticky top-0 z-20 shrink-0">
           <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
             <h2 className="text-sm sm:text-base font-bold text-white truncate">
               {activeTab === 'dashboard' ? 'Logbook Digitizer' : 
@@ -750,35 +797,36 @@ const App: React.FC = () => {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-8">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-8">
           {activeTab === 'permanent-log' ? (
             <PermanentLogTab />
           ) : activeTab === 'dashboard' ? (
             <div className="space-y-10">
               <section className="space-y-6">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div className="flex flex-col gap-4">
                   <div>
-                    <h3 className="text-xl font-bold text-white">Staging Area</h3>
-                    <p className="text-sm text-slate-500">The software verifies row alignment and image clarity before extraction.</p>
+                    <h3 className="text-lg md:text-xl font-bold text-white">Staging Area</h3>
+                    <p className="text-xs md:text-sm text-slate-500">The software verifies row alignment and image clarity before extraction.</p>
                   </div>
-                  <div className="flex flex-wrap gap-3">
-                    <button 
-                      onClick={() => addStagingSlot('single')}
-                      className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-sm font-bold transition-all border border-slate-700"
-                    >
-                      <ICONS.Plus /> New Single Scan
-                    </button>
-                    <button 
-                      onClick={() => addStagingSlot('spread')}
-                      className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-sm font-bold transition-all border border-slate-700"
-                    >
-                      <ICONS.Plus /> New Spread Pair
-                    </button>
-                    <div className="w-[1px] bg-slate-800 h-8 mx-1 hidden lg:block"></div>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex gap-3">
+                      <button 
+                        onClick={() => addStagingSlot('single')}
+                        className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-sm font-bold transition-all border border-slate-700 min-h-[44px]"
+                      >
+                        <ICONS.Plus /> <span className="hidden sm:inline">New</span> Single
+                      </button>
+                      <button 
+                        onClick={() => addStagingSlot('spread')}
+                        className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-sm font-bold transition-all border border-slate-700 min-h-[44px]"
+                      >
+                        <ICONS.Plus /> <span className="hidden sm:inline">New</span> Spread
+                      </button>
+                    </div>
                     <button 
                       onClick={processPendingScans}
                       disabled={isBatchProcessing || !user || (userCredits !== null && userCredits < 1) || !scans.some(s => s.status === 'pending' && (s.mode === 'single' ? s.images.length >= 1 : s.images.length === 2))}
-                      className="flex items-center gap-2 px-6 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-500/20"
+                      className="flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-500/20 min-h-[44px]"
                       title={!user ? 'Sign in required' : (userCredits !== null && userCredits < 1) ? 'Insufficient credits' : 'Start extraction (1 credit per scan)'}
                     >
                       {isBatchProcessing ? (
@@ -1056,6 +1104,55 @@ const App: React.FC = () => {
           )}
         </div>
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      {isMobile && (
+        <nav className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 z-40 md:hidden">
+          <div className="grid grid-cols-4 gap-1 px-2 py-2">
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all ${activeTab === 'dashboard' ? 'text-blue-400 bg-blue-600/10' : 'text-slate-500'}`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+              </svg>
+              <span className="text-[10px] font-semibold">Scan</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('permanent-log')}
+              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all ${activeTab === 'permanent-log' ? 'text-blue-400 bg-blue-600/10' : 'text-slate-500'}`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              </svg>
+              <span className="text-[10px] font-semibold">Log</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('tutorial')}
+              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all ${activeTab === 'tutorial' ? 'text-blue-400 bg-blue-600/10' : 'text-slate-500'}`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+              </svg>
+              <span className="text-[10px] font-semibold">Help</span>
+            </button>
+            <button
+              onClick={handleExportModalOpen}
+              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all ${exportableEntries.length > 0 ? 'text-emerald-400' : 'text-slate-500'}`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <span className="text-[10px] font-semibold">Export</span>
+              {exportableEntries.length > 0 && (
+                <span className="absolute top-1 right-2 bg-emerald-500 text-white text-[8px] font-bold px-1 rounded-full min-w-[16px] h-4 flex items-center justify-center">
+                  {exportableEntries.length}
+                </span>
+              )}
+            </button>
+          </div>
+        </nav>
+      )}
 
       {showExportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md">
