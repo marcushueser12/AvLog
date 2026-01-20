@@ -48,12 +48,15 @@ router.post('/aircraft', verifyAuth, async (req: AuthRequest, res) => {
       return res.status(400).json({ error: 'Aircraft ID is required' });
     }
 
+    // Normalize aircraft ID to uppercase for consistency
+    const normalizedAircraftId = aircraftId.trim().toUpperCase();
+
     // Check if aircraft profile already exists for this user/aircraft
     const { data: existing } = await supabaseAdmin
       .from('aircraft_profiles')
       .select('id')
       .eq('user_id', userId)
-      .eq('aircraft_id', aircraftId.trim())
+      .eq('aircraft_id', normalizedAircraftId)
       .single();
 
     if (existing) {
@@ -61,6 +64,7 @@ router.post('/aircraft', verifyAuth, async (req: AuthRequest, res) => {
       const { data, error } = await supabaseAdmin
         .from('aircraft_profiles')
         .update({
+          aircraft_id: normalizedAircraftId, // Ensure it's normalized
           equipment_type: equipmentType.trim() || null,
           type_code: typeCode.trim() || null,
           year: year.trim() || null,
@@ -87,7 +91,7 @@ router.post('/aircraft', verifyAuth, async (req: AuthRequest, res) => {
         .from('aircraft_profiles')
         .insert({
           user_id: userId,
-          aircraft_id: aircraftId.trim(),
+          aircraft_id: normalizedAircraftId,
           equipment_type: equipmentType.trim() || null,
           type_code: typeCode.trim() || null,
           year: year.trim() || null,

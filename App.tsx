@@ -403,15 +403,34 @@ const App: React.FC = () => {
         console.log('Verified scan saved:', result);
         
         // Auto-extract aircraft from saved entries and create profiles if they don't exist
+        // First, get existing aircraft profiles to check for duplicates
+        let existingAircraft: string[] = [];
+        try {
+          const existingResponse = await fetch(`${API_URL}/api/aircraft`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (existingResponse.ok) {
+            const existingData = await existingResponse.json();
+            existingAircraft = (existingData.aircraft || []).map((a: any) => a.aircraft_id.toUpperCase());
+          }
+        } catch (err) {
+          console.error('Error loading existing aircraft:', err);
+        }
+
         const uniqueAircraft = new Map<string, { aircraftId: string; aircraftType: string }>();
         scanEntries.forEach(entry => {
           if (entry.aircraftId && entry.aircraftId.trim()) {
             const id = entry.aircraftId.trim().toUpperCase();
-            if (!uniqueAircraft.has(id)) {
-              uniqueAircraft.set(id, {
-                aircraftId: id,
-                aircraftType: entry.aircraftType?.trim() || ''
-              });
+            // Only add if not already in existing profiles
+            if (!existingAircraft.includes(id)) {
+              if (!uniqueAircraft.has(id)) {
+                uniqueAircraft.set(id, {
+                  aircraftId: id,
+                  aircraftType: entry.aircraftType?.trim() || ''
+                });
+              }
             }
           }
         });

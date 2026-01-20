@@ -4,6 +4,7 @@ import { ICONS } from '../constants';
 import ImageViewer, { ImageViewerHandle } from './ImageViewer';
 import { convertDDMMtoMMDD, formatDateForDisplay, adjustYearForDate } from '../utils/logbookUtils';
 import { useMobile } from '../utils/useMobile';
+import AircraftSelector from './AircraftSelector';
 
 interface EntryEditorProps {
   entries: LogbookEntry[];
@@ -194,12 +195,19 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                   
                   <div>
                     <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>Tail #</label>
-                    <input
-                      type="text"
-                      value={entry.aircraftId}
-                      onChange={(e) => onUpdate(entry.id, 'aircraftId', e.target.value)}
-                      className={getFieldClass(entry, 'aircraftId', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
-                    />
+                    <div className={getFieldClass(entry, 'aircraftId', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5' : 'px-3 py-2'} min-h-[44px]`)}>
+                      <AircraftSelector
+                        value={entry.aircraftId}
+                        onChange={(aircraftId, aircraftType) => {
+                          onUpdate(entry.id, 'aircraftId', aircraftId);
+                          if (aircraftType) {
+                            onUpdate(entry.id, 'aircraftType', aircraftType);
+                          }
+                        }}
+                        className="w-full"
+                        placeholder="N123AB"
+                      />
+                    </div>
                   </div>
                   
                   <div>
@@ -482,16 +490,23 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     />
                   </td>
                   <td className="p-1 sticky left-56 bg-slate-900 group-hover:bg-slate-800 z-20 border-r border-slate-700 shadow-[4px_0_8_rgba(0,0,0,0.3)]">
-                    <input 
-                      type="text"
-                      value={entry.aircraftId}
-                      onChange={(e) => onUpdate(entry.id, 'aircraftId', e.target.value)}
-                      className={getFieldClass(entry, 'aircraftId', "bg-transparent hover:border-slate-700 focus:border-blue-500 rounded px-2 py-1.5 w-full outline-none text-xs font-bold uppercase")}
-                    />
+                    <div className={getFieldClass(entry, 'aircraftId', "bg-transparent hover:border-slate-700 focus-within:border-blue-500 rounded px-2 py-1.5 w-full border border-transparent")}>
+                      <AircraftSelector
+                        value={entry.aircraftId}
+                        onChange={(aircraftId, aircraftType) => {
+                          onUpdate(entry.id, 'aircraftId', aircraftId);
+                          if (aircraftType) {
+                            onUpdate(entry.id, 'aircraftType', aircraftType);
+                          }
+                        }}
+                        className="w-full"
+                        placeholder="N123AB"
+                      />
+                    </div>
                   </td>
                   <td className="p-1">
                     <input 
-                      type="text" 
+                      type="text"
                       value={entry.from} 
                       onChange={(e) => onUpdate(entry.id, 'from', e.target.value)} 
                       className={getFieldClass(entry, 'from', "bg-transparent w-full outline-none text-xs uppercase text-center rounded py-1.5")} 

@@ -35,6 +35,84 @@ const PermanentLogTab: React.FC = () => {
     }
   }, [user]);
 
+  // Auto-extract aircraft from entries and create profiles
+  const autoExtractAircraft = async (entriesList: LogbookEntry[]) => {
+    if (!user) return;
+
+    try {
+      const token = getAccessToken();
+      if (!token) return;
+
+      // Get existing aircraft profiles to check for duplicates
+      const aircraftResponse = await fetch(`${API_URL}/api/aircraft`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      let existingAircraft: string[] = [];
+      if (aircraftResponse.ok) {
+        const aircraftData = await aircraftResponse.json();
+        existingAircraft = (aircraftData.aircraft || []).map((a: any) => a.aircraft_id.toUpperCase());
+      }
+
+      // Extract unique aircraft from entries
+      const uniqueAircraft = new Map<string, { aircraftId: string; aircraftType: string }>();
+      entriesList.forEach(entry => {
+        if (entry.aircraftId && entry.aircraftId.trim()) {
+          const id = entry.aircraftId.trim().toUpperCase();
+          // Only add if not already in existing profiles
+          if (!existingAircraft.includes(id)) {
+            if (!uniqueAircraft.has(id)) {
+              uniqueAircraft.set(id, {
+                aircraftId: id,
+                aircraftType: entry.aircraftType?.trim() || ''
+              });
+            }
+          }
+        }
+      });
+
+      // Create aircraft profiles for any new aircraft
+      for (const [aircraftId, aircraftData] of uniqueAircraft.entries()) {
+        try {
+          const createResponse = await fetch(`${API_URL}/api/aircraft`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              aircraftId: aircraftData.aircraftId,
+              typeCode: aircraftData.aircraftType,
+              equipmentType: '',
+              year: '',
+              make: '',
+              model: '',
+              gearType: '',
+              engineType: '',
+              categoryClass: '',
+              complex: false,
+              highPerformance: false,
+              pressurized: false,
+              taa: false
+            })
+          });
+          // Don't throw on error - profile might already exist or be created by another process
+          if (createResponse.ok) {
+            console.log(`Auto-created aircraft profile for ${aircraftId}`);
+          }
+        } catch (aircraftError) {
+          // Silently continue - aircraft profile might already exist
+          console.log(`Aircraft profile for ${aircraftId} may already exist`);
+        }
+      }
+    } catch (error) {
+      console.error('Error auto-extracting aircraft:', error);
+      // Don't block the UI if auto-extraction fails
+    }
+  };
+
   const loadVerifiedScans = async () => {
     if (!user) return;
 
@@ -58,6 +136,30 @@ const PermanentLogTab: React.FC = () => {
 
       const data = await response.json();
       setScans(data.scans || []);
+      
+      // Auto-extract aircraft from all entries in permanent log
+      if (data.scans && data.scans.length > 0) {
+        // Load entries for all scans to extract aircraft
+        const allEntries: LogbookEntry[] = [];
+        for (const scan of data.scans) {
+          try {
+            const entriesResponse = await fetch(`${API_URL}/api/verified/entries/${scan.id}`, {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            if (entriesResponse.ok) {
+              const entriesData = await entriesResponse.json();
+              allEntries.push(...(entriesData.entries || []));
+            }
+          } catch (err) {
+            console.error(`Error loading entries for scan ${scan.id}:`, err);
+          }
+        }
+        
+        // Auto-extract aircraft from all entries
+        await autoExtractAircraft(allEntries);
+      }
     } catch (error) {
       console.error('Error loading verified scans:', error);
     } finally {
@@ -93,6 +195,9 @@ const PermanentLogTab: React.FC = () => {
         ...prev,
         [scanId]: loadedEntries.map(e => ({ ...e }))
       }));
+      
+      // Auto-extract aircraft from entries and create profiles if they don't exist
+      await autoExtractAircraft(loadedEntries);
     } catch (error) {
       console.error('Error loading entries:', error);
     }
