@@ -509,7 +509,8 @@ const App: React.FC = () => {
   const handleUpdateEntry = (id: string, field: keyof LogbookEntry, value: string) => {
     setEntries(prev => prev.map(e => {
       if (e.id === id) {
-        let updatedEntry: LogbookEntry = { ...e, [field]: value, isVerified: true };
+        // Don't change isVerified status - that should only happen when user explicitly verifies the scan
+        let updatedEntry: LogbookEntry = { ...e, [field]: value };
         
         if (['totalTime', 'night', 'day'].includes(field)) {
           updatedEntry = { ...updatedEntry, ...reconcileFlightTimes(updatedEntry) } as LogbookEntry;

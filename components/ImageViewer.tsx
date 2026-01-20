@@ -19,6 +19,8 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({
 }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [stitchedImage, setStitchedImage] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const isScrollingRef = useRef(false);
   
   // Get rotation for each image (default to 0 if not provided)
@@ -27,6 +29,9 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({
 
   // Rotate images first, then stitch them together horizontally when there are 2 images
   useEffect(() => {
+    setImageError(null);
+    setIsLoading(true);
+    
     if (images.length === 2) {
       const stitchImages = async () => {
         try {
@@ -34,7 +39,16 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({
           const loadImage = (src: string): Promise<HTMLImageElement> => {
             return new Promise((resolve, reject) => {
               const img = new Image();
+              // Safari-specific: Set crossOrigin to anonymous for better compatibility
+              img.crossOrigin = 'anonymous';
+              
+              // Add timeout for Safari
+              const timeout = setTimeout(() => {
+                reject(new Error('Image load timeout'));
+              }, 10000);
+              
               img.onload = () => {
+                clearTimeout(timeout);
                 // Verify image loaded correctly
                 if (img.naturalWidth === 0 || img.naturalHeight === 0) {
                   reject(new Error('Image has zero dimensions'));
@@ -42,7 +56,10 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({
                 }
                 resolve(img);
               };
-              img.onerror = () => reject(new Error('Failed to load image'));
+              img.onerror = (e) => {
+                clearTimeout(timeout);
+                reject(new Error('Failed to load image'));
+              };
               img.src = src;
             });
           };
@@ -149,9 +166,12 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({
           }
 
           setStitchedImage(stitchedDataUrl);
+          setIsLoading(false);
         } catch (error) {
           console.error('Error stitching images:', error);
+          setImageError('Failed to process images. Displaying originals.');
           setStitchedImage(null);
+          setIsLoading(false);
         }
       };
 
@@ -161,9 +181,21 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({
       const rotateSingleImage = async () => {
         try {
           const img = new Image();
+          img.crossOrigin = 'anonymous';
+          
           await new Promise<void>((resolve, reject) => {
-            img.onload = () => resolve();
-            img.onerror = () => reject(new Error('Failed to load image'));
+            const timeout = setTimeout(() => {
+              reject(new Error('Image load timeout'));
+            }, 10000);
+            
+            img.onload = () => {
+              clearTimeout(timeout);
+              resolve();
+            };
+            img.onerror = () => {
+              clearTimeout(timeout);
+              reject(new Error('Failed to load image'));
+            };
             img.src = images[0];
           });
 
@@ -202,15 +234,19 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({
           }
 
           setStitchedImage(dataUrl);
+          setIsLoading(false);
         } catch (error) {
           console.error('Error rotating single image:', error);
+          setImageError('Failed to process image. Displaying original.');
           setStitchedImage(null);
+          setIsLoading(false);
         }
       };
 
       rotateSingleImage();
     } else {
       setStitchedImage(null);
+      setIsLoading(false);
     }
   }, [images, rotation1, rotation2, rotations]);
 
@@ -256,9 +292,40 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({
     );
   }
 
-  const displayImage = images.length === 2 ? stitchedImage : images[0];
+  // Use stitched image if available, otherwise fall back to original images
+  const displayImage = images.length === 2 
+    ? (stitchedImage || (images.length > 0 ? images[0] : null))
+    : images[0];
 
-  if (!displayImage || (images.length === 2 && !stitchedImage)) {
+  // If stitching failed, show original images side by side as fallback
+  if (images.length === 2 && !stitchedImage && !isLoading && imageError) {
+    return (
+      <div className="w-full bg-slate-950 rounded-xl border border-slate-800">
+        {imageError && (
+          <div className="px-4 py-2 bg-amber-500/10 border-b border-amber-500/20 text-amber-400 text-xs">
+            {imageError}
+          </div>
+        )}
+        <div className="flex gap-2 p-2 overflow-x-auto" style={{ minHeight: '600px' }}>
+          {images.map((img, idx) => (
+            <img
+              key={idx}
+              src={img}
+              alt={`Page ${idx + 1}`}
+              className="max-h-full object-contain"
+              style={{ maxWidth: '50%' }}
+              onError={(e) => {
+                console.error(`Failed to load image ${idx + 1}`);
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!displayImage || (images.length === 2 && !stitchedImage && isLoading)) {
     return (
       <div className="w-full bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-center" style={{ minHeight: '600px' }}>
         <div className="text-center text-slate-500">
@@ -329,6 +396,19 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({
             <img
               src={displayImage}
               alt={images.length === 2 ? 'Stitched logbook pages' : 'Logbook page'}
+              crossOrigin="anonymous"
+              onError={(e) => {
+                console.error('Failed to display image');
+                // Fallback: try to show original images if stitched image fails
+                if (images.length === 2 && stitchedImage) {
+                  setStitchedImage(null);
+                  setImageError('Failed to display stitched image. Showing originals.');
+                }
+              }}
+              onLoad={() => {
+                setIsLoading(false);
+                setImageError(null);
+              }}
               style={{
                 transform: 'none', // Rotation is applied in canvas
                 transformOrigin: 'center center',
