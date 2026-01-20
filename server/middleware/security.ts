@@ -59,18 +59,21 @@ export const helmetConfig = helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"], // Allow inline styles for React
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Required for Vite in dev
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"], // Allow inline styles and Google Fonts
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Required for Vite in dev and ES modules
       imgSrc: ["'self'", "data:", "blob:"], // Allow data URLs and blobs for images
       connectSrc: ["'self'"], // API connections
-      fontSrc: ["'self'", "data:"],
+      fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"], // Allow Google Fonts
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
       frameSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
     },
   },
-  crossOriginEmbedderPolicy: false, // Disable for compatibility
+  crossOriginEmbedderPolicy: false, // Disable for compatibility with Safari
   crossOriginResourcePolicy: { policy: "cross-origin" }, // Allow cross-origin resources
+  crossOriginOpenerPolicy: false, // Disable for Safari compatibility
 });
 
 /**

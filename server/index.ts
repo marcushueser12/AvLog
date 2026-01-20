@@ -51,7 +51,36 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Serve static files from the frontend build in production
 if (process.env.NODE_ENV === 'production') {
   const frontendPath = path.join(__dirname, '../../dist');
-  app.use(express.static(frontendPath));
+  app.use(express.static(frontendPath, {
+    maxAge: '1d', // Cache static assets for 1 day
+    etag: true,
+    lastModified: true,
+    setHeaders: (res, filePath) => {
+      // Ensure proper MIME types for JavaScript modules (critical for Safari)
+      if (filePath.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+      }
+      // Ensure proper MIME types for CSS
+      if (filePath.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css; charset=utf-8');
+      }
+      // Ensure proper MIME types for HTML
+      if (filePath.endsWith('.html')) {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      }
+      // CORS headers for static assets (important for Safari)
+      // Note: Using * is safe for static assets (no credentials sent)
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+      // Important for Safari - prevent caching issues
+      if (filePath.includes('index.html')) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+      }
+    }
+  }));
 }
 
 // Health check endpoint (no rate limiting for monitoring)
@@ -199,7 +228,18 @@ app.use('/api/payments', paymentRoutes);
 // Serve frontend for all non-API routes (SPA routing)
 if (process.env.NODE_ENV === 'production') {
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../dist/index.html'));
+    // Don't serve index.html for API routes or asset requests
+    if (req.path.startsWith('/api/') || req.path.startsWith('/assets/')) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+    
+    const indexPath = path.join(__dirname, '../../dist/index.html');
+    // Set proper headers for HTML response (important for Safari)
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.sendFile(indexPath);
   });
 }
 
