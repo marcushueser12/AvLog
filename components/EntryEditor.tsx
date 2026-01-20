@@ -14,6 +14,7 @@ interface EntryEditorProps {
   onAdd: () => void;
   onRotationChange?: (imageIndex: number, newRotation: number) => void; // Callback when rotation changes
   forceTableOnMobile?: boolean; // Force table view with horizontal scroll on mobile instead of cards
+  twoColumnCards?: boolean; // Use 2-column card layout on mobile instead of single column
 }
 
 const EntryEditor: React.FC<EntryEditorProps> = ({ 
@@ -24,7 +25,8 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   onDelete, 
   onAdd,
   onRotationChange,
-  forceTableOnMobile = false
+  forceTableOnMobile = false,
+  twoColumnCards = false
 }) => {
   const isMobile = useMobile();
   const useTableOnMobile = forceTableOnMobile && isMobile;
@@ -96,7 +98,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   };
 
   return (
-    <div className={`bg-slate-900 rounded-xl border border-slate-800 shadow-2xl flex flex-col ${useTableOnMobile ? 'overflow-visible' : 'overflow-hidden'}`}>
+    <div className={`bg-slate-900 rounded-xl border border-slate-800 shadow-2xl flex flex-col ${useTableOnMobile || twoColumnCards ? 'overflow-visible' : 'overflow-hidden'}`}>
       {/* Date Format Selector & Year Adjustment */}
       <div className="px-3 sm:px-6 py-3 bg-slate-800/50 border-b border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
@@ -145,7 +147,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
       
       {/* Mobile Card View - Only if not forcing table view */}
       {isMobile && !useTableOnMobile ? (
-        <div className="flex-1 overflow-y-auto space-y-3 p-4">
+        <div className={`flex-1 overflow-y-auto ${twoColumnCards ? 'p-2' : 'p-4'}`}>
           {entries.length === 0 ? (
             <div className="text-center py-20 text-slate-500 italic font-medium">
               <div className="flex flex-col items-center gap-2">
@@ -156,8 +158,9 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
               </div>
             </div>
           ) : (
-            entries.map((entry, index) => (
-              <div key={entry.id} className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+            <div className={twoColumnCards ? 'grid grid-cols-2 gap-2' : 'space-y-3'}>
+              {entries.map((entry, index) => (
+                <div key={entry.id} className={`bg-slate-800 rounded-xl border border-slate-700 ${twoColumnCards ? 'p-3' : 'p-4'}`}>
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-slate-500 font-mono">#{entry.rowAnchor || index + 1}</span>
@@ -176,187 +179,188 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                   </button>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-3">
+                <div className={`grid grid-cols-2 gap-${twoColumnCards ? '2' : '3'}`}>
                   <div>
-                    <label className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold block mb-1">Date</label>
+                    <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>Date</label>
                     <input
                       type="text"
                       value={formatDateForDisplay(entry.date)}
                       onChange={(e) => onUpdate(entry.id, 'date', e.target.value)}
                       placeholder="MM/DD/YYYY"
                       inputMode="numeric"
-                      className={getFieldClass(entry, 'date', "w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]")}
+                      className={getFieldClass(entry, 'date', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
                   
                   <div>
-                    <label className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold block mb-1">Tail #</label>
+                    <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>Tail #</label>
                     <input
                       type="text"
                       value={entry.aircraftId}
                       onChange={(e) => onUpdate(entry.id, 'aircraftId', e.target.value)}
-                      className={getFieldClass(entry, 'aircraftId', "w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]")}
+                      className={getFieldClass(entry, 'aircraftId', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
                   
                   <div>
-                    <label className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold block mb-1">From</label>
+                    <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>From</label>
                     <input
                       type="text"
                       value={entry.from}
                       onChange={(e) => onUpdate(entry.id, 'from', e.target.value)}
-                      className={getFieldClass(entry, 'from', "w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm uppercase text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]")}
+                      className={getFieldClass(entry, 'from', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} uppercase text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
                   
                   <div>
-                    <label className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold block mb-1">To</label>
+                    <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>To</label>
                     <input
                       type="text"
                       value={entry.to}
                       onChange={(e) => onUpdate(entry.id, 'to', e.target.value)}
-                      className={getFieldClass(entry, 'to', "w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm uppercase text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]")}
+                      className={getFieldClass(entry, 'to', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} uppercase text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
                   
                   <div>
-                    <label className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold block mb-1">Total</label>
+                    <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>Total</label>
                     <input
                       type="text"
                       value={entry.totalTime}
                       onChange={(e) => onUpdate(entry.id, 'totalTime', e.target.value)}
-                      className={getFieldClass(entry, 'totalTime', "w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-blue-400 text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]")}
+                      className={getFieldClass(entry, 'totalTime', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-blue-400 text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
                   
                   <div>
-                    <label className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold block mb-1">Night</label>
+                    <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>Night</label>
                     <input
                       type="text"
                       value={entry.night}
                       onChange={(e) => onUpdate(entry.id, 'night', e.target.value)}
-                      className={getFieldClass(entry, 'night', "w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]")}
+                      className={getFieldClass(entry, 'night', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
                   
                   <div>
-                    <label className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold block mb-1">XC</label>
+                    <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>XC</label>
                     <input
                       type="text"
                       value={entry.crossCountry}
                       onChange={(e) => onUpdate(entry.id, 'crossCountry', e.target.value)}
-                      className={getFieldClass(entry, 'crossCountry', "w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]")}
+                      className={getFieldClass(entry, 'crossCountry', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
                   
                   <div>
-                    <label className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold block mb-1">PIC</label>
+                    <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>PIC</label>
                     <input
                       type="text"
                       value={entry.pic}
                       onChange={(e) => onUpdate(entry.id, 'pic', e.target.value)}
-                      className={getFieldClass(entry, 'pic', "w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]")}
+                      className={getFieldClass(entry, 'pic', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
                   
                   <div>
-                    <label className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold block mb-1">SIC</label>
+                    <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>SIC</label>
                     <input
                       type="text"
                       value={entry.sic}
                       onChange={(e) => onUpdate(entry.id, 'sic', e.target.value)}
-                      className={getFieldClass(entry, 'sic', "w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]")}
+                      className={getFieldClass(entry, 'sic', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
                   
                   <div>
-                    <label className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold block mb-1">Dual Rec</label>
+                    <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>Dual Rec</label>
                     <input
                       type="text"
                       value={entry.dualReceived}
                       onChange={(e) => onUpdate(entry.id, 'dualReceived', e.target.value)}
-                      className={getFieldClass(entry, 'dualReceived', "w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]")}
+                      className={getFieldClass(entry, 'dualReceived', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
                   
                   <div>
-                    <label className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold block mb-1">Dual Giv</label>
+                    <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>Dual Giv</label>
                     <input
                       type="text"
                       value={entry.dualGiven}
                       onChange={(e) => onUpdate(entry.id, 'dualGiven', e.target.value)}
-                      className={getFieldClass(entry, 'dualGiven', "w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]")}
+                      className={getFieldClass(entry, 'dualGiven', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
                   
                   <div>
-                    <label className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold block mb-1">Actual Inst</label>
+                    <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>Actual Inst</label>
                     <input
                       type="text"
                       value={entry.instrument}
                       onChange={(e) => onUpdate(entry.id, 'instrument', e.target.value)}
-                      className={getFieldClass(entry, 'instrument', "w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-emerald-400 text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]")}
+                      className={getFieldClass(entry, 'instrument', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-emerald-400 text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
                   
                   <div>
-                    <label className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold block mb-1">Sim Inst</label>
+                    <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>Sim Inst</label>
                     <input
                       type="text"
                       value={entry.simulatedInstrument}
                       onChange={(e) => onUpdate(entry.id, 'simulatedInstrument', e.target.value)}
-                      className={getFieldClass(entry, 'simulatedInstrument', "w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-cyan-400 text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]")}
+                      className={getFieldClass(entry, 'simulatedInstrument', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-cyan-400 text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
                   
                   <div>
-                    <label className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold block mb-1">Appr</label>
+                    <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>Appr</label>
                     <input
                       type="text"
                       value={entry.approaches}
                       onChange={(e) => onUpdate(entry.id, 'approaches', e.target.value)}
-                      className={getFieldClass(entry, 'approaches', "w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-amber-400 text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]")}
+                      className={getFieldClass(entry, 'approaches', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-amber-400 text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
                   
                   <div>
-                    <label className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold block mb-1">Lnd D</label>
+                    <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>Lnd D</label>
                     <input
                       type="text"
                       value={entry.landingsDay}
                       onChange={(e) => onUpdate(entry.id, 'landingsDay', e.target.value)}
-                      className={getFieldClass(entry, 'landingsDay', "w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]")}
+                      className={getFieldClass(entry, 'landingsDay', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
                   
                   <div>
-                    <label className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold block mb-1">Lnd N</label>
+                    <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>Lnd N</label>
                     <input
                       type="text"
                       value={entry.landingsNight}
                       onChange={(e) => onUpdate(entry.id, 'landingsNight', e.target.value)}
-                      className={getFieldClass(entry, 'landingsNight', "w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]")}
+                      className={getFieldClass(entry, 'landingsNight', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
                   
                   <div className="col-span-2">
-                    <label className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold block mb-1">Comments / Remarks</label>
+                    <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>Comments / Remarks</label>
                     <input
                       type="text"
                       value={entry.comments}
                       onChange={(e) => onUpdate(entry.id, 'comments', e.target.value)}
-                      className={getFieldClass(entry, 'comments', "w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]")}
+                      className={getFieldClass(entry, 'comments', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
                 </div>
               </div>
-            ))
+              ))}
+            </div>
           )}
           
-          {entries.length > 0 && (
+          {entries.length > 0 && !twoColumnCards && (
             <button
               onClick={onAdd}
-              className="w-full py-4 bg-slate-800 hover:bg-slate-700 border-2 border-dashed border-slate-700 rounded-xl text-slate-400 hover:text-slate-300 font-semibold transition-all flex items-center justify-center gap-2 min-h-[44px]"
+              className="w-full py-4 bg-slate-800 hover:bg-slate-700 border-2 border-dashed border-slate-700 rounded-xl text-slate-400 hover:text-slate-300 font-semibold transition-all flex items-center justify-center gap-2 min-h-[44px] mt-3"
             >
               <ICONS.Plus />
               Add Entry

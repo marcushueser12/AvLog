@@ -420,10 +420,10 @@ const PermanentLogTab: React.FC = () => {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-8">
+    <div className="flex-1 overflow-y-auto p-2 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-2">Permanent Log</h2>
+        <div className="mb-4 md:mb-8">
+          <h2 className="text-xl md:text-2xl font-bold text-white mb-2">Permanent Log</h2>
           <p className="text-slate-400 text-sm">
             Your verified logbook entries saved to your account. These are stored permanently and can be exported anytime.
           </p>
@@ -546,12 +546,12 @@ const PermanentLogTab: React.FC = () => {
 
                   {/* EntryEditor when expanded */}
                   {isExpanded && entriesCount > 0 && (
-                    <div className="p-4 md:p-4 px-2 md:px-4 border-t border-slate-800 overflow-visible">
+                    <div className="p-2 md:p-4 md:px-4 border-t border-slate-800 overflow-visible">
                       <EntryEditor
                         entries={currentEntries}
                         images={[]} // No images stored - just data
                         rotations={[0, 0]}
-                        forceTableOnMobile={true}
+                        twoColumnCards={true}
                         onUpdate={(entryId, field, value) => {
                           // Allow year adjustment (date field updates) even when not in edit mode
                           // This enables bulk year adjustment functionality
