@@ -74,8 +74,11 @@ router.post('/aircraft', verifyAuth, async (req: AuthRequest, res) => {
       return res.status(400).json({ error: 'Aircraft ID is required' });
     }
 
-    // Normalize aircraft ID to uppercase for consistency
-    const normalizedAircraftId = aircraftId.trim().toUpperCase();
+    // Normalize aircraft ID: add "N" prefix if not present and convert to uppercase
+    let normalizedAircraftId = aircraftId.trim().toUpperCase();
+    if (normalizedAircraftId && !normalizedAircraftId.startsWith('N')) {
+      normalizedAircraftId = `N${normalizedAircraftId}`;
+    }
 
     // Check if aircraft profile already exists for this user/aircraft
     const { data: existing } = await supabaseAdmin

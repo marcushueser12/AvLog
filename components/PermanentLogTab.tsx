@@ -4,7 +4,7 @@ import { LogbookEntry } from '../types';
 import { ICONS } from '../constants';
 import AuthModal from './AuthModal';
 import EntryEditor from './EntryEditor';
-import { reconcileFlightTimes, reconcileIFRData } from '../utils/logbookUtils';
+import { reconcileFlightTimes, reconcileIFRData, normalizeAircraftId } from '../utils/logbookUtils';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -53,14 +53,14 @@ const PermanentLogTab: React.FC = () => {
       let existingAircraft: string[] = [];
       if (aircraftResponse.ok) {
         const aircraftData = await aircraftResponse.json();
-        existingAircraft = (aircraftData.aircraft || []).map((a: any) => a.aircraft_id.toUpperCase());
+        existingAircraft = (aircraftData.aircraft || []).map((a: any) => (a.aircraftId || a.aircraft_id || '').toUpperCase());
       }
 
       // Extract unique aircraft from entries
       const uniqueAircraft = new Map<string, { aircraftId: string; aircraftType: string }>();
       entriesList.forEach(entry => {
         if (entry.aircraftId && entry.aircraftId.trim()) {
-          const id = entry.aircraftId.trim().toUpperCase();
+          const id = normalizeAircraftId(entry.aircraftId);
           // Only add if not already in existing profiles
           if (!existingAircraft.includes(id)) {
             if (!uniqueAircraft.has(id)) {

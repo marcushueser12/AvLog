@@ -13,7 +13,7 @@ import PaymentModal from './components/PaymentModal';
 import { useAuth } from './contexts/AuthContext';
 import { extractLogbookEntriesFromPair, extractLogbookEntriesSingle } from './services/geminiService';
 import { generateForeFlightCSV, downloadCSV } from './utils/csvUtils';
-import { reconcileFlightTimes, reconcileIFRData, normalizeDateSeparator } from './utils/logbookUtils';
+import { reconcileFlightTimes, reconcileIFRData, normalizeDateSeparator, normalizeAircraftId } from './utils/logbookUtils';
 import { getExifOrientation } from './utils/exifUtils';
 import { useMobile } from './utils/useMobile';
 
@@ -413,7 +413,7 @@ const App: React.FC = () => {
           });
           if (existingResponse.ok) {
             const existingData = await existingResponse.json();
-            existingAircraft = (existingData.aircraft || []).map((a: any) => a.aircraft_id.toUpperCase());
+            existingAircraft = (existingData.aircraft || []).map((a: any) => (a.aircraftId || a.aircraft_id || '').toUpperCase());
           }
         } catch (err) {
           console.error('Error loading existing aircraft:', err);
@@ -422,7 +422,7 @@ const App: React.FC = () => {
         const uniqueAircraft = new Map<string, { aircraftId: string; aircraftType: string }>();
         scanEntries.forEach(entry => {
           if (entry.aircraftId && entry.aircraftId.trim()) {
-            const id = entry.aircraftId.trim().toUpperCase();
+            const id = normalizeAircraftId(entry.aircraftId);
             // Only add if not already in existing profiles
             if (!existingAircraft.includes(id)) {
               if (!uniqueAircraft.has(id)) {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AircraftProfile } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import { normalizeAircraftId } from '../utils/logbookUtils';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -92,9 +93,9 @@ const AircraftSelector: React.FC<AircraftSelectorProps> = ({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value.toUpperCase();
-    onChange(newValue);
-    if (!isOpen && newValue) {
+    const normalized = normalizeAircraftId(e.target.value);
+    onChange(normalized);
+    if (!isOpen && normalized) {
       setIsOpen(true);
     }
   };

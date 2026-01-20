@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { AircraftProfile } from '../types';
 import { ICONS } from '../constants';
+import { normalizeAircraftId } from '../utils/logbookUtils';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -280,7 +281,10 @@ const AircraftProfilesTab: React.FC = () => {
                 <input
                   type="text"
                   value={newAircraft.aircraftId || ''}
-                  onChange={(e) => setNewAircraft({ ...newAircraft, aircraftId: e.target.value.toUpperCase() })}
+                  onChange={(e) => {
+                    const normalized = normalizeAircraftId(e.target.value);
+                    setNewAircraft({ ...newAircraft, aircraftId: normalized });
+                  }}
                   placeholder="N123AB"
                   className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
@@ -507,7 +511,10 @@ const AircraftProfilesTab: React.FC = () => {
                         <input
                           type="text"
                           value={profile.aircraftId || ''}
-                          onChange={(e) => setEditedAircraft({ ...editedAircraft, aircraftId: e.target.value.toUpperCase() })}
+                          onChange={(e) => {
+                            const normalized = normalizeAircraftId(e.target.value);
+                            setEditedAircraft({ ...editedAircraft, aircraftId: normalized });
+                          }}
                           className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       ) : (

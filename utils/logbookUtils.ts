@@ -2,6 +2,24 @@
 import type { LogbookEntry } from "../types.js";
 
 /**
+ * Normalize aircraft ID - adds "N" prefix if not present and converts to uppercase
+ * Examples: "123AB" -> "N123AB", "n123ab" -> "N123AB", "N123AB" -> "N123AB"
+ */
+export const normalizeAircraftId = (aircraftId: string): string => {
+  if (!aircraftId || typeof aircraftId !== 'string') return aircraftId;
+  
+  const trimmed = aircraftId.trim().toUpperCase();
+  if (!trimmed) return trimmed;
+  
+  // If it doesn't start with "N", add it
+  if (!trimmed.startsWith('N')) {
+    return `N${trimmed}`;
+  }
+  
+  return trimmed;
+};
+
+/**
  * Normalize date separators - converts any separator (., *, -, etc.) to "/"
  * Examples: "8.5" -> "8/5", "12.10" -> "12/10", "12*10" -> "12/10"
  */
