@@ -551,6 +551,7 @@ const PermanentLogTab: React.FC = () => {
                         entries={currentEntries}
                         images={[]} // No images stored - just data
                         rotations={[0, 0]}
+                        forceTableOnMobile={true}
                         onUpdate={(entryId, field, value) => {
                           // Allow year adjustment (date field updates) even when not in edit mode
                           // This enables bulk year adjustment functionality

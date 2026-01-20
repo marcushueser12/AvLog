@@ -13,6 +13,7 @@ interface EntryEditorProps {
   onDelete: (id: string) => void;
   onAdd: () => void;
   onRotationChange?: (imageIndex: number, newRotation: number) => void; // Callback when rotation changes
+  forceTableOnMobile?: boolean; // Force table view with horizontal scroll on mobile instead of cards
 }
 
 const EntryEditor: React.FC<EntryEditorProps> = ({ 
@@ -22,9 +23,11 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   onUpdate, 
   onDelete, 
   onAdd,
-  onRotationChange 
+  onRotationChange,
+  forceTableOnMobile = false
 }) => {
   const isMobile = useMobile();
+  const useTableOnMobile = forceTableOnMobile && isMobile;
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const imageViewerRef = useRef<ImageViewerHandle>(null);
   const isSyncingRef = useRef(false);
@@ -140,8 +143,8 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
         </div>
       </div>
       
-      {/* Mobile Card View */}
-      {isMobile ? (
+      {/* Mobile Card View - Only if not forcing table view */}
+      {isMobile && !useTableOnMobile ? (
         <div className="flex-1 overflow-y-auto space-y-3 p-4">
           {entries.length === 0 ? (
             <div className="text-center py-20 text-slate-500 italic font-medium">
@@ -361,11 +364,11 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
           )}
         </div>
       ) : (
-        /* Desktop Table View */
+        /* Desktop Table View or Forced Table on Mobile */
         <div 
           ref={tableScrollRef}
           onScroll={handleTableScroll}
-          className="overflow-x-auto custom-scrollbar flex-1 -webkit-overflow-scrolling-touch"
+          className={`overflow-x-auto custom-scrollbar flex-1 -webkit-overflow-scrolling-touch ${useTableOnMobile ? 'pb-4' : ''}`}
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
         <table className="w-full text-left border-collapse min-w-[1850px] text-[11px] sm:text-xs">
@@ -591,7 +594,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
             </tr>
           </tbody>
         </table>
-        </div>
+      </div>
       )}
       
       {/* Images - Show for both mobile and desktop */}
@@ -608,23 +611,23 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
       
       {/* Footer - Desktop only (mobile has add button in card view) */}
       {!isMobile && (
-        <div className="p-6 bg-slate-800/40 flex flex-col sm:flex-row justify-between items-center gap-4 border-t border-slate-800">
-          <div className="flex flex-col">
-              <span className="text-sm text-slate-300 font-bold uppercase tracking-tight flex items-center gap-2">
-                <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
-                IFR CROSS-CHECK ACTIVE
-              </span>
-              <p className="text-[11px] text-slate-500 mt-1 max-w-lg leading-relaxed">
-                Actual, Simulated, and Approach data are being cross-referenced against keywords in your Remarks section.
-              </p>
-          </div>
-          <button 
-            onClick={onAdd}
-            className="flex items-center justify-center gap-2 px-6 py-3 sm:py-2.5 bg-slate-700 hover:bg-slate-600 rounded-xl text-sm font-bold text-white transition-all border border-slate-600 shadow-lg active:scale-95 min-h-[44px] sm:min-h-0 w-full sm:w-auto"
-          >
-            <ICONS.Plus /> Manual Row
-          </button>
+      <div className="p-6 bg-slate-800/40 flex flex-col sm:flex-row justify-between items-center gap-4 border-t border-slate-800">
+        <div className="flex flex-col">
+            <span className="text-sm text-slate-300 font-bold uppercase tracking-tight flex items-center gap-2">
+              <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+              IFR CROSS-CHECK ACTIVE
+            </span>
+            <p className="text-[11px] text-slate-500 mt-1 max-w-lg leading-relaxed">
+              Actual, Simulated, and Approach data are being cross-referenced against keywords in your Remarks section.
+            </p>
         </div>
+        <button 
+          onClick={onAdd}
+            className="flex items-center justify-center gap-2 px-6 py-3 sm:py-2.5 bg-slate-700 hover:bg-slate-600 rounded-xl text-sm font-bold text-white transition-all border border-slate-600 shadow-lg active:scale-95 min-h-[44px] sm:min-h-0 w-full sm:w-auto"
+        >
+          <ICONS.Plus /> Manual Row
+        </button>
+      </div>
       )}
 
       <style>{`
