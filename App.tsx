@@ -678,12 +678,13 @@ const App: React.FC = () => {
             {user ? (
               <>
                 <button
-                  onClick={() => userCredits === 0 ? setShowPaymentModal(true) : null}
-                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-semibold ${
+                  onClick={() => setShowPaymentModal(true)}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer transition-all hover:opacity-80 ${
                     userCredits === 0 
-                      ? 'bg-red-600/10 border-red-600/30 text-red-400' 
-                      : 'bg-blue-600/10 border-blue-600/30 text-blue-400'
+                      ? 'bg-red-600/10 border-red-600/30 text-red-400 hover:bg-red-600/20' 
+                      : 'bg-blue-600/10 border-blue-600/30 text-blue-400 hover:bg-blue-600/20'
                   }`}
+                  title="Buy credits"
                 >
                   <span>{loadingCredits ? '...' : `${userCredits || 0}`}</span>
                 </button>
