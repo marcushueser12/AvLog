@@ -73,6 +73,7 @@ const LOGBOOK_RESPONSE_SCHEMA = {
           night: { type: Type.STRING },
           crossCountry: { type: Type.STRING },
           pic: { type: Type.STRING },
+          solo: { type: Type.STRING, description: "Solo flight time (time flown without an instructor)" },
           sic: { type: Type.STRING },
           dualReceived: { type: Type.STRING },
           dualGiven: { type: Type.STRING },
@@ -81,6 +82,8 @@ const LOGBOOK_RESPONSE_SCHEMA = {
           approaches: { type: Type.STRING },
           landingsDay: { type: Type.STRING },
           landingsNight: { type: Type.STRING },
+          groundReceived: { type: Type.STRING, description: "Ground instruction received (training time)" },
+          groundGiven: { type: Type.STRING, description: "Ground instruction given (as instructor)" },
           uncertainFields: { type: Type.ARRAY, items: { type: Type.STRING } }
         },
         required: ["rowAnchor", "reconciliationConfidence", "date", "aircraftId", "totalTime", "uncertainFields"]
@@ -234,6 +237,9 @@ export const extractLogbookEntriesFromPair = async (leftImage: string, rightImag
           id: `s-${Date.now()}-${i}`, 
           route: r.route || "", 
           comments: r.comments || "",
+          solo: r.solo || "",
+          groundReceived: r.groundReceived || "",
+          groundGiven: r.groundGiven || "",
           uncertainFields: r.uncertainFields || []
         };
         
@@ -302,6 +308,9 @@ export const extractLogbookEntriesSingle = async (image: string, expectedCount?:
           id: `p-${Date.now()}-${i}`, 
           route: r.route || "", 
           comments: r.comments || "",
+          solo: r.solo || "",
+          groundReceived: r.groundReceived || "",
+          groundGiven: r.groundGiven || "",
           uncertainFields: r.uncertainFields || []
         };
         
