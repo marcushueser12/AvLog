@@ -96,7 +96,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   };
 
   return (
-    <div className="bg-slate-900 rounded-xl overflow-hidden border border-slate-800 shadow-2xl flex flex-col">
+    <div className={`bg-slate-900 rounded-xl border border-slate-800 shadow-2xl flex flex-col ${useTableOnMobile ? 'overflow-visible' : 'overflow-hidden'}`}>
       {/* Date Format Selector & Year Adjustment */}
       <div className="px-3 sm:px-6 py-3 bg-slate-800/50 border-b border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
@@ -368,10 +368,18 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
         <div 
           ref={tableScrollRef}
           onScroll={handleTableScroll}
-          className={`overflow-x-auto custom-scrollbar flex-1 -webkit-overflow-scrolling-touch ${useTableOnMobile ? 'pb-4' : ''}`}
-          style={{ WebkitOverflowScrolling: 'touch' }}
+          className={`overflow-x-auto custom-scrollbar flex-1 ${useTableOnMobile ? 'pb-4 touch-pan-x' : ''}`}
+          style={{ 
+            WebkitOverflowScrolling: 'touch',
+            touchAction: useTableOnMobile ? 'pan-x pan-y' : 'auto',
+            overflowX: 'auto',
+            overflowY: 'visible',
+            minHeight: useTableOnMobile ? '200px' : 'auto',
+            width: useTableOnMobile ? '100%' : 'auto',
+            maxWidth: useTableOnMobile ? '100vw' : 'none'
+          }}
         >
-        <table className="w-full text-left border-collapse min-w-[1850px] text-[11px] sm:text-xs">
+        <table className="w-full text-left border-collapse min-w-[1850px] text-[11px] sm:text-xs" style={{ width: 'max-content' }}>
           <thead>
             <tr className="bg-slate-800 text-slate-400 text-[10px] uppercase tracking-wider font-bold">
               <th className="px-3 py-4 w-12 sticky left-0 bg-slate-800 z-40 border-r border-slate-700">#</th>
@@ -635,6 +643,13 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
         .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 5px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+        ${useTableOnMobile ? `
+          .custom-scrollbar {
+            -webkit-overflow-scrolling: touch !important;
+            overscroll-behavior-x: contain;
+            scroll-behavior: smooth;
+          }
+        ` : ''}
       `}</style>
     </div>
   );

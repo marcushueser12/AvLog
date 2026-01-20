@@ -441,7 +441,7 @@ const PermanentLogTab: React.FC = () => {
             return (
               <div key={scan.id} className="space-y-4">
                 {/* Header */}
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-visible md:overflow-hidden">
                   <div className="p-4 border-b border-slate-800">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
@@ -546,7 +546,7 @@ const PermanentLogTab: React.FC = () => {
 
                   {/* EntryEditor when expanded */}
                   {isExpanded && entriesCount > 0 && (
-                    <div className="p-4 border-t border-slate-800">
+                    <div className="p-4 md:p-4 px-2 md:px-4 border-t border-slate-800 overflow-visible">
                       <EntryEditor
                         entries={currentEntries}
                         images={[]} // No images stored - just data
