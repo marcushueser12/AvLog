@@ -4,6 +4,29 @@ import { verifyAuth, AuthRequest } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// Helper function to transform snake_case to camelCase
+const transformAircraftProfile = (dbProfile: any) => {
+  return {
+    id: dbProfile.id,
+    userId: dbProfile.user_id,
+    aircraftId: dbProfile.aircraft_id,
+    equipmentType: dbProfile.equipment_type || '',
+    typeCode: dbProfile.type_code || '',
+    year: dbProfile.year || '',
+    make: dbProfile.make || '',
+    model: dbProfile.model || '',
+    gearType: dbProfile.gear_type || '',
+    engineType: dbProfile.engine_type || '',
+    categoryClass: dbProfile.category_class || '',
+    complex: dbProfile.complex || false,
+    highPerformance: dbProfile.high_performance || false,
+    pressurized: dbProfile.pressurized || false,
+    taa: dbProfile.taa || false,
+    createdAt: dbProfile.created_at,
+    updatedAt: dbProfile.updated_at
+  };
+};
+
 // Get all aircraft profiles for the authenticated user
 router.get('/aircraft', verifyAuth, async (req: AuthRequest, res) => {
   try {
@@ -17,7 +40,10 @@ router.get('/aircraft', verifyAuth, async (req: AuthRequest, res) => {
 
     if (error) throw error;
 
-    res.json({ aircraft: data || [] });
+    // Transform snake_case to camelCase
+    const transformedAircraft = (data || []).map(transformAircraftProfile);
+
+    res.json({ aircraft: transformedAircraft });
   } catch (error: any) {
     console.error('Error fetching aircraft profiles:', error);
     res.status(500).json({ error: error.message || 'Failed to fetch aircraft profiles' });
@@ -84,7 +110,7 @@ router.post('/aircraft', verifyAuth, async (req: AuthRequest, res) => {
         .single();
 
       if (error) throw error;
-      res.json({ aircraft: data });
+      res.json({ aircraft: transformAircraftProfile(data) });
     } else {
       // Create new
       const { data, error } = await supabaseAdmin
@@ -109,7 +135,7 @@ router.post('/aircraft', verifyAuth, async (req: AuthRequest, res) => {
         .single();
 
       if (error) throw error;
-      res.json({ aircraft: data });
+      res.json({ aircraft: transformAircraftProfile(data) });
     }
   } catch (error: any) {
     console.error('Error saving aircraft profile:', error);
