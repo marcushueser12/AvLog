@@ -10,6 +10,7 @@ import PermanentLogTab from './components/PermanentLogTab';
 import AircraftProfilesTab from './components/AircraftProfilesTab';
 import AuthModal from './components/AuthModal';
 import PaymentModal from './components/PaymentModal';
+import NewAircraftModal from './components/NewAircraftModal';
 import { useAuth } from './contexts/AuthContext';
 import { extractLogbookEntriesFromPair, extractLogbookEntriesSingle } from './services/geminiService';
 import { generateForeFlightCSV, downloadCSV } from './utils/csvUtils';
@@ -61,6 +62,9 @@ const App: React.FC = () => {
   const [userCredits, setUserCredits] = useState<number | null>(null);
   const [loadingCredits, setLoadingCredits] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showNewAircraftModal, setShowNewAircraftModal] = useState(false);
+  const [newAircraftData, setNewAircraftData] = useState<{ aircraftId: string; aircraftType?: string; entryId?: string } | null>(null);
+  const [existingAircraftIds, setExistingAircraftIds] = useState<Set<string>>(new Set());
 
   const handleSignIn = (tab: AppTab = 'dashboard') => {
     setView('app');
@@ -183,6 +187,32 @@ const App: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]); // Only depend on user, loadUserCredits is stable
 
+  // Load existing aircraft IDs
+  const loadExistingAircraft = async () => {
+    if (!user) return;
+
+    try {
+      const token = getAccessToken();
+      if (!token) return;
+
+      const response = await fetch(`${API_URL}/api/aircraft`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const aircraftIds = new Set<string>(
+          (data.aircraft || []).map((a: any) => (a.aircraftId || a.aircraft_id || '').toUpperCase())
+        );
+        setExistingAircraftIds(aircraftIds);
+      }
+    } catch (error) {
+      console.error('Error loading existing aircraft:', error);
+    }
+  };
+
   // Load user credits when user changes, and handle user switching
   useEffect(() => {
     if (user) {
@@ -203,8 +233,10 @@ const App: React.FC = () => {
       }
       
       loadUserCredits();
+      loadExistingAircraft();
     } else {
       setUserCredits(0); // Show 0 credits when not logged in
+      setExistingAircraftIds(new Set<string>());
       // Clear user ID from localStorage when signed out
       try {
         localStorage.removeItem('logextract_user_id');
@@ -313,10 +345,56 @@ const App: React.FC = () => {
         const entriesWithScanRef = result.entries.map((e: any) => {
           // Normalize date separator (e.g., "8.5" -> "8/5", "12*10" -> "12/10")
           const normalizedDate = normalizeDateSeparator(e.date || '');
-          return { ...e, scanId: scan.id, date: normalizedDate };
+          const normalizedAircraftId = normalizeAircraftId(e.aircraftId || '');
+          return { ...e, scanId: scan.id, date: normalizedDate, aircraftId: normalizedAircraftId };
         });
         
         setEntries(prev => [...prev, ...entriesWithScanRef]);
+        
+        // Check for new aircraft IDs after extraction
+        // Only check after existing aircraft IDs are loaded
+        if (user) {
+          // Load existing aircraft if not already loaded, then check for new ones
+          if (existingAircraftIds.size === 0) {
+            loadExistingAircraft().then(() => {
+              // After loading, check again for new aircraft
+              entriesWithScanRef.forEach((entry: LogbookEntry) => {
+                if (entry.aircraftId && entry.aircraftId.trim()) {
+                  const normalized = normalizeAircraftId(entry.aircraftId);
+                  setExistingAircraftIds(prev => {
+                    if (!prev.has(normalized)) {
+                      // New aircraft detected - prompt to create profile
+                      setNewAircraftData({
+                        aircraftId: normalized,
+                        aircraftType: entry.aircraftType || ''
+                      });
+                      setShowNewAircraftModal(true);
+                      return new Set(prev).add(normalized);
+                    }
+                    return prev;
+                  });
+                }
+              });
+            });
+          } else {
+            // Existing aircraft already loaded, check immediately
+            entriesWithScanRef.forEach((entry: LogbookEntry) => {
+              if (entry.aircraftId && entry.aircraftId.trim()) {
+                const normalized = normalizeAircraftId(entry.aircraftId);
+                if (!existingAircraftIds.has(normalized)) {
+                  // New aircraft detected - prompt to create profile
+                  setNewAircraftData({
+                    aircraftId: normalized,
+                    aircraftType: entry.aircraftType || ''
+                  });
+                  setShowNewAircraftModal(true);
+                  // Add to existing set to prevent duplicate prompts
+                  setExistingAircraftIds(prev => new Set(prev).add(normalized));
+                }
+              }
+            });
+          }
+        }
         
         // Assign page number - count completed scans before this one
         setScans(prev => {
@@ -524,6 +602,31 @@ const App: React.FC = () => {
       }
       return e;
     }));
+  };
+
+  const handleAircraftIdChange = (entryId: string, aircraftId: string) => {
+    if (!user || !aircraftId || !aircraftId.trim()) return;
+
+    const normalized = normalizeAircraftId(aircraftId);
+    
+    // Check if this aircraft already exists
+    if (!existingAircraftIds.has(normalized)) {
+      // New aircraft - prompt to create profile
+      const entry = entries.find(e => e.id === entryId);
+      setNewAircraftData({
+        aircraftId: normalized,
+        aircraftType: entry?.aircraftType || '',
+        entryId: entryId
+      });
+      setShowNewAircraftModal(true);
+      // Add to existing set to prevent duplicate prompts
+      setExistingAircraftIds(prev => new Set(prev).add(normalized));
+    }
+  };
+
+  const handleAircraftCreated = () => {
+    // Reload existing aircraft IDs after creation
+    loadExistingAircraft();
   };
 
   const handleDeleteEntry = (id: string) => {
@@ -1111,6 +1214,7 @@ const App: React.FC = () => {
                                   images={scan.images}
                                   rotations={scan.imageRotations}
                                   onUpdate={handleUpdateEntry}
+                                  onAircraftIdChange={handleAircraftIdChange}
                                   onRotationChange={(imageIndex, newRotation) => {
                                     setScans(prev => prev.map(s => {
                                       if (s.id === scan.id) {
@@ -1362,6 +1466,20 @@ const App: React.FC = () => {
           }
         }}
       />
+
+      {/* New Aircraft Modal */}
+      {newAircraftData && (
+        <NewAircraftModal
+          isOpen={showNewAircraftModal}
+          aircraftId={newAircraftData.aircraftId}
+          aircraftType={newAircraftData.aircraftType}
+          onClose={() => {
+            setShowNewAircraftModal(false);
+            setNewAircraftData(null);
+          }}
+          onCreated={handleAircraftCreated}
+        />
+      )}
     </div>
   );
 };

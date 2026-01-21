@@ -2,9 +2,8 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { LogbookEntry } from '../types';
 import { ICONS } from '../constants';
 import ImageViewer, { ImageViewerHandle } from './ImageViewer';
-import { convertDDMMtoMMDD, formatDateForDisplay, adjustYearForDate } from '../utils/logbookUtils';
+import { convertDDMMtoMMDD, formatDateForDisplay, adjustYearForDate, normalizeAircraftId } from '../utils/logbookUtils';
 import { useMobile } from '../utils/useMobile';
-import AircraftSelector from './AircraftSelector';
 
 interface EntryEditorProps {
   entries: LogbookEntry[];
@@ -16,6 +15,7 @@ interface EntryEditorProps {
   onRotationChange?: (imageIndex: number, newRotation: number) => void; // Callback when rotation changes
   forceTableOnMobile?: boolean; // Force table view with horizontal scroll on mobile instead of cards
   twoColumnCards?: boolean; // Use 2-column card layout on mobile instead of single column
+  onAircraftIdChange?: (entryId: string, aircraftId: string) => void; // Callback when aircraft ID changes to check if it's new
 }
 
 const EntryEditor: React.FC<EntryEditorProps> = ({ 
@@ -27,7 +27,8 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   onAdd,
   onRotationChange,
   forceTableOnMobile = false,
-  twoColumnCards = false
+  twoColumnCards = false,
+  onAircraftIdChange
 }) => {
   const isMobile = useMobile();
   const useTableOnMobile = forceTableOnMobile && isMobile;
@@ -195,19 +196,28 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                   
                   <div>
                     <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-slate-500 uppercase tracking-wide font-semibold block mb-1`}>Tail #</label>
-                    <div className={getFieldClass(entry, 'aircraftId', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5' : 'px-3 py-2'} min-h-[44px]`)}>
-                      <AircraftSelector
-                        value={entry.aircraftId}
-                        onChange={(aircraftId, aircraftType) => {
-                          onUpdate(entry.id, 'aircraftId', aircraftId);
-                          if (aircraftType) {
-                            onUpdate(entry.id, 'aircraftType', aircraftType);
+                    <input
+                      type="text"
+                      value={entry.aircraftId}
+                      onChange={(e) => {
+                        const normalized = normalizeAircraftId(e.target.value);
+                        onUpdate(entry.id, 'aircraftId', normalized);
+                        if (onAircraftIdChange) {
+                          onAircraftIdChange(entry.id, normalized);
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const normalized = normalizeAircraftId(e.target.value);
+                        if (normalized && normalized !== entry.aircraftId) {
+                          onUpdate(entry.id, 'aircraftId', normalized);
+                          if (onAircraftIdChange) {
+                            onAircraftIdChange(entry.id, normalized);
                           }
-                        }}
-                        className="w-full"
-                        placeholder="N123AB"
-                      />
-                    </div>
+                        }
+                      }}
+                      className={getFieldClass(entry, 'aircraftId', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5' : 'px-3 py-2'} font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
+                      placeholder="N123AB"
+                    />
                   </div>
                   
                   <div>
@@ -490,19 +500,28 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     />
                   </td>
                   <td className="p-1 sticky left-56 bg-slate-900 group-hover:bg-slate-800 z-20 border-r border-slate-700 shadow-[4px_0_8_rgba(0,0,0,0.3)]">
-                    <div className={getFieldClass(entry, 'aircraftId', "bg-transparent hover:border-slate-700 focus-within:border-blue-500 rounded px-2 py-1.5 w-full border border-transparent")}>
-                      <AircraftSelector
-                        value={entry.aircraftId}
-                        onChange={(aircraftId, aircraftType) => {
-                          onUpdate(entry.id, 'aircraftId', aircraftId);
-                          if (aircraftType) {
-                            onUpdate(entry.id, 'aircraftType', aircraftType);
+                    <input
+                      type="text"
+                      value={entry.aircraftId}
+                      onChange={(e) => {
+                        const normalized = normalizeAircraftId(e.target.value);
+                        onUpdate(entry.id, 'aircraftId', normalized);
+                        if (onAircraftIdChange) {
+                          onAircraftIdChange(entry.id, normalized);
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const normalized = normalizeAircraftId(e.target.value);
+                        if (normalized && normalized !== entry.aircraftId) {
+                          onUpdate(entry.id, 'aircraftId', normalized);
+                          if (onAircraftIdChange) {
+                            onAircraftIdChange(entry.id, normalized);
                           }
-                        }}
-                        className="w-full"
-                        placeholder="N123AB"
-                      />
-                    </div>
+                        }
+                      }}
+                      className={getFieldClass(entry, 'aircraftId', "bg-transparent hover:border-slate-700 focus:border-blue-500 rounded px-2 py-1.5 w-full outline-none text-xs font-bold uppercase border border-transparent")}
+                      placeholder="N123AB"
+                    />
                   </td>
                   <td className="p-1">
                     <input 

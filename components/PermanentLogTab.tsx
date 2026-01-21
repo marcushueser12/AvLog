@@ -4,6 +4,7 @@ import { LogbookEntry } from '../types';
 import { ICONS } from '../constants';
 import AuthModal from './AuthModal';
 import EntryEditor from './EntryEditor';
+import NewAircraftModal from './NewAircraftModal';
 import { reconcileFlightTimes, reconcileIFRData, normalizeAircraftId } from '../utils/logbookUtils';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -28,12 +29,73 @@ const PermanentLogTab: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [expandedScans, setExpandedScans] = useState<Set<string>>(new Set());
+  const [showNewAircraftModal, setShowNewAircraftModal] = useState(false);
+  const [newAircraftData, setNewAircraftData] = useState<{ aircraftId: string; aircraftType?: string; entryId?: string } | null>(null);
+  const [existingAircraftIds, setExistingAircraftIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (user) {
       loadVerifiedScans();
+      loadExistingAircraft();
+    } else {
+      setExistingAircraftIds(new Set<string>());
     }
   }, [user]);
+
+  // Load existing aircraft IDs
+  const loadExistingAircraft = async () => {
+    if (!user) return;
+
+    try {
+      const token = getAccessToken();
+      if (!token) return;
+
+      const response = await fetch(`${API_URL}/api/aircraft`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const aircraftIds = new Set<string>(
+          (data.aircraft || []).map((a: any) => (a.aircraftId || a.aircraft_id || '').toUpperCase())
+        );
+        setExistingAircraftIds(aircraftIds);
+      }
+    } catch (error) {
+      console.error('Error loading existing aircraft:', error);
+    }
+  };
+
+  const handleAircraftIdChange = (entryId: string, aircraftId: string) => {
+    if (!user || !aircraftId || !aircraftId.trim()) return;
+
+    const normalized = normalizeAircraftId(aircraftId);
+    
+    // Check if this aircraft already exists
+    if (!existingAircraftIds.has(normalized)) {
+      // New aircraft - prompt to create profile
+      const scanId = Object.keys(editableEntries).find(sid => 
+        editableEntries[sid]?.some(e => e.id === entryId)
+      );
+      const entry = scanId ? editableEntries[scanId]?.find(e => e.id === entryId) : null;
+      
+      setNewAircraftData({
+        aircraftId: normalized,
+        aircraftType: entry?.aircraftType || '',
+        entryId: entryId
+      });
+      setShowNewAircraftModal(true);
+      // Add to existing set to prevent duplicate prompts
+      setExistingAircraftIds(prev => new Set(prev).add(normalized));
+    }
+  };
+
+  const handleAircraftCreated = () => {
+    // Reload existing aircraft IDs after creation
+    loadExistingAircraft();
+  };
 
   // Auto-extract aircraft from entries and create profiles
   const autoExtractAircraft = async (entriesList: LogbookEntry[]) => {
@@ -660,6 +722,7 @@ const PermanentLogTab: React.FC = () => {
                         images={[]} // No images stored - just data
                         rotations={[0, 0]}
                         twoColumnCards={true}
+                        onAircraftIdChange={handleAircraftIdChange}
                         onUpdate={(entryId, field, value) => {
                           // Allow year adjustment (date field updates) even when not in edit mode
                           // This enables bulk year adjustment functionality
@@ -693,6 +756,20 @@ const PermanentLogTab: React.FC = () => {
           })}
         </div>
       </div>
+
+      {/* New Aircraft Modal */}
+      {newAircraftData && (
+        <NewAircraftModal
+          isOpen={showNewAircraftModal}
+          aircraftId={newAircraftData.aircraftId}
+          aircraftType={newAircraftData.aircraftType}
+          onClose={() => {
+            setShowNewAircraftModal(false);
+            setNewAircraftData(null);
+          }}
+          onCreated={handleAircraftCreated}
+        />
+      )}
     </div>
   );
 };
