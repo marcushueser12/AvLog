@@ -500,7 +500,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     />
                   </td>
                   <td className="p-1 sticky left-56 bg-slate-900 group-hover:bg-slate-800 z-20 border-r border-slate-700 shadow-[4px_0_8_rgba(0,0,0,0.3)]">
-                    <input
+                    <input 
                       type="text"
                       value={entry.aircraftId}
                       onChange={(e) => {
@@ -525,7 +525,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                   </td>
                   <td className="p-1">
                     <input 
-                      type="text"
+                      type="text" 
                       value={entry.from} 
                       onChange={(e) => onUpdate(entry.id, 'from', e.target.value)} 
                       className={getFieldClass(entry, 'from', "bg-transparent w-full outline-none text-xs uppercase text-center rounded py-1.5")} 
@@ -691,11 +691,11 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                 <td colSpan={2} className="px-3 py-3"></td>
                 <td className="p-3 text-center text-blue-400 font-bold bg-blue-500/10 border-r border-slate-800 ring-1 ring-inset ring-blue-500/20">{sumTotal.toFixed(1)}</td>
                 <td className="w-10"></td>
-                <td colSpan={6}></td>
+                <td colSpan={7}></td>
                 <td className="p-3 text-center text-emerald-400 font-bold bg-emerald-500/10 border-r border-slate-800 ring-1 ring-inset ring-emerald-500/20">{sumInst.toFixed(1)}</td>
                 <td className="p-3 text-center text-cyan-400 font-bold bg-cyan-500/10 border-r border-slate-800 ring-1 ring-inset ring-cyan-500/20">{sumSim.toFixed(1)}</td>
                 <td className="p-3 text-center text-amber-500 font-bold bg-amber-500/10 border-r border-slate-800 ring-1 ring-inset ring-amber-500/20">{sumAppr}</td>
-                <td colSpan={3}></td>
+                <td colSpan={6}></td>
             </tr>
           </tbody>
         </table>
