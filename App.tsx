@@ -58,7 +58,10 @@ const App: React.FC = () => {
   const [permanentLogScans, setPermanentLogScans] = useState<any[]>([]);
   const [permanentLogEntries, setPermanentLogEntries] = useState<Record<string, LogbookEntry[]>>({});
   const [selectedScansForExport, setSelectedScansForExport] = useState<Set<string>>(new Set());
+  const [selectedAircraftForExport, setSelectedAircraftForExport] = useState<Set<string>>(new Set());
   const [loadingPermanentLog, setLoadingPermanentLog] = useState(false);
+  const [exportAircraftProfiles, setExportAircraftProfiles] = useState<AircraftProfile[]>([]);
+  const [loadingAircraftForExport, setLoadingAircraftForExport] = useState(false);
   const [userCredits, setUserCredits] = useState<number | null>(null);
   const [loadingCredits, setLoadingCredits] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -145,6 +148,14 @@ const App: React.FC = () => {
       return s;
     }));
   };
+
+  // Initialize aircraft selection when aircraft profiles are loaded
+  useEffect(() => {
+    if (exportAircraftProfiles.length > 0 && selectedAircraftForExport.size === 0) {
+      // Auto-select all aircraft profiles by default
+      setSelectedAircraftForExport(new Set(exportAircraftProfiles.map(p => p.id)));
+    }
+  }, [exportAircraftProfiles]);
 
   // Save scans and entries to localStorage whenever they change
   useEffect(() => {
@@ -682,15 +693,54 @@ const App: React.FC = () => {
     }
   };
 
+  const loadAircraftForExport = async () => {
+    if (!user) {
+      setExportAircraftProfiles([]);
+      return;
+    }
+
+    setLoadingAircraftForExport(true);
+    try {
+      const token = getAccessToken();
+      if (!token) return;
+
+      const response = await fetch(`${API_URL}/api/aircraft`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to load aircraft profiles');
+      }
+
+      const data = await response.json();
+      setExportAircraftProfiles(data.aircraft || []);
+    } catch (error) {
+      console.error('Error loading aircraft profiles for export:', error);
+    } finally {
+      setLoadingAircraftForExport(false);
+    }
+  };
+
   const handleExportModalOpen = () => {
     setShowExportModal(true);
     if (user) {
       loadPermanentLogForExport();
+      loadAircraftForExport();
     }
     // Initialize selection with all current exportable entries' scan IDs
     const currentScanIds = new Set(entries.filter(e => e.isVerified || scans.find(s => s.id === e.scanId)?.status === 'verified').map(e => e.scanId).filter(Boolean));
     setSelectedScansForExport(currentScanIds);
   };
+
+  // Initialize aircraft selection when aircraft profiles are loaded
+  useEffect(() => {
+    if (exportAircraftProfiles.length > 0 && selectedAircraftForExport.size === 0) {
+      // Auto-select all aircraft profiles by default
+      setSelectedAircraftForExport(new Set(exportAircraftProfiles.map(p => p.id)));
+    }
+  }, [exportAircraftProfiles]);
 
   const handleExport = async () => {
     // Combine current verified entries with selected permanent log entries
@@ -720,29 +770,12 @@ const App: React.FC = () => {
       return isNaN(dateA) || isNaN(dateB) ? 0 : dateA - dateB;
     });
 
-    // Load aircraft profiles for export
-    let aircraftProfiles: AircraftProfile[] = [];
-    if (user) {
-      try {
-        const token = getAccessToken();
-        if (token) {
-          const response = await fetch(`${API_URL}/api/aircraft`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          if (response.ok) {
-            const data = await response.json();
-            aircraftProfiles = data.aircraft || [];
-          }
-        }
-      } catch (error) {
-        console.error('Error loading aircraft profiles for export:', error);
-        // Continue export even if aircraft profiles fail to load
-      }
-    }
+    // Filter aircraft profiles to only selected ones
+    const selectedAircraftProfiles = exportAircraftProfiles.filter(profile => 
+      selectedAircraftForExport.has(profile.id)
+    );
 
-    const csvContent = generateForeFlightCSV(sortedEntries, aircraftProfiles);
+    const csvContent = generateForeFlightCSV(sortedEntries, selectedAircraftProfiles);
     downloadCSV(csvContent, `${exportName}.csv`);
     setShowExportModal(false);
   };
@@ -1416,6 +1449,81 @@ const App: React.FC = () => {
                   <p className="text-emerald-400 text-xs mt-3 font-medium">
                     {Array.from(selectedScansForExport).reduce((total, scanId) => total + (permanentLogEntries[scanId]?.length || 0), 0)} entries selected from permanent log
                   </p>
+                )}
+              </div>
+            )}
+
+            {/* Aircraft profiles selection */}
+            {user && exportAircraftProfiles.length > 0 && (
+              <div className="mb-6">
+                <h4 className="text-sm font-bold text-white mb-3">Select Aircraft Profiles:</h4>
+                {loadingAircraftForExport ? (
+                  <div className="text-slate-400 text-sm py-4">Loading aircraft profiles...</div>
+                ) : (
+                  <>
+                    <div className="mb-2 flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          // Select all aircraft profiles
+                          setSelectedAircraftForExport(new Set(exportAircraftProfiles.map(p => p.id)));
+                        }}
+                        className="text-xs text-blue-400 hover:text-blue-300 font-medium"
+                      >
+                        Select All
+                      </button>
+                      <span className="text-slate-600">|</span>
+                      <button
+                        onClick={() => {
+                          // Deselect all
+                          setSelectedAircraftForExport(new Set());
+                        }}
+                        className="text-xs text-blue-400 hover:text-blue-300 font-medium"
+                      >
+                        Deselect All
+                      </button>
+                    </div>
+                    <div className="space-y-2 max-h-64 overflow-y-auto border border-slate-800 rounded-2xl p-4 bg-slate-950/50">
+                      {exportAircraftProfiles.map(profile => {
+                        const isSelected = selectedAircraftForExport.has(profile.id);
+                        return (
+                          <label
+                            key={profile.id}
+                            className="flex items-center gap-3 p-3 rounded-xl border border-slate-800 hover:border-slate-700 cursor-pointer transition-all bg-slate-900/50"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={(e) => {
+                                const newSet = new Set(selectedAircraftForExport);
+                                if (e.target.checked) {
+                                  newSet.add(profile.id);
+                                } else {
+                                  newSet.delete(profile.id);
+                                }
+                                setSelectedAircraftForExport(newSet);
+                              }}
+                              className="w-5 h-5 text-blue-600 bg-slate-950 border-slate-700 rounded focus:ring-blue-500 focus:ring-2"
+                            />
+                            <div className="flex-1">
+                              <div className="text-sm font-bold text-white">
+                                {profile.aircraftId}
+                                {profile.typeCode && <span className="text-slate-400 ml-2">({profile.typeCode})</span>}
+                              </div>
+                              <div className="text-xs text-slate-500 mt-0.5">
+                                {profile.make && profile.model ? `${profile.make} ${profile.model}` : profile.equipmentType || 'No details'}
+                                {profile.year && ` • ${profile.year}`}
+                              </div>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    {selectedAircraftForExport.size > 0 && (
+                      <p className="text-emerald-400 text-xs mt-3 font-medium">
+                        {selectedAircraftForExport.size} {selectedAircraftForExport.size === 1 ? 'aircraft profile' : 'aircraft profiles'} selected
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
             )}
