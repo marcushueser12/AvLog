@@ -5,6 +5,68 @@ import { ICONS } from '../constants';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
+// Dropdown options (shared with AircraftProfilesTab)
+const ENGINE_TYPE_OPTIONS = [
+  'Diesel',
+  'Electric',
+  'Non-Powered',
+  'Piston',
+  'Radial',
+  'Turbofan',
+  'Turbojet',
+  'Turboprop',
+  'Turboshaft'
+];
+
+const GEAR_TYPE_OPTIONS = [
+  'Amphibian (AM)',
+  'Fixed Tailwheel (FC)',
+  'Fixed Tricycle (FT)',
+  'Floats (FL)',
+  'Retractable Tailwheel (RC)',
+  'Retractable Tricycle (RT)',
+  'Skids',
+  'Skis'
+];
+
+const CATEGORY_CLASS_OPTIONS = [
+  'Airplane Single Engine Land (ASEL)',
+  'Airplane Multi Engine Land (AMEL)',
+  'Airplane Single Engine Sea (ASES)',
+  'Airplane Multi Engine Sea (AMES)',
+  'Rotorcraft Helicopter (RH)',
+  'Rotorcraft Gyroplane (RG)',
+  'Glider (GL)',
+  'Lighter Than Air Airship (LA)',
+  'Lighter Than Air Balloon (LB)',
+  'Powered Lift (PLIFT)',
+  'Powered Parachute Land (PL)',
+  'Powered Parachute Sea (PS)',
+  'Weight Shift Control Land (WL)',
+  'Weight Shift Control Sea (WS)'
+];
+
+// Helper function to extract abbreviation from strings like "Amphibian (AM)" -> "AM"
+// If no parentheses, returns the full string
+const extractAbbreviation = (value: string): string => {
+  const match = value.match(/\(([^)]+)\)/);
+  return match ? match[1] : value;
+};
+
+// Helper function to find the display text for a stored value
+// If value is an abbreviation, find the full text; otherwise return the value
+const findDisplayText = (value: string, options: string[]): string => {
+  if (!value) return '';
+  // Check if value matches an abbreviation
+  for (const option of options) {
+    if (extractAbbreviation(option) === value) {
+      return option;
+    }
+  }
+  // If no match, return the value as-is (for backward compatibility)
+  return value;
+};
+
 interface NewAircraftModalProps {
   isOpen: boolean;
   aircraftId: string;
@@ -179,6 +241,45 @@ const NewAircraftModal: React.FC<NewAircraftModalProps> = ({
                 placeholder="172S"
                 className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-400 mb-2">Gear Type</label>
+              <select
+                value={findDisplayText(formData.gearType || '', GEAR_TYPE_OPTIONS)}
+                onChange={(e) => setFormData({ ...formData, gearType: extractAbbreviation(e.target.value) })}
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select Gear Type</option>
+                {GEAR_TYPE_OPTIONS.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-400 mb-2">Engine Type</label>
+              <select
+                value={findDisplayText(formData.engineType || '', ENGINE_TYPE_OPTIONS)}
+                onChange={(e) => setFormData({ ...formData, engineType: extractAbbreviation(e.target.value) })}
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select Engine Type</option>
+                {ENGINE_TYPE_OPTIONS.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-slate-400 mb-2">Category/Class</label>
+              <select
+                value={findDisplayText(formData.categoryClass || '', CATEGORY_CLASS_OPTIONS)}
+                onChange={(e) => setFormData({ ...formData, categoryClass: extractAbbreviation(e.target.value) })}
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select Category/Class</option>
+                {CATEGORY_CLASS_OPTIONS.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
             </div>
             <div className="md:col-span-2 flex gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
