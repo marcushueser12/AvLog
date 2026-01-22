@@ -722,6 +722,7 @@ const PermanentLogTab: React.FC = () => {
                         images={[]} // No images stored - just data
                         rotations={[0, 0]}
                         twoColumnCards={true}
+                        readOnly={!isEditingScan}
                         onAircraftIdChange={handleAircraftIdChange}
                         onUpdate={(entryId, field, value) => {
                           // Allow year adjustment (date field updates) even when not in edit mode

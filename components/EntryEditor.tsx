@@ -16,6 +16,7 @@ interface EntryEditorProps {
   forceTableOnMobile?: boolean; // Force table view with horizontal scroll on mobile instead of cards
   twoColumnCards?: boolean; // Use 2-column card layout on mobile instead of single column
   onAircraftIdChange?: (entryId: string, aircraftId: string) => void; // Callback when aircraft ID changes to check if it's new
+  readOnly?: boolean; // If true, disable all inputs (for permanent log when not in edit mode)
 }
 
 const EntryEditor: React.FC<EntryEditorProps> = ({ 
@@ -28,7 +29,8 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   onRotationChange,
   forceTableOnMobile = false,
   twoColumnCards = false,
-  onAircraftIdChange
+  onAircraftIdChange,
+  readOnly = false
 }) => {
   const isMobile = useMobile();
   const useTableOnMobile = forceTableOnMobile && isMobile;
@@ -96,7 +98,8 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
 
   const getFieldClass = (entry: LogbookEntry, field: string, base: string = "") => {
     const uncertain = entry.uncertainFields?.includes(field);
-    return `${base} transition-all duration-300 ${uncertain ? 'bg-amber-500/10 border-amber-500/50 ring-1 ring-amber-500/30' : 'border-transparent'}`;
+    const readOnlyClass = readOnly ? 'cursor-not-allowed opacity-60 pointer-events-none' : '';
+    return `${base} transition-all duration-300 ${uncertain ? 'bg-amber-500/10 border-amber-500/50 ring-1 ring-amber-500/30' : 'border-transparent'} ${readOnlyClass}`;
   };
 
   return (
@@ -190,7 +193,8 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       onChange={(e) => onUpdate(entry.id, 'date', e.target.value)}
                       placeholder="MM/DD/YYYY"
                       inputMode="numeric"
-                      className={getFieldClass(entry, 'date', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
+                      readOnly={readOnly}
+                      className={getFieldClass(entry, 'date', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px] ${readOnly ? 'cursor-not-allowed opacity-60' : ''}`)}
                     />
                   </div>
                   
@@ -215,7 +219,8 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                           }
                         }
                       }}
-                      className={getFieldClass(entry, 'aircraftId', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5' : 'px-3 py-2'} font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
+                      readOnly={readOnly}
+                      className={getFieldClass(entry, 'aircraftId', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5' : 'px-3 py-2'} font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px] ${readOnly ? 'cursor-not-allowed opacity-60' : ''}`)}
                       placeholder="N123AB"
                     />
                   </div>
@@ -236,6 +241,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text"
                       value={entry.to}
                       onChange={(e) => onUpdate(entry.id, 'to', e.target.value)}
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'to', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} uppercase text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
@@ -246,6 +252,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text"
                       value={entry.totalTime}
                       onChange={(e) => onUpdate(entry.id, 'totalTime', e.target.value)}
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'totalTime', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-blue-400 text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
@@ -256,6 +263,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text"
                       value={entry.night}
                       onChange={(e) => onUpdate(entry.id, 'night', e.target.value)}
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'night', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
@@ -266,6 +274,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text"
                       value={entry.crossCountry}
                       onChange={(e) => onUpdate(entry.id, 'crossCountry', e.target.value)}
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'crossCountry', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
@@ -276,6 +285,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text"
                       value={entry.pic}
                       onChange={(e) => onUpdate(entry.id, 'pic', e.target.value)}
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'pic', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
@@ -286,6 +296,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text"
                       value={entry.solo || ''}
                       onChange={(e) => onUpdate(entry.id, 'solo', e.target.value)}
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'solo', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
@@ -296,6 +307,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text"
                       value={entry.sic}
                       onChange={(e) => onUpdate(entry.id, 'sic', e.target.value)}
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'sic', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
@@ -306,6 +318,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text"
                       value={entry.dualReceived}
                       onChange={(e) => onUpdate(entry.id, 'dualReceived', e.target.value)}
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'dualReceived', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
@@ -316,6 +329,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text"
                       value={entry.dualGiven}
                       onChange={(e) => onUpdate(entry.id, 'dualGiven', e.target.value)}
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'dualGiven', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
@@ -326,6 +340,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text"
                       value={entry.instrument}
                       onChange={(e) => onUpdate(entry.id, 'instrument', e.target.value)}
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'instrument', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-emerald-400 text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
@@ -336,6 +351,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text"
                       value={entry.simulatedInstrument}
                       onChange={(e) => onUpdate(entry.id, 'simulatedInstrument', e.target.value)}
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'simulatedInstrument', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-cyan-400 text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
@@ -346,6 +362,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text"
                       value={entry.approaches}
                       onChange={(e) => onUpdate(entry.id, 'approaches', e.target.value)}
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'approaches', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-amber-400 text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
@@ -356,6 +373,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text"
                       value={entry.landingsDay}
                       onChange={(e) => onUpdate(entry.id, 'landingsDay', e.target.value)}
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'landingsDay', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
@@ -366,6 +384,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text"
                       value={entry.landingsNight}
                       onChange={(e) => onUpdate(entry.id, 'landingsNight', e.target.value)}
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'landingsNight', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
@@ -376,6 +395,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text"
                       value={entry.groundReceived || ''}
                       onChange={(e) => onUpdate(entry.id, 'groundReceived', e.target.value)}
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'groundReceived', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
@@ -386,6 +406,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text"
                       value={entry.groundGiven || ''}
                       onChange={(e) => onUpdate(entry.id, 'groundGiven', e.target.value)}
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'groundGiven', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
@@ -396,6 +417,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text"
                       value={entry.comments}
                       onChange={(e) => onUpdate(entry.id, 'comments', e.target.value)}
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'comments', `w-full bg-slate-700 border border-slate-600 rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]`)}
                     />
                   </div>
@@ -496,6 +518,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       onChange={(e) => onUpdate(entry.id, 'date', e.target.value)}
                       placeholder="MM/DD/YYYY"
                       inputMode="numeric"
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'date', "bg-transparent hover:border-slate-700 focus:border-blue-500 rounded px-2 py-2 sm:py-1.5 w-full outline-none text-xs min-h-[44px] sm:min-h-0")}
                     />
                   </td>
@@ -519,6 +542,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                           }
                         }
                       }}
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'aircraftId', "bg-transparent hover:border-slate-700 focus:border-blue-500 rounded px-2 py-1.5 w-full outline-none text-xs font-bold uppercase border border-transparent")}
                       placeholder="N123AB"
                     />
@@ -528,6 +552,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text" 
                       value={entry.from} 
                       onChange={(e) => onUpdate(entry.id, 'from', e.target.value)} 
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'from', "bg-transparent w-full outline-none text-xs uppercase text-center rounded py-1.5")} 
                     />
                   </td>
@@ -536,6 +561,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text" 
                       value={entry.to} 
                       onChange={(e) => onUpdate(entry.id, 'to', e.target.value)} 
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'to', "bg-transparent w-full outline-none text-xs uppercase text-center rounded py-1.5")} 
                     />
                   </td>
@@ -544,6 +570,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text"
                       value={entry.totalTime}
                       onChange={(e) => onUpdate(entry.id, 'totalTime', e.target.value)}
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'totalTime', "bg-transparent hover:border-slate-700 focus:border-blue-500 rounded px-1 py-1.5 w-full outline-none text-xs font-mono text-center text-blue-400")}
                     />
                   </td>
@@ -552,6 +579,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text" 
                       value={entry.day} 
                       onChange={(e) => onUpdate(entry.id, 'day', e.target.value)} 
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'day', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5 text-slate-400 bg-slate-400/5 border-0")} 
                     />
                   </td>
@@ -560,6 +588,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text" 
                       value={entry.night} 
                       onChange={(e) => onUpdate(entry.id, 'night', e.target.value)} 
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'night', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
                     />
                   </td>
@@ -568,6 +597,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text" 
                       value={entry.crossCountry} 
                       onChange={(e) => onUpdate(entry.id, 'crossCountry', e.target.value)} 
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'crossCountry', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
                     />
                   </td>
@@ -576,6 +606,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text" 
                       value={entry.pic} 
                       onChange={(e) => onUpdate(entry.id, 'pic', e.target.value)} 
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'pic', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
                     />
                   </td>
@@ -584,6 +615,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text" 
                       value={entry.solo || ''} 
                       onChange={(e) => onUpdate(entry.id, 'solo', e.target.value)} 
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'solo', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
                     />
                   </td>
@@ -592,6 +624,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text" 
                       value={entry.sic} 
                       onChange={(e) => onUpdate(entry.id, 'sic', e.target.value)} 
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'sic', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
                     />
                   </td>
@@ -600,6 +633,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text" 
                       value={entry.dualReceived} 
                       onChange={(e) => onUpdate(entry.id, 'dualReceived', e.target.value)} 
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'dualReceived', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
                     />
                   </td>
@@ -608,6 +642,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text" 
                       value={entry.dualGiven} 
                       onChange={(e) => onUpdate(entry.id, 'dualGiven', e.target.value)} 
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'dualGiven', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
                     />
                   </td>
@@ -616,6 +651,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text" 
                       value={entry.instrument} 
                       onChange={(e) => onUpdate(entry.id, 'instrument', e.target.value)} 
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'instrument', "bg-transparent w-full outline-none text-xs font-mono text-center text-emerald-400 font-bold rounded py-1.5")} 
                     />
                   </td>
@@ -624,6 +660,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text" 
                       value={entry.simulatedInstrument} 
                       onChange={(e) => onUpdate(entry.id, 'simulatedInstrument', e.target.value)} 
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'simulatedInstrument', "bg-transparent w-full outline-none text-xs font-mono text-center text-cyan-400 rounded py-1.5")} 
                     />
                   </td>
@@ -632,6 +669,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text" 
                       value={entry.approaches} 
                       onChange={(e) => onUpdate(entry.id, 'approaches', e.target.value)} 
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'approaches', "bg-transparent w-full outline-none text-xs font-mono text-center text-amber-500 font-bold rounded py-1.5")} 
                     />
                   </td>
@@ -640,6 +678,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text" 
                       value={entry.landingsDay} 
                       onChange={(e) => onUpdate(entry.id, 'landingsDay', e.target.value)} 
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'landingsDay', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
                     />
                   </td>
@@ -648,6 +687,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text" 
                       value={entry.landingsNight} 
                       onChange={(e) => onUpdate(entry.id, 'landingsNight', e.target.value)} 
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'landingsNight', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
                     />
                   </td>
@@ -656,6 +696,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text" 
                       value={entry.groundReceived || ''} 
                       onChange={(e) => onUpdate(entry.id, 'groundReceived', e.target.value)} 
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'groundReceived', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
                     />
                   </td>
@@ -664,6 +705,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text" 
                       value={entry.groundGiven || ''} 
                       onChange={(e) => onUpdate(entry.id, 'groundGiven', e.target.value)} 
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'groundGiven', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
                     />
                   </td>
@@ -673,6 +715,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.comments} 
                       placeholder="Remarks..."
                       onChange={(e) => onUpdate(entry.id, 'comments', e.target.value)} 
+                      readOnly={readOnly}
                       className={getFieldClass(entry, 'comments', "bg-transparent w-full outline-none text-xs px-2 py-2 sm:py-1.5 rounded truncate focus:bg-slate-800 min-h-[44px] sm:min-h-0")} 
                     />
                   </td>
