@@ -1343,7 +1343,7 @@ const App: React.FC = () => {
       {/* Mobile Bottom Navigation */}
       {isMobile && (
         <nav className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 z-40 md:hidden">
-          <div className="grid grid-cols-4 gap-1 px-2 py-2">
+          <div className="grid grid-cols-5 gap-1 px-1 py-2">
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all ${activeTab === 'dashboard' ? 'text-blue-400 bg-blue-600/10' : 'text-slate-500'}`}
@@ -1363,6 +1363,13 @@ const App: React.FC = () => {
               <span className="text-[10px] font-semibold">Log</span>
             </button>
             <button
+              onClick={() => setActiveTab('aircraft')}
+              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all ${activeTab === 'aircraft' ? 'text-blue-400 bg-blue-600/10' : 'text-slate-500'}`}
+            >
+              <ICONS.Aircraft />
+              <span className="text-[10px] font-semibold">Aircraft</span>
+            </button>
+            <button
               onClick={() => setActiveTab('tutorial')}
               className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all ${activeTab === 'tutorial' ? 'text-blue-400 bg-blue-600/10' : 'text-slate-500'}`}
             >
@@ -1373,14 +1380,14 @@ const App: React.FC = () => {
             </button>
             <button
               onClick={handleExportModalOpen}
-              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all ${exportableEntries.length > 0 ? 'text-emerald-400' : 'text-slate-500'}`}
+              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all relative ${exportableEntries.length > 0 ? 'text-emerald-400' : 'text-slate-500'}`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
               </svg>
               <span className="text-[10px] font-semibold">Export</span>
               {exportableEntries.length > 0 && (
-                <span className="absolute top-1 right-2 bg-emerald-500 text-white text-[8px] font-bold px-1 rounded-full min-w-[16px] h-4 flex items-center justify-center">
+                <span className="absolute top-0 right-0 bg-emerald-500 text-white text-[8px] font-bold px-1 rounded-full min-w-[14px] h-3.5 flex items-center justify-center">
                   {exportableEntries.length}
                 </span>
               )}
