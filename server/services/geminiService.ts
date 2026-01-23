@@ -108,7 +108,15 @@ const SYSTEM_INSTRUCTION = `
      - "Actual Inst" and "Simulated Inst" are usually decimals.
      - "Approaches" may contain digits or tally marks (e.g., "||" = "2").
   
-  2. COMMENT/REMARK CROSS-REFERENCE (CRITICAL RULE: ADDITIVE ONLY):
+  2. CRITICAL: INSTRUMENT TIME vs APPROACHES ARE INDEPENDENT
+     - "Actual Instrument" time and "Simulated Instrument" time are TIME VALUES (hours/minutes).
+     - "Approaches" is a COUNT of instrument approaches performed (numeric count).
+     - DO NOT infer approaches from instrument time. Having instrument time does NOT mean approaches were performed.
+     - DO NOT infer instrument time from approaches. Having approaches does NOT mean instrument time was logged.
+     - Extract each field independently from its dedicated column only.
+     - Only extract approaches from the "Approaches" column or remarks, never from instrument time values.
+  
+  3. COMMENT/REMARK CROSS-REFERENCE (CRITICAL RULE: ADDITIVE ONLY):
      - Read the "Comments" or "Remarks" section.
      - If Remarks suggest HIGHER values than the columns (e.g. Remarks say "3x ILS" but column has "2"), update column to the HIGHER value.
      - If Remarks suggest LOWER values (e.g. Remarks say "1 approach" but column has "2"), RETAIN the column's original "2".
