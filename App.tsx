@@ -853,6 +853,7 @@ const App: React.FC = () => {
     // Reset state
     setScans([]);
     setEntries([]);
+    setAcceptedTerms(false);
   };
 
   // Grouping logic for the verification queue (Completed but not yet Verified)
