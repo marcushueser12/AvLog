@@ -566,7 +566,7 @@ const AircraftProfilesTab: React.FC = () => {
                           </button>
                           <button
                             onClick={() => handleDelete(aircraftProfile.id)}
-                            className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-[#003366] rounded-lg text-sm font-semibold transition-all"
+                            className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-semibold transition-all shadow-sm hover:shadow-md"
                           >
                             Delete
                           </button>

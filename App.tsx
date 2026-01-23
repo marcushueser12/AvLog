@@ -1463,11 +1463,11 @@ const App: React.FC = () => {
 
       {/* Mobile Bottom Navigation */}
       {isMobile && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 z-40 md:hidden">
+        <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-[#E2E8F0] z-40 md:hidden shadow-lg">
           <div className="grid grid-cols-5 gap-1 px-1 py-2">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all ${activeTab === 'dashboard' ? 'text-blue-400 bg-blue-600/10' : 'text-slate-500'}`}
+              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all ${activeTab === 'dashboard' ? 'text-[#007BFF] bg-[#007BFF]/10' : 'text-[#003366]/70'}`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
@@ -1476,7 +1476,7 @@ const App: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('permanent-log')}
-              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all ${activeTab === 'permanent-log' ? 'text-blue-400 bg-blue-600/10' : 'text-slate-500'}`}
+              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all ${activeTab === 'permanent-log' ? 'text-[#007BFF] bg-[#007BFF]/10' : 'text-[#003366]/70'}`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
@@ -1485,14 +1485,14 @@ const App: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('aircraft')}
-              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all ${activeTab === 'aircraft' ? 'text-blue-400 bg-blue-600/10' : 'text-slate-500'}`}
+              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all ${activeTab === 'aircraft' ? 'text-[#007BFF] bg-[#007BFF]/10' : 'text-[#003366]/70'}`}
             >
               <ICONS.Aircraft />
               <span className="text-[10px] font-semibold">Aircraft</span>
             </button>
             <button
               onClick={() => setActiveTab('tutorial')}
-              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all ${activeTab === 'tutorial' ? 'text-blue-400 bg-blue-600/10' : 'text-slate-500'}`}
+              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all ${activeTab === 'tutorial' ? 'text-[#007BFF] bg-[#007BFF]/10' : 'text-[#003366]/70'}`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
@@ -1501,14 +1501,14 @@ const App: React.FC = () => {
             </button>
             <button
               onClick={handleExportModalOpen}
-              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all relative ${exportableEntries.length > 0 ? 'text-emerald-400' : 'text-slate-500'}`}
+              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all relative ${exportableEntries.length > 0 ? 'text-emerald-600' : 'text-[#003366]/70'}`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
               </svg>
               <span className="text-[10px] font-semibold">Export</span>
               {exportableEntries.length > 0 && (
-                <span className="absolute top-0 right-0 bg-emerald-500 text-white text-[8px] font-bold px-1 rounded-full min-w-[14px] h-3.5 flex items-center justify-center">
+                <span className="absolute top-0 right-0 bg-emerald-600 text-white text-[8px] font-bold px-1 rounded-full min-w-[14px] h-3.5 flex items-center justify-center">
                   {exportableEntries.length}
                 </span>
               )}
@@ -1519,13 +1519,13 @@ const App: React.FC = () => {
 
       {showExportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md">
-          <div className="absolute inset-0 bg-slate-950/80" onClick={() => setShowExportModal(false)}></div>
-          <div className="relative bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95">
-            <h3 className="text-xl font-bold mb-2">Export to ForeFlight</h3>
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowExportModal(false)}></div>
+          <div className="relative bg-white/90 backdrop-blur-md border border-[#E2E8F0] rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95">
+            <h3 className="text-xl font-bold mb-2 text-[#003366]">Export to ForeFlight</h3>
             
             {/* Current verified entries count */}
             {exportableEntries.length > 0 && (
-              <p className="text-slate-400 text-sm mb-4">
+              <p className="text-[#003366]/70 text-sm mb-4">
                 {exportableEntries.length} verified {exportableEntries.length === 1 ? 'entry' : 'entries'} from current session will be included.
               </p>
             )}
@@ -1533,18 +1533,18 @@ const App: React.FC = () => {
             {/* Permanent log selection */}
             {user && permanentLogScans.length > 0 && (
               <div className="mb-6">
-                <h4 className="text-sm font-bold text-white mb-3">Select from Permanent Log:</h4>
+                <h4 className="text-sm font-bold text-[#003366] mb-3">Select from Permanent Log:</h4>
                 {loadingPermanentLog ? (
-                  <div className="text-slate-400 text-sm py-4">Loading saved entries...</div>
+                  <div className="text-[#003366]/70 text-sm py-4">Loading saved entries...</div>
                 ) : (
-                  <div className="space-y-2 max-h-64 overflow-y-auto border border-slate-800 rounded-2xl p-4 bg-slate-950/50">
+                  <div className="space-y-2 max-h-64 overflow-y-auto border border-[#E2E8F0] rounded-2xl p-4 bg-[#F4F7FA]">
                     {permanentLogScans.map(scan => {
                       const scanEntries = permanentLogEntries[scan.id] || [];
                       const isSelected = selectedScansForExport.has(scan.id);
                       return (
                         <label
                           key={scan.id}
-                          className="flex items-center gap-3 p-3 rounded-xl border border-slate-800 hover:border-slate-700 cursor-pointer transition-all bg-slate-900/50"
+                          className="flex items-center gap-3 p-3 rounded-xl border border-[#E2E8F0] hover:border-[#007BFF] cursor-pointer transition-all bg-white/80 backdrop-blur-sm"
                         >
                           <input
                             type="checkbox"
@@ -1558,13 +1558,13 @@ const App: React.FC = () => {
                               }
                               setSelectedScansForExport(newSet);
                             }}
-                            className="w-5 h-5 text-blue-600 bg-slate-950 border-slate-700 rounded focus:ring-blue-500 focus:ring-2"
+                            className="w-5 h-5 text-[#007BFF] bg-white border-[#E2E8F0] rounded focus:ring-[#007BFF] focus:ring-2"
                           />
                           <div className="flex-1">
-                            <div className="text-sm font-bold text-white">
+                            <div className="text-sm font-bold text-[#003366]">
                               Page #{scan.page_number || 'N/A'} ({scan.mode === 'single' ? 'Single' : 'Spread'})
                             </div>
-                            <div className="text-xs text-slate-500 mt-0.5">
+                            <div className="text-xs text-[#003366]/70 mt-0.5">
                               {scanEntries.length} {scanEntries.length === 1 ? 'entry' : 'entries'}
                             </div>
                           </div>
@@ -1574,7 +1574,7 @@ const App: React.FC = () => {
                   </div>
                 )}
                 {selectedScansForExport.size > 0 && (
-                  <p className="text-emerald-400 text-xs mt-3 font-medium">
+                  <p className="text-emerald-600 text-xs mt-3 font-medium">
                     {Array.from(selectedScansForExport).reduce((total, scanId) => total + (permanentLogEntries[scanId]?.length || 0), 0)} entries selected from permanent log
                   </p>
                 )}
@@ -1584,9 +1584,9 @@ const App: React.FC = () => {
             {/* Aircraft profiles selection */}
             {user && exportAircraftProfiles.length > 0 && (
               <div className="mb-6">
-                <h4 className="text-sm font-bold text-white mb-3">Select Aircraft Profiles:</h4>
+                <h4 className="text-sm font-bold text-[#003366] mb-3">Select Aircraft Profiles:</h4>
                 {loadingAircraftForExport ? (
-                  <div className="text-slate-400 text-sm py-4">Loading aircraft profiles...</div>
+                  <div className="text-[#003366]/70 text-sm py-4">Loading aircraft profiles...</div>
                 ) : (
                   <>
                     <div className="mb-2 flex items-center gap-2">
@@ -1595,28 +1595,28 @@ const App: React.FC = () => {
                           // Select all aircraft profiles
                           setSelectedAircraftForExport(new Set(exportAircraftProfiles.map(p => p.id)));
                         }}
-                        className="text-xs text-blue-400 hover:text-blue-300 font-medium"
+                        className="text-xs text-[#007BFF] hover:text-[#007BFF]/80 font-medium"
                       >
                         Select All
                       </button>
-                      <span className="text-slate-600">|</span>
+                      <span className="text-[#003366]/30">|</span>
                       <button
                         onClick={() => {
                           // Deselect all
                           setSelectedAircraftForExport(new Set());
                         }}
-                        className="text-xs text-blue-400 hover:text-blue-300 font-medium"
+                        className="text-xs text-[#007BFF] hover:text-[#007BFF]/80 font-medium"
                       >
                         Deselect All
                       </button>
                     </div>
-                    <div className="space-y-2 max-h-64 overflow-y-auto border border-slate-800 rounded-2xl p-4 bg-slate-950/50">
+                    <div className="space-y-2 max-h-64 overflow-y-auto border border-[#E2E8F0] rounded-2xl p-4 bg-[#F4F7FA]">
                       {exportAircraftProfiles.map(profile => {
                         const isSelected = selectedAircraftForExport.has(profile.id);
                         return (
                           <label
                             key={profile.id}
-                            className="flex items-center gap-3 p-3 rounded-xl border border-slate-800 hover:border-slate-700 cursor-pointer transition-all bg-slate-900/50"
+                            className="flex items-center gap-3 p-3 rounded-xl border border-[#E2E8F0] hover:border-[#007BFF] cursor-pointer transition-all bg-white/80 backdrop-blur-sm"
                           >
                             <input
                               type="checkbox"
@@ -1630,14 +1630,14 @@ const App: React.FC = () => {
                                 }
                                 setSelectedAircraftForExport(newSet);
                               }}
-                              className="w-5 h-5 text-blue-600 bg-slate-950 border-slate-700 rounded focus:ring-blue-500 focus:ring-2"
+                              className="w-5 h-5 text-[#007BFF] bg-white border-[#E2E8F0] rounded focus:ring-[#007BFF] focus:ring-2"
                             />
                             <div className="flex-1">
-                              <div className="text-sm font-bold text-white">
+                              <div className="text-sm font-bold text-[#003366]">
                                 {profile.aircraftId}
-                                {profile.typeCode && <span className="text-slate-400 ml-2">({profile.typeCode})</span>}
+                                {profile.typeCode && <span className="text-[#003366]/70 ml-2">({profile.typeCode})</span>}
                               </div>
-                              <div className="text-xs text-slate-500 mt-0.5">
+                              <div className="text-xs text-[#003366]/70 mt-0.5">
                                 {profile.make && profile.model ? `${profile.make} ${profile.model}` : profile.equipmentType || 'No details'}
                                 {profile.year && ` • ${profile.year}`}
                               </div>
@@ -1647,7 +1647,7 @@ const App: React.FC = () => {
                       })}
                     </div>
                     {selectedAircraftForExport.size > 0 && (
-                      <p className="text-emerald-400 text-xs mt-3 font-medium">
+                      <p className="text-emerald-600 text-xs mt-3 font-medium">
                         {selectedAircraftForExport.size} {selectedAircraftForExport.size === 1 ? 'aircraft profile' : 'aircraft profiles'} selected
                       </p>
                     )}
@@ -1662,28 +1662,28 @@ const App: React.FC = () => {
               const permanentCount = Array.from(selectedScansForExport).reduce((total, scanId) => total + (permanentLogEntries[scanId]?.length || 0), 0);
               const totalCount = currentCount + permanentCount;
               return (
-                <p className="text-blue-400 text-sm mb-6 font-bold">
+                <p className="text-[#007BFF] text-sm mb-6 font-bold">
                   Total: {totalCount} {totalCount === 1 ? 'entry' : 'entries'} will be exported
                 </p>
               );
             })()}
 
             <div className="relative mb-6">
-                <label className="text-xs text-slate-500 mb-2 block">Export filename:</label>
+                <label className="text-xs text-[#003366]/70 mb-2 block">Export filename:</label>
                 <input 
                     type="text" 
                     value={exportName}
                     onChange={(e) => setExportName(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 p-4 rounded-2xl outline-none focus:border-blue-500 transition-all font-mono text-sm"
+                    className="w-full bg-white border border-[#E2E8F0] p-4 rounded-2xl outline-none focus:border-[#007BFF] transition-all font-mono text-sm text-[#003366]"
                 />
             </div>
             <button 
               onClick={handleExport}
-              className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black text-lg transition-all shadow-lg"
+              className="w-full py-4 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-2xl font-black text-lg transition-all shadow-lg shadow-[#003366]/20"
             >
               Download .CSV for ForeFlight
             </button>
-            <button onClick={() => setShowExportModal(false)} className="w-full mt-4 py-2 text-slate-400 hover:text-white font-medium">Cancel</button>
+            <button onClick={() => setShowExportModal(false)} className="w-full mt-4 py-2 text-[#003366]/70 hover:text-[#003366] font-medium">Cancel</button>
           </div>
         </div>
       )}
