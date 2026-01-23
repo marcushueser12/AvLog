@@ -99,7 +99,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   const getFieldClass = (entry: LogbookEntry, field: string, base: string = "") => {
     const uncertain = entry.uncertainFields?.includes(field);
     const readOnlyClass = readOnly ? 'cursor-not-allowed opacity-60 pointer-events-none' : '';
-    return `${base} transition-all duration-300 ${uncertain ? 'bg-amber-500/10 border-amber-500/50 ring-1 ring-amber-500/30' : 'border-transparent'} ${readOnlyClass}`;
+    return `${base} transition-all duration-300 ${uncertain ? 'bg-amber-50 border-amber-300 ring-1 ring-amber-200' : 'border-transparent'} ${readOnlyClass}`;
   };
 
   return (
