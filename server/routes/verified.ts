@@ -563,6 +563,80 @@ router.post('/deduct-credits', verifyAuth, async (req: AuthRequest, res) => {
 });
 
 /**
+ * POST /api/verified/refund-credits
+ * Refund credits to a user (e.g., when extraction fails or returns no entries)
+ * Requires: Authorization Bearer token
+ * Body: { amount: number (optional, defaults to 1), reason?: string }
+ */
+router.post('/refund-credits', verifyAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!;
+    const { amount = 1, reason } = req.body;
+
+    if (typeof amount !== 'number' || amount <= 0) {
+      return res.status(400).json({ error: 'Amount must be a positive number' });
+    }
+
+    // Get current credits
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from('user_profiles')
+      .select('credits')
+      .eq('user_id', userId)
+      .single();
+
+    if (profileError && profileError.code !== 'PGRST116') {
+      console.error('Error fetching profile:', profileError);
+      return res.status(500).json({ error: 'Failed to fetch user profile' });
+    }
+
+    const currentCredits = profile?.credits || 0;
+    const newCredits = currentCredits + amount;
+
+    // Update credits
+    const { error: updateError } = await supabaseAdmin
+      .from('user_profiles')
+      .upsert({
+        user_id: userId,
+        credits: newCredits,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'user_id'
+      });
+
+    if (updateError) {
+      console.error('Error updating credits:', updateError);
+      return res.status(500).json({ error: 'Failed to refund credits' });
+    }
+
+    // Log transaction
+    const { error: transactionError } = await supabaseAdmin
+      .from('credit_transactions')
+      .insert({
+        user_id: userId,
+        amount: amount, // Positive for refund
+        type: 'refund',
+        description: reason || `Refunded ${amount} credit${amount > 1 ? 's' : ''} - extraction returned no entries`
+      });
+
+    if (transactionError) {
+      console.error('Error logging transaction:', transactionError);
+      // Don't fail the request if logging fails
+    }
+
+    res.json({
+      success: true,
+      previousBalance: currentCredits,
+      creditsRefunded: amount,
+      newBalance: newCredits,
+      message: `Successfully refunded ${amount} credit${amount > 1 ? 's' : ''}`
+    });
+  } catch (error: any) {
+    console.error('Refund credits error:', error);
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
+/**
  * DELETE /api/verified/scan/:scanId
  * Delete a verified scan and all its entries
  * Requires: Authorization Bearer token

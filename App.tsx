@@ -353,6 +353,37 @@ const App: React.FC = () => {
           result = await extractLogbookEntriesFromPair(scan.images[0], scan.images[1], scan.expectedEntries);
         }
 
+        // Check if extraction returned any entries
+        if (!result.entries || result.entries.length === 0) {
+          // No entries returned - refund the credit
+          console.warn('Extraction returned no entries, refunding credit');
+          try {
+            const refundResponse = await fetch(`${API_URL}/api/verified/refund-credits`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                amount: 1,
+                reason: `Extraction returned no entries - ${scan.mode === 'single' ? 'single page' : 'spread pair'}`
+              })
+            });
+
+            if (refundResponse.ok) {
+              const refundData = await refundResponse.json();
+              setUserCredits(refundData.newBalance);
+              throw new Error('Extraction returned no entries. Credit has been refunded.');
+            } else {
+              console.error('Failed to refund credit');
+              throw new Error('Extraction returned no entries. Please contact support for a credit refund.');
+            }
+          } catch (refundError: any) {
+            // Re-throw the error to be caught by the outer catch block
+            throw refundError;
+          }
+        }
+
         const entriesWithScanRef = result.entries.map((e: any) => {
           // Normalize date separator (e.g., "8.5" -> "8/5", "12*10" -> "12/10")
           const normalizedDate = normalizeDateSeparator(e.date || '');
