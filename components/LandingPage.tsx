@@ -1,9 +1,9 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { ICONS } from '../constants';
 import { AppTab } from '../types';
 import AuthModal from './AuthModal';
 import { useAuth } from '../contexts/AuthContext';
+import { Plane, FileText, CloudUpload, Clock, Menu, X, ChevronRight, Shield, CheckCircle2, Grid3x3 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface LandingPageProps {
   onStart: (tab?: AppTab) => void;
@@ -27,197 +27,258 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
   }, []);
 
   const menuItems = [
-    { id: 'dashboard', label: 'Scanner Dashboard', icon: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>, desc: 'Main logbook digitization tool' },
-    { id: 'permanent-log', label: 'Permanent Log', icon: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>, desc: 'View and export saved entries' },
-    { id: 'aircraft', label: 'Aircraft Profiles', icon: ICONS.Aircraft, desc: 'Manage your fleet details' },
-    { id: 'stats', label: 'Currency & Stats', icon: ICONS.Stats, desc: 'Track hours and proficiency' },
-    { id: 'tutorial', label: 'App Tutorial', icon: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>, desc: 'Learn how to use LogExtract' },
+    { id: 'dashboard', label: 'Scanner Dashboard', icon: Grid3x3, desc: 'Main logbook digitization tool' },
+    { id: 'permanent-log', label: 'Permanent Log', icon: FileText, desc: 'View and export saved entries' },
+    { id: 'aircraft', label: 'Aircraft Profiles', icon: Plane, desc: 'Manage your fleet details' },
+    { id: 'stats', label: 'Currency & Stats', icon: Clock, desc: 'Track hours and proficiency' },
+    { id: 'tutorial', label: 'App Tutorial', icon: FileText, desc: 'Learn how to use LogExtract' },
   ];
 
-  return (
-    <div className="min-h-screen flex flex-col bg-[#0f172a]">
-      {/* Background decoration */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-blue-600/5 blur-[120px] pointer-events-none rounded-full"></div>
-      
-      {/* Nav (Reverted to original relative positioning and padding) */}
-      <nav className="relative z-50 px-6 py-8 md:px-12 flex justify-between items-center max-w-7xl mx-auto w-full">
-        <div 
-          className="flex items-center gap-3 cursor-pointer group"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        >
-          <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
-            <ICONS.Plane />
-          </div>
-          <span className="text-2xl font-black text-white tracking-tighter">LogExtract</span>
-        </div>
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
 
-        <div className="flex items-center gap-4">
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        duration: 0.5
+      }
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[#F4F7FA]">
+      {/* Background decoration - subtle blue gradient */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-gradient-to-b from-[#007BFF]/10 to-transparent blur-[120px] pointer-events-none rounded-full"></div>
+      
+      {/* Navigation Bar with Glassmorphism */}
+      <nav className="relative z-50 px-6 py-6 md:px-12 backdrop-blur-md bg-white/70 border-b border-[#E2E8F0] shadow-sm">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <motion.div 
+            className="flex items-center gap-3 cursor-pointer group"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            whileHover={{ scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          >
+            <div className="bg-[#003366] p-2.5 rounded-xl shadow-lg shadow-[#003366]/20 group-hover:shadow-[#003366]/30 transition-all">
+              <Plane className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-2xl font-black text-[#003366] tracking-tight">LogExtract</span>
+          </motion.div>
+
+          <div className="flex items-center gap-4">
             {user ? (
               <button
                 onClick={() => onStart('permanent-log')}
-                className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-600/30 text-emerald-400 rounded-xl font-bold transition-all text-sm"
+                className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-xl font-semibold transition-all text-sm"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                </svg>
+                <FileText className="w-4 h-4" />
                 My Log
               </button>
             ) : (
               <button
                 onClick={() => setShowAuthModal(true)}
-                className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-600/30 text-blue-400 rounded-xl font-bold transition-all text-sm"
+                className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-xl font-semibold transition-all text-sm"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
-                </svg>
                 Sign In
               </button>
             )}
+            
             <div className="relative" ref={menuRef}>
-                <button 
-                    onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl font-bold transition-all text-sm group"
-                >
-                    Navigation
-                    <div className={`transition-transform duration-300 ${isMenuOpen ? 'rotate-180' : ''}`}>
-                        <ICONS.ChevronDown />
-                    </div>
-                </button>
+              <button 
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="flex items-center gap-2 px-5 py-2.5 bg-white/80 hover:bg-white border border-[#E2E8F0] text-[#003366] rounded-xl font-semibold transition-all text-sm shadow-sm"
+              >
+                <Menu className="w-4 h-4" />
+                Navigation
+              </button>
 
-                {isMenuOpen && (
-                    <div className="absolute right-0 mt-3 w-72 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200 z-[100]">
-                        <div className="p-3 bg-slate-950/50 border-b border-slate-800">
-                             <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 px-3">Quick Access</span>
-                        </div>
-                        <div className="p-2 space-y-1">
-                            <button 
-                                onClick={() => { setIsMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                                className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl hover:bg-slate-800 transition-colors text-left group"
-                            >
-                                <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                                    <ICONS.Home />
-                                </div>
-                                <div>
-                                    <div className="text-sm font-bold text-white">Home Page</div>
-                                    <div className="text-[10px] text-slate-500">Back to overview</div>
-                                </div>
-                            </button>
-                            
-                            {menuItems.map((item) => {
-                                const ItemIcon = item.icon;
-                                return (
-                                  <button 
-                                      key={item.id}
-                                      onClick={() => { setIsMenuOpen(false); onStart(item.id as AppTab); }}
-                                      className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl hover:bg-slate-800 transition-colors text-left group"
-                                  >
-                                      <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                                          <ItemIcon />
-                                      </div>
-                                      <div>
-                                          <div className="text-sm font-bold text-white">{item.label}</div>
-                                          <div className="text-[10px] text-slate-500">{item.desc}</div>
-                                      </div>
-                                  </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
+              {isMenuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute right-0 mt-3 w-72 bg-white/90 backdrop-blur-md border border-[#E2E8F0] rounded-2xl shadow-xl overflow-hidden z-[100]"
+                >
+                  <div className="p-3 bg-[#F4F7FA] border-b border-[#E2E8F0]">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#003366]/60 px-3">Quick Access</span>
+                  </div>
+                  <div className="p-2 space-y-1">
+                    <button 
+                      onClick={() => { setIsMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#F4F7FA] transition-colors text-left group"
+                    >
+                      <div className="w-10 h-10 bg-[#F4F7FA] rounded-xl flex items-center justify-center text-[#003366]/60 group-hover:bg-[#007BFF] group-hover:text-white transition-all">
+                        <Plane className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-[#003366]">Home Page</div>
+                        <div className="text-[10px] text-[#003366]/60">Back to overview</div>
+                      </div>
+                    </button>
+                    
+                    {menuItems.map((item) => {
+                      const ItemIcon = item.icon;
+                      return (
+                        <motion.button
+                          key={item.id}
+                          onClick={() => { setIsMenuOpen(false); onStart(item.id as AppTab); }}
+                          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#F4F7FA] transition-colors text-left group"
+                          whileHover={{ x: 4 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                        >
+                          <div className="w-10 h-10 bg-[#F4F7FA] rounded-xl flex items-center justify-center text-[#003366]/60 group-hover:bg-[#007BFF] group-hover:text-white transition-all">
+                            <ItemIcon className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <div className="text-sm font-semibold text-[#003366]">{item.label}</div>
+                            <div className="text-[10px] text-[#003366]/60">{item.desc}</div>
+                          </div>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
             </div>
 
-            <button 
-                onClick={() => onStart('dashboard')}
-                className="hidden sm:block px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-all text-sm shadow-lg shadow-blue-600/20"
+            <motion.button
+              onClick={() => onStart('dashboard')}
+              className="hidden sm:block px-6 py-2.5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-xl font-semibold transition-all text-sm shadow-lg shadow-[#003366]/20 shiny-button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-                Start Scanning
-            </button>
+              Start Scanning
+            </motion.button>
+          </div>
         </div>
       </nav>
 
       {/* Hero Section */}
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 max-w-5xl mx-auto py-20">
-        <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight mb-8 leading-[1.1] animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+        <motion.h1
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.1 }}
+          className="text-5xl md:text-7xl font-black text-[#003366] tracking-tight mb-8 leading-[1.1]"
+        >
           Your Physical Logbook, <br />
-          <span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">Digitized in Seconds.</span>
-        </h1>
+          <span className="bg-gradient-to-r from-[#007BFF] to-[#003366] bg-clip-text text-transparent">
+            Digitized in Seconds.
+          </span>
+        </motion.h1>
         
-        <p className="text-slate-400 text-lg md:text-xl max-w-2xl mb-12 leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.2 }}
+          className="text-[#003366]/70 text-lg md:text-xl max-w-2xl mb-12 leading-relaxed"
+        >
           The most advanced AI pilot logbook converter. Scan your handwritten pages and export perfectly formatted CSVs for ForeFlight, Logbook Pro, and more.
-        </p>
+        </motion.p>
 
-        <div className="flex flex-col sm:flex-row gap-4 animate-in fade-in zoom-in-95 duration-700 delay-300">
-            <button 
-                onClick={() => onStart('dashboard')}
-                className="px-10 py-5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black text-lg transition-all shadow-2xl shadow-blue-600/40 flex items-center gap-3 group"
-            >
-                Start Digitizing Now
-                <div className="group-hover:translate-x-1 transition-transform">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                </div>
-            </button>
-            <button 
-                onClick={() => onStart('tutorial')}
-                className="px-10 py-5 bg-slate-900 border border-slate-800 text-slate-300 hover:text-white rounded-2xl font-bold text-lg transition-all flex items-center gap-3"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                View App Tutorial
-            </button>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.3 }}
+          className="flex flex-col sm:flex-row gap-4"
+        >
+          <motion.button
+            onClick={() => onStart('dashboard')}
+            className="px-10 py-5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-2xl font-black text-lg transition-all shadow-2xl shadow-[#003366]/30 flex items-center gap-3 group shiny-button"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            Start Digitizing Now
+            <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          </motion.button>
+          <motion.button
+            onClick={() => onStart('tutorial')}
+            className="px-10 py-5 bg-white border-2 border-[#E2E8F0] text-[#003366] hover:border-[#007BFF] rounded-2xl font-semibold text-lg transition-all shadow-sm flex items-center gap-3"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <FileText className="w-5 h-5" />
+            View App Tutorial
+          </motion.button>
+        </motion.div>
 
         {/* Feature Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-32 text-left animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-500">
-            <div className="p-8 bg-slate-900/50 border border-slate-800 rounded-3xl hover:bg-slate-900/80 transition-all hover:border-blue-500/30 group">
-                <div className="w-12 h-12 bg-blue-600/10 text-blue-400 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                </div>
-                <h3 className="text-xl font-bold text-white mb-3 tracking-tight">AI Handwriting Engine</h3>
-                <p className="text-slate-500 text-sm leading-relaxed">
-                    Built on Gemini 3 Pro, LogExtract understands messy handwriting, ink smears, and pilot shorthand with superhuman accuracy.
-                </p>
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-32 text-left"
+        >
+          <motion.div
+            variants={itemVariants}
+            className="p-8 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl hover:bg-white hover:shadow-lg transition-all group"
+          >
+            <div className="w-12 h-12 bg-[#007BFF]/10 text-[#007BFF] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <Shield className="w-6 h-6" />
             </div>
+            <h3 className="text-xl font-bold text-[#003366] mb-3 tracking-tight">AI Handwriting Engine</h3>
+            <p className="text-[#003366]/70 text-sm leading-relaxed">
+              Built on Gemini 3 Pro, LogExtract understands messy handwriting, ink smears, and pilot shorthand with superhuman accuracy.
+            </p>
+          </motion.div>
 
-            <div className="p-8 bg-slate-900/50 border border-slate-800 rounded-3xl hover:bg-slate-900/80 transition-all hover:border-emerald-500/30 group">
-                <div className="w-12 h-12 bg-emerald-600/10 text-emerald-400 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <ICONS.Check />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-3 tracking-tight">ForeFlight Validated</h3>
-                <p className="text-slate-500 text-sm leading-relaxed">
-                    Our export engine produces structured CSVs that match the ForeFlight Import V2 standard exactly. No manual cleanup needed.
-                </p>
+          <motion.div
+            variants={itemVariants}
+            className="p-8 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl hover:bg-white hover:shadow-lg transition-all group"
+          >
+            <div className="w-12 h-12 bg-[#007BFF]/10 text-[#007BFF] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <CheckCircle2 className="w-6 h-6" />
             </div>
+            <h3 className="text-xl font-bold text-[#003366] mb-3 tracking-tight">ForeFlight Validated</h3>
+            <p className="text-[#003366]/70 text-sm leading-relaxed">
+              Our export engine produces structured CSVs that match the ForeFlight Import V2 standard exactly. No manual cleanup needed.
+            </p>
+          </motion.div>
 
-            <div className="p-8 bg-slate-900/50 border border-slate-800 rounded-3xl hover:bg-slate-900/80 transition-all hover:border-amber-500/30 group">
-                <div className="w-12 h-12 bg-amber-600/10 text-amber-400 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="21" x2="9" y2="10"/><line x1="15" y1="21" x2="15" y2="10"/></svg>
-                </div>
-                <h3 className="text-xl font-bold text-white mb-3 tracking-tight">Spread Support</h3>
-                <p className="text-slate-500 text-sm leading-relaxed">
-                    Upload left and right pages together. LogExtract correlates the columns across the spine to stitch entries into a single flight.
-                </p>
+          <motion.div
+            variants={itemVariants}
+            className="p-8 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl hover:bg-white hover:shadow-lg transition-all group"
+          >
+            <div className="w-12 h-12 bg-[#007BFF]/10 text-[#007BFF] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <CloudUpload className="w-6 h-6" />
             </div>
-        </div>
+            <h3 className="text-xl font-bold text-[#003366] mb-3 tracking-tight">Spread Support</h3>
+            <p className="text-[#003366]/70 text-sm leading-relaxed">
+              Upload left and right pages together. LogExtract correlates the columns across the spine to stitch entries into a single flight.
+            </p>
+          </motion.div>
+        </motion.div>
 
         {/* Floating background airplane icon */}
-        <div className="absolute -bottom-20 -right-20 text-blue-600/5 rotate-[-15deg] pointer-events-none hidden md:block">
-            <svg width="600" height="600" viewBox="0 0 24 24" fill="currentColor"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+        <div className="absolute -bottom-20 -right-20 text-[#007BFF]/5 rotate-[-15deg] pointer-events-none hidden md:block">
+          <Plane className="w-[600px] h-[600px]" />
         </div>
       </main>
 
-      <footer className="relative z-10 p-12 text-center text-slate-700 text-xs border-t border-slate-900">
+      <footer className="relative z-10 p-12 text-center text-[#003366]/60 text-xs border-t border-[#E2E8F0] bg-white/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-2">
-                <div className="bg-slate-800 p-1 rounded-md">
-                    <ICONS.Plane />
-                </div>
-                <span className="font-bold text-slate-500">LOGEXTRACT</span>
+          <div className="flex items-center gap-2">
+            <div className="bg-[#003366] p-1.5 rounded-md">
+              <Plane className="w-4 h-4 text-white" />
             </div>
-            <div className="flex gap-8">
-                <a href="#" className="hover:text-slate-400">Privacy Policy</a>
-                <a href="#" className="hover:text-slate-400">Terms of Service</a>
-                <a href="#" className="hover:text-slate-400">API Documentation</a>
-            </div>
-            <p>© {new Date().getFullYear()} LogExtract Technologies. All rights reserved.</p>
+            <span className="font-bold text-[#003366]">LOGEXTRACT</span>
+          </div>
+          <div className="flex gap-8">
+            <a href="#" className="hover:text-[#007BFF] transition-colors">Privacy Policy</a>
+            <a href="#" className="hover:text-[#007BFF] transition-colors">Terms of Service</a>
+            <a href="#" className="hover:text-[#007BFF] transition-colors">API Documentation</a>
+          </div>
+          <p>© {new Date().getFullYear()} LogExtract Technologies. All rights reserved.</p>
         </div>
       </footer>
 

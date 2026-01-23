@@ -17,6 +17,8 @@ import { generateForeFlightCSV, downloadCSV } from './utils/csvUtils';
 import { reconcileFlightTimes, reconcileIFRData, normalizeDateSeparator, normalizeAircraftId } from './utils/logbookUtils';
 import { getExifOrientation } from './utils/exifUtils';
 import { useMobile } from './utils/useMobile';
+import { motion } from 'framer-motion';
+import { Plane, Grid3x3, FileText, Clock, Home, LogOut, Download, Plus, Trash2, Upload } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -902,54 +904,75 @@ const App: React.FC = () => {
   const currentTotalTime = entries.reduce((acc, curr) => acc + (parseFloat(curr.totalTime) || 0), 0);
 
   const NavButton = ({ tab, label, icon: Icon }: { tab: AppTab, label: string, icon: React.FC }) => (
-    <button 
+    <motion.button 
       onClick={() => setActiveTab(tab)}
-      className={`flex items-center gap-3 px-4 py-3 sm:py-3 rounded-xl font-bold text-sm transition-all border min-h-[44px] sm:min-h-0 ${activeTab === tab ? 'bg-blue-600/10 text-blue-400 border-blue-500/20' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800 border-transparent'}`}
+      className={`flex items-center gap-3 px-4 py-3 sm:py-3 rounded-xl font-semibold text-sm transition-all border min-h-[44px] sm:min-h-0 ${activeTab === tab ? 'bg-[#007BFF]/10 text-[#007BFF] border-[#007BFF]/30 shadow-sm' : 'text-[#003366]/70 hover:text-[#003366] hover:bg-[#F4F7FA] border-transparent'}`}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
     >
       <Icon />
       {label}
-    </button>
+    </motion.button>
   );
 
+  // Calculate stats for Bento Grid
+  const stats = useMemo(() => {
+    const totalTime = entries.reduce((acc, curr) => acc + (parseFloat(curr.totalTime) || 0), 0);
+    const pic = entries.reduce((acc, curr) => acc + (parseFloat(curr.pic) || 0), 0);
+    const multiEngine = entries.filter(e => {
+      const type = e.aircraftType?.toLowerCase() || '';
+      return type.includes('multi') || type.includes('twin');
+    }).length;
+    const night = entries.reduce((acc, curr) => acc + (parseFloat(curr.night) || 0), 0);
+    const instrument = entries.reduce((acc, curr) => acc + (parseFloat(curr.instrument) || 0), 0);
+    const crossCountry = entries.reduce((acc, curr) => acc + (parseFloat(curr.crossCountry) || 0), 0);
+    
+    return { totalTime, pic, multiEngine, night, instrument, crossCountry };
+  }, [entries]);
+
   return (
-    <div className="min-h-screen bg-[#0f172a] flex flex-col md:flex-row overflow-hidden text-slate-200 pb-16 md:pb-0">
+    <div className="min-h-screen bg-[#F4F7FA] flex flex-col md:flex-row overflow-hidden text-[#003366] pb-16 md:pb-0">
       {/* Desktop Sidebar - Hidden on Mobile */}
-      <aside className="hidden md:flex w-64 bg-slate-900 border-r border-slate-800 p-6 flex-col gap-8 shrink-0">
-        <div 
+      <aside className="hidden md:flex w-64 bg-white/80 backdrop-blur-md border-r border-[#E2E8F0] p-6 flex-col gap-8 shrink-0 shadow-sm">
+        <motion.div 
           className="flex items-center gap-3 cursor-pointer group"
           onClick={() => setView('landing')}
+          whileHover={{ scale: 1.02 }}
+          transition={{ type: "spring", stiffness: 400, damping: 17 }}
         >
-          <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
-            <ICONS.Plane />
+          <div className="bg-[#003366] p-2 rounded-xl shadow-lg shadow-[#003366]/20 group-hover:shadow-[#003366]/30 transition-all">
+            <Plane className="w-5 h-5 text-white" />
           </div>
-          <span className="text-xl font-black text-white tracking-tighter">LogExtract</span>
-        </div>
+          <span className="text-xl font-black text-[#003366] tracking-tight">LogExtract</span>
+        </motion.div>
 
         <nav className="flex-1 flex flex-col gap-2">
-          <NavButton tab="dashboard" label="Scanner Dashboard" icon={() => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>} />
-          <NavButton tab="permanent-log" label="Permanent Log" icon={() => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>} />
+          <NavButton tab="dashboard" label="Scanner Dashboard" icon={() => <Grid3x3 className="w-4 h-4" />} />
+          <NavButton tab="permanent-log" label="Permanent Log" icon={() => <FileText className="w-4 h-4" />} />
           <NavButton tab="aircraft" label="Aircraft Profiles" icon={ICONS.Aircraft} />
-          <NavButton tab="stats" label="Currency & Stats" icon={ICONS.Stats} />
-          <div className="my-4 border-t border-slate-800/50"></div>
-          <NavButton tab="tutorial" label="User Guide" icon={() => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>} />
-          <button 
+          <NavButton tab="stats" label="Currency & Stats" icon={() => <Clock className="w-4 h-4" />} />
+          <div className="my-4 border-t border-[#E2E8F0]"></div>
+          <NavButton tab="tutorial" label="User Guide" icon={() => <FileText className="w-4 h-4" />} />
+          <motion.button 
             onClick={() => setView('landing')}
-            className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-300 hover:bg-slate-800 rounded-xl font-bold text-sm transition-all border border-transparent"
+            className="flex items-center gap-3 px-4 py-3 text-[#003366]/70 hover:text-[#003366] hover:bg-[#F4F7FA] rounded-xl font-semibold text-sm transition-all border border-transparent"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
-            <ICONS.Home />
+            <Home className="w-4 h-4" />
             Exit to Home
-          </button>
+          </motion.button>
         </nav>
       </aside>
 
       {/* Mobile Top Bar */}
       {isMobile && (
-        <header className="md:hidden bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
+        <header className="md:hidden bg-white/90 backdrop-blur-md border-b border-[#E2E8F0] px-4 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
           <div className="flex items-center gap-2">
-            <div className="bg-blue-600 p-1.5 rounded-lg">
-              <ICONS.Plane />
+            <div className="bg-[#003366] p-1.5 rounded-lg">
+              <Plane className="w-4 h-4 text-white" />
             </div>
-            <span className="text-lg font-black text-white">LogExtract</span>
+            <span className="text-lg font-black text-[#003366]">LogExtract</span>
           </div>
           <div className="flex items-center gap-2">
             {user ? (
@@ -958,8 +981,8 @@ const App: React.FC = () => {
                   onClick={() => setShowPaymentModal(true)}
                   className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer transition-all hover:opacity-80 ${
                     userCredits === 0 
-                      ? 'bg-red-600/10 border-red-600/30 text-red-400 hover:bg-red-600/20' 
-                      : 'bg-blue-600/10 border-blue-600/30 text-blue-400 hover:bg-blue-600/20'
+                      ? 'bg-red-100 border-red-300 text-red-600 hover:bg-red-200' 
+                      : 'bg-[#007BFF]/10 border-[#007BFF]/30 text-[#007BFF] hover:bg-[#007BFF]/20'
                   }`}
                   title="Buy credits"
                 >
@@ -967,17 +990,15 @@ const App: React.FC = () => {
                 </button>
                 <button
                   onClick={handleSignOut}
-                  className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-lg"
+                  className="p-2 bg-[#F4F7FA] hover:bg-[#E2E8F0] text-[#003366]/70 rounded-lg"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-                  </svg>
+                  <LogOut className="w-4 h-4" />
                 </button>
               </>
             ) : (
               <button
                 onClick={() => setShowAuthModal(true)}
-                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold"
+                className="px-3 py-1.5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-lg text-xs font-semibold"
               >
                 Sign In
               </button>
@@ -986,26 +1007,26 @@ const App: React.FC = () => {
         </header>
       )}
 
-      <main className="flex-1 flex flex-col min-w-0 bg-[#0f172a]">
+      <main className="flex-1 flex flex-col min-w-0 bg-[#F4F7FA]">
         {/* Desktop Header */}
-        <header className="hidden md:flex h-14 px-6 border-b border-slate-800 items-center justify-between bg-slate-900/30 backdrop-blur-xl sticky top-0 z-20 shrink-0">
+        <header className="hidden md:flex h-14 px-6 border-b border-[#E2E8F0] items-center justify-between bg-white/70 backdrop-blur-md sticky top-0 z-20 shrink-0 shadow-sm">
           <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-            <h2 className="text-sm sm:text-base font-bold text-white truncate">
+            <h2 className="text-sm sm:text-base font-bold text-[#003366] truncate">
               {activeTab === 'dashboard' ? 'Logbook Digitizer' : 
                activeTab === 'permanent-log' ? 'Permanent Log' :
                activeTab === 'tutorial' ? 'Tutorial' : 
                activeTab === 'aircraft' ? 'Aircraft' : 'Statistics'}
             </h2>
-            <div className="hidden md:flex items-center gap-2 px-2.5 py-1 bg-emerald-500/10 rounded-lg border border-emerald-500/20 text-emerald-400 text-[10px] font-bold">
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+            <div className="hidden md:flex items-center gap-2 px-2.5 py-1 bg-[#007BFF]/10 rounded-lg border border-[#007BFF]/20 text-[#007BFF] text-[10px] font-bold">
+              <span className="w-1.5 h-1.5 bg-[#007BFF] rounded-full animate-pulse"></span>
               OCR
             </div>
           </div>
           
           <div className="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto justify-end flex-wrap">
-            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-lg border border-slate-700/50">
-              <span className="text-xs text-slate-500 font-medium">Total:</span>
-              <span className="text-sm font-mono text-blue-400 font-bold">{currentTotalTime.toFixed(1)}h</span>
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-white/80 rounded-lg border border-[#E2E8F0] shadow-sm">
+              <span className="text-xs text-[#003366]/70 font-medium">Total:</span>
+              <span className="text-sm font-mono text-[#007BFF] font-bold">{currentTotalTime.toFixed(1)}h</span>
             </div>
             
             {user ? (
@@ -1014,8 +1035,8 @@ const App: React.FC = () => {
                   onClick={() => userCredits === 0 ? setShowPaymentModal(true) : null}
                   className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-lg border transition-all text-xs sm:text-sm font-semibold min-h-[44px] sm:min-h-0 ${
                     userCredits === 0 
-                      ? 'bg-red-600/10 border-red-600/30 text-red-400 hover:bg-red-600/20 cursor-pointer' 
-                      : 'bg-blue-600/10 border-blue-600/30 text-blue-400 cursor-default'
+                      ? 'bg-red-100 border-red-300 text-red-600 hover:bg-red-200 cursor-pointer' 
+                      : 'bg-[#007BFF]/10 border-[#007BFF]/30 text-[#007BFF] cursor-default'
                   }`}
                   title={userCredits === 0 ? 'Click to buy credits' : `${userCredits} credit${userCredits !== 1 ? 's' : ''} available`}
                 >
@@ -1030,48 +1051,44 @@ const App: React.FC = () => {
                 {userCredits !== 0 && (
                   <button
                     onClick={() => setShowPaymentModal(true)}
-                    className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-600/30 text-emerald-400 rounded-lg text-xs font-semibold transition-all"
+                    className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-lg text-xs font-semibold transition-all"
                     title="Buy more credits"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 5v14M5 12h14"/>
-                    </svg>
+                    <Plus className="w-3 h-3" />
                     <span>Add</span>
                   </button>
                 )}
-                <div className="hidden md:flex items-center gap-2 px-2.5 py-1.5 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                  <span className="text-xs text-slate-400 font-medium truncate max-w-[120px]">{user.email?.split('@')[0]}</span>
+                <div className="hidden md:flex items-center gap-2 px-2.5 py-1.5 bg-white/80 rounded-lg border border-[#E2E8F0] shadow-sm">
+                  <span className="text-xs text-[#003366]/70 font-medium truncate max-w-[120px]">{user.email?.split('@')[0]}</span>
                 </div>
                 <button
                   onClick={handleSignOut}
-                  className="px-2.5 sm:px-2.5 py-2 sm:py-1.5 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400 hover:text-slate-300 rounded-lg transition-all border border-slate-700/50 min-h-[44px] sm:min-h-0"
+                  className="px-2.5 sm:px-2.5 py-2 sm:py-1.5 bg-white/80 hover:bg-[#F4F7FA] text-[#003366]/70 hover:text-[#003366] rounded-lg transition-all border border-[#E2E8F0] min-h-[44px] sm:min-h-0"
                   title="Sign Out"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-                  </svg>
+                  <LogOut className="w-4 h-4" />
                 </button>
               </>
             ) : (
               <button
                 onClick={() => setShowAuthModal(true)}
-                className="px-3 py-2 sm:py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-semibold transition-all border border-slate-700 min-h-[44px] sm:min-h-0"
+                className="px-3 py-2 sm:py-1.5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-lg text-sm font-semibold transition-all border border-[#003366] min-h-[44px] sm:min-h-0"
               >
                 Sign In
               </button>
             )}
-            <button 
+            <motion.button 
               onClick={handleExportModalOpen}
-              className="px-3 py-2 sm:py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-blue-500/20 flex items-center gap-1.5 min-h-[44px] sm:min-h-0"
+              className="px-3 py-2 sm:py-1.5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-[#003366]/20 flex items-center gap-1.5 min-h-[44px] sm:min-h-0 shiny-button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
+              <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Export</span>
               {exportableEntries.length > 0 && (
-                <span className="text-xs bg-blue-700 px-1.5 py-0.5 rounded font-bold">{exportableEntries.length}</span>
+                <span className="text-xs bg-[#007BFF] px-1.5 py-0.5 rounded font-bold">{exportableEntries.length}</span>
               )}
-            </button>
+            </motion.button>
           </div>
         </header>
 
@@ -1080,83 +1097,136 @@ const App: React.FC = () => {
             <PermanentLogTab />
           ) : activeTab === 'dashboard' ? (
             <div className="space-y-10">
+              {/* Bento Grid Stats */}
+              <motion.section
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+              >
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  className="p-6 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl shadow-sm hover:shadow-md transition-all"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-[#003366]/70">Total Time</span>
+                    <Clock className="w-5 h-5 text-[#007BFF]" />
+                  </div>
+                  <p className="text-3xl font-black text-[#003366]">{stats.totalTime.toFixed(1)}</p>
+                  <p className="text-xs text-[#003366]/60 mt-1">hours</p>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  className="p-6 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl shadow-sm hover:shadow-md transition-all"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-[#003366]/70">PIC</span>
+                    <Plane className="w-5 h-5 text-[#007BFF]" />
+                  </div>
+                  <p className="text-3xl font-black text-[#003366]">{stats.pic.toFixed(1)}</p>
+                  <p className="text-xs text-[#003366]/60 mt-1">hours</p>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  className="p-6 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl shadow-sm hover:shadow-md transition-all"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-[#003366]/70">Multi-Engine</span>
+                    <Plane className="w-5 h-5 text-[#007BFF]" />
+                  </div>
+                  <p className="text-3xl font-black text-[#003366]">{stats.multiEngine}</p>
+                  <p className="text-xs text-[#003366]/60 mt-1">flights</p>
+                </motion.div>
+              </motion.section>
+
               <section className="space-y-6">
                 <div className="flex flex-col gap-4">
                   <div>
-                    <h3 className="text-lg md:text-xl font-bold text-white">Staging Area</h3>
-                    <p className="text-xs md:text-sm text-slate-500">The software verifies row alignment and image clarity before extraction.</p>
+                    <h3 className="text-lg md:text-xl font-bold text-[#003366]">Staging Area</h3>
+                    <p className="text-xs md:text-sm text-[#003366]/70">The software verifies row alignment and image clarity before extraction.</p>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3">
                     <div className="flex gap-3">
-                      <button 
+                      <motion.button 
                         onClick={() => addStagingSlot('single')}
-                        className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-sm font-bold transition-all border border-slate-700 min-h-[44px]"
+                        className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-3 bg-white/80 hover:bg-white border border-[#E2E8F0] text-[#003366] rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md min-h-[44px]"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                       >
-                        <ICONS.Plus /> <span className="hidden sm:inline">New</span> Single
-                      </button>
-                      <button 
+                        <Plus className="w-4 h-4" /> <span className="hidden sm:inline">New</span> Single
+                      </motion.button>
+                      <motion.button 
                         onClick={() => addStagingSlot('spread')}
-                        className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-sm font-bold transition-all border border-slate-700 min-h-[44px]"
+                        className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-3 bg-white/80 hover:bg-white border border-[#E2E8F0] text-[#003366] rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md min-h-[44px]"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                       >
-                        <ICONS.Plus /> <span className="hidden sm:inline">New</span> Spread
-                      </button>
+                        <Plus className="w-4 h-4" /> <span className="hidden sm:inline">New</span> Spread
+                      </motion.button>
                     </div>
-                    <button 
+                    <motion.button 
                       onClick={processPendingScans}
                       disabled={isBatchProcessing || !user || (userCredits !== null && userCredits < 1) || !scans.some(s => s.status === 'pending' && (s.mode === 'single' ? s.images.length >= 1 : s.images.length === 2))}
-                      className="flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-500/20 min-h-[44px]"
+                      className="flex items-center justify-center gap-2 px-6 py-3 bg-[#003366] hover:bg-[#003366]/90 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-[#003366]/20 min-h-[44px] shiny-button"
                       title={!user ? 'Sign in required' : (userCredits !== null && userCredits < 1) ? 'Insufficient credits' : 'Start extraction (1 credit per scan)'}
+                      whileHover={{ scale: isBatchProcessing || !user || (userCredits !== null && userCredits < 1) ? 1 : 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                     >
                       {isBatchProcessing ? (
                         <><span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></span> Reconciling...</>
                       ) : (
                         <><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Start Extraction</>
                       )}
-                    </button>
+                    </motion.button>
                   </div>
                 </div>
 
                 {scans.filter(s => s.status !== 'verified').length === 0 ? (
-                  <div className="h-48 border-2 border-dashed border-slate-800 rounded-3xl flex flex-col items-center justify-center gap-3 text-slate-600">
-                    <div className="p-4 bg-slate-900 rounded-2xl">
-                        <ICONS.Upload />
+                  <div className="h-48 border-2 border-dashed border-[#E2E8F0] rounded-2xl flex flex-col items-center justify-center gap-3 text-[#003366]/60 bg-white/50 backdrop-blur-sm">
+                    <div className="p-4 bg-[#F4F7FA] rounded-2xl">
+                        <Upload className="w-8 h-8 text-[#007BFF]" />
                     </div>
                     <p className="text-sm font-medium">Create a scan slot and upload your logbook pages.</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {scans.filter(s => s.status !== 'verified').map(scan => (
-                      <div key={scan.id} className="relative flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden group hover:border-slate-700 transition-all">
-                        <div className="p-3 border-b border-slate-800 flex items-center justify-between bg-slate-950/20">
+                      <motion.div
+                        key={scan.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="relative flex flex-col bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl overflow-hidden group hover:border-[#007BFF]/30 hover:shadow-lg transition-all shadow-sm"
+                      >
+                        <div className="p-3 border-b border-[#E2E8F0] flex items-center justify-between bg-[#F4F7FA]/50">
                           <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${scan.status === 'completed' ? 'bg-emerald-500' : scan.status === 'processing' ? 'bg-blue-500 animate-pulse' : 'bg-amber-500'}`}></div>
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                            <div className={`w-2 h-2 rounded-full ${scan.status === 'completed' ? 'bg-emerald-500' : scan.status === 'processing' ? 'bg-[#007BFF] animate-pulse' : 'bg-amber-500'}`}></div>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#003366]/70">
                                 {scan.mode === 'single' ? 'Single' : 'Spread'}
                             </span>
                           </div>
                           
                           {scan.clarityScore !== undefined && (
-                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-slate-950 rounded-full border border-slate-800">
+                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-white rounded-full border border-[#E2E8F0]">
                               <div className={`w-1 h-1 rounded-full ${scan.clarityScore > 70 ? 'bg-emerald-500' : 'bg-amber-500'}`}></div>
-                              <span className="text-[8px] font-bold text-slate-500">CLARITY: {scan.clarityScore}%</span>
+                              <span className="text-[8px] font-bold text-[#003366]/70">CLARITY: {scan.clarityScore}%</span>
                             </div>
                           )}
 
-                          <button onClick={() => deleteScan(scan.id)} className="p-1 text-slate-600 hover:text-red-400 transition-colors ml-2">
-                            <ICONS.Trash />
+                          <button onClick={() => deleteScan(scan.id)} className="p-1 text-[#003366]/60 hover:text-red-500 transition-colors ml-2">
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
 
                         <div className="flex-1 p-4 grid gap-3" style={{ gridTemplateColumns: scan.mode === 'spread' ? '1fr 1fr' : '1fr' }}>
                           {[...Array(scan.mode === 'spread' ? 2 : 1)].map((_, i) => (
-                            <div key={i} className="relative aspect-[3/4] bg-slate-950 border border-slate-800 rounded-xl overflow-hidden flex flex-col items-center justify-center">
+                            <div key={i} className="relative aspect-[3/4] bg-[#F4F7FA] border border-[#E2E8F0] rounded-xl overflow-hidden flex flex-col items-center justify-center">
                               {scan.images[i] ? (
                                 <img src={scan.images[i]} className={`w-full h-full object-cover ${scan.status === 'completed' ? 'opacity-30' : 'opacity-70'}`} />
                               ) : (
                                 <>
                                   <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => e.target.files?.[0] && handleImageUpload(scan.id, i, e.target.files[0])} />
-                                  <div className="text-blue-500 mb-2"><ICONS.Plus /></div>
-                                  <span className="text-[10px] font-bold text-slate-600 uppercase">Page {i+1}</span>
+                                  <div className="text-[#007BFF] mb-2"><Plus className="w-6 h-6" /></div>
+                                  <span className="text-[10px] font-bold text-[#003366]/70 uppercase">Page {i+1}</span>
                                 </>
                               )}
                             </div>
@@ -1165,9 +1235,9 @@ const App: React.FC = () => {
 
                         {scan.status === 'pending' && (
                           <div className="px-4 pb-4">
-                            <div className="flex items-center justify-between gap-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                            <div className="flex items-center justify-between gap-2 bg-[#F4F7FA] p-2.5 rounded-xl border border-[#E2E8F0]">
                               <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Expected Rows:</span>
+                                <span className="text-[10px] font-bold text-[#003366]/70 uppercase tracking-tight">Expected Rows:</span>
                                 <input 
                                   type="number" 
                                   min="1"
@@ -1175,12 +1245,12 @@ const App: React.FC = () => {
                                   value={scan.expectedEntries || ''}
                                   placeholder="?"
                                   onChange={(e) => handleUpdateExpectedEntries(scan.id, e.target.value ? parseInt(e.target.value) : undefined)}
-                                  className="w-10 bg-transparent border-0 text-xs font-mono text-blue-400 focus:outline-none placeholder:text-slate-700"
+                                  className="w-10 bg-transparent border-0 text-xs font-mono text-[#007BFF] focus:outline-none placeholder:text-[#003366]/40"
                                 />
                               </div>
                               <div className="group/hint relative cursor-help">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-600 hover:text-slate-400 transition-colors"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                                <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-slate-800 border border-slate-700 rounded-lg shadow-xl text-[10px] text-slate-300 leading-tight opacity-0 group-hover/hint:opacity-100 transition-opacity pointer-events-none z-50">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#003366]/60 hover:text-[#003366] transition-colors"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-white border border-[#E2E8F0] rounded-lg shadow-xl text-[10px] text-[#003366]/80 leading-tight opacity-0 group-hover/hint:opacity-100 transition-opacity pointer-events-none z-50">
                                   Providing an expected count helps the AI find faint rows that might otherwise be missed.
                                 </div>
                               </div>
@@ -1189,14 +1259,14 @@ const App: React.FC = () => {
                         )}
 
                         {scan.status === 'completed' && scan.extractedTotals && (
-                            <div className="px-4 py-2 bg-slate-950 border-t border-slate-800">
+                            <div className="px-4 py-2 bg-[#F4F7FA] border-t border-[#E2E8F0]">
                                <div className="flex justify-between items-center text-[10px] font-bold">
-                                  <span className="text-slate-500">PAGE TOTALS</span>
-                                  <span className="text-blue-400">{scan.extractedTotals.totalTime} HRS</span>
+                                  <span className="text-[#003366]/70">PAGE TOTALS</span>
+                                  <span className="text-[#007BFF]">{scan.extractedTotals.totalTime} HRS</span>
                                </div>
                             </div>
                         )}
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 )}
@@ -1206,7 +1276,7 @@ const App: React.FC = () => {
                 <section className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-xl font-bold text-white">Verification Queue</h3>
+                      <h3 className="text-xl font-bold text-[#003366]">Verification Queue</h3>
                       <p className="text-sm text-slate-500">
                         Results are grouped by page scan and auto-sorted by date. 
                         <span className="text-amber-400/80 font-medium"> Tip: Manually verify dates when handwriting is unclear or ambiguous.</span>
