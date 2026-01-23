@@ -456,32 +456,32 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
         <table className="w-full text-left border-collapse min-w-[1950px] text-[11px] sm:text-xs" style={{ width: 'max-content' }}>
           <thead>
             <tr className="bg-[#003366] backdrop-blur-sm text-white text-[10px] uppercase tracking-wider font-bold">
-              <th className="px-3 py-4 sticky left-0 bg-[#003366] z-40 border-r border-[#003366]/50" style={{ width: '48px', minWidth: '48px' }}>#</th>
-              <th className="px-3 py-4 sticky bg-[#003366] z-40 border-r border-[#003366]/50 text-center" style={{ left: '48px', width: '48px', minWidth: '48px' }}>Sync</th>
-              <th className="px-2 py-4 sticky bg-[#003366] z-30 border-r border-[#003366]/50" style={{ left: '96px', width: '100px', minWidth: '100px', maxWidth: '100px' }}>Date</th>
-              <th className="px-2 py-4 sticky bg-[#003366] z-30 border-r border-[#003366]/50 shadow-[4px_0_8px_rgba(0,0,0,0.1)]" style={{ left: '196px', width: '80px', minWidth: '80px', maxWidth: '80px' }}>Tail #</th>
-              <th className="px-3 py-4 w-24">From</th>
-              <th className="px-3 py-4 w-24">To</th>
-              <th className="px-3 py-4 w-24 text-[#007BFF] bg-[#007BFF]/10">Total</th>
-              <th className="px-1 py-4 w-10 text-center" title="Day (Auto-calculated: Total - Night)">
+              <th className="px-2 py-4 sticky left-0 bg-[#003366] z-40 border-r border-[#003366]/50 text-center whitespace-nowrap" style={{ width: 'auto', minWidth: '40px' }}>#</th>
+              <th className="px-2 py-4 sticky bg-[#003366] z-40 border-r border-[#003366]/50 text-center whitespace-nowrap" style={{ left: '40px', width: 'auto', minWidth: '40px' }}>Sync</th>
+              <th className="px-2 py-4 sticky bg-[#003366] z-30 border-r border-[#003366]/50 text-center whitespace-nowrap" style={{ left: '80px', width: 'auto', minWidth: '100px' }}>Date</th>
+              <th className="px-2 py-4 sticky bg-[#003366] z-30 border-r border-[#003366]/50 text-center whitespace-nowrap shadow-[4px_0_8px_rgba(0,0,0,0.1)]" style={{ left: '180px', width: 'auto', minWidth: '80px' }}>Tail #</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap">From</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap">To</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap text-[#007BFF] bg-[#007BFF]/10">Total</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap" title="Day (Auto-calculated: Total - Night)">
                 Day
               </th>
-              <th className="px-3 py-4 w-20">Night</th>
-              <th className="px-3 py-4 w-20">XC</th>
-              <th className="px-3 py-4 w-20">PIC</th>
-              <th className="px-3 py-4 w-20">Solo</th>
-              <th className="px-3 py-4 w-20">SIC</th>
-              <th className="px-3 py-4 w-20">Dual Rec</th>
-              <th className="px-3 py-4 w-20">Dual Giv</th>
-              <th className="px-3 py-4 w-28 text-emerald-300 bg-emerald-600/20">Actual Inst</th>
-              <th className="px-3 py-4 w-28 text-cyan-300 bg-cyan-600/20">Sim Inst</th>
-              <th className="px-3 py-4 w-20 text-amber-300 bg-amber-600/20">Appr</th>
-              <th className="px-3 py-4 w-20">Lnd D</th>
-              <th className="px-3 py-4 w-20">Lnd N</th>
-              <th className="px-3 py-4 w-20">Gnd Rec</th>
-              <th className="px-3 py-4 w-20">Gnd Giv</th>
-              <th className="px-3 py-4 w-32">Comments / Remarks</th>
-              <th className="px-3 py-4 w-16 text-center sticky right-0 bg-[#003366] z-30 border-l border-[#003366]/50 shadow-[-4px_0_8px_rgba(0,0,0,0.1)]">Actions</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap">Night</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap">XC</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap">PIC</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap">Solo</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap">SIC</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap">Dual Rec</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap">Dual Giv</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap text-emerald-300 bg-emerald-600/20">Actual Inst</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap text-cyan-300 bg-cyan-600/20">Sim Inst</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap text-amber-300 bg-amber-600/20">Appr</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap">Lnd D</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap">Lnd N</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap">Gnd Rec</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap">Gnd Giv</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap">Comments / Remarks</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#E2E8F0]">
@@ -497,10 +497,10 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
             ) : (
               entries.map((entry) => (
                 <tr key={entry.id} className="hover:bg-white/80 transition-colors group bg-white">
-                  <td className="p-1 sticky left-0 bg-white group-hover:bg-white/90 z-40 border-r border-[#E2E8F0] text-center text-[10px] text-black font-mono font-semibold" style={{ width: '48px', minWidth: '48px' }}>
+                  <td className="p-1 sticky left-0 bg-white group-hover:bg-white/90 z-40 border-r border-[#E2E8F0] text-center text-[10px] text-black font-mono font-semibold whitespace-nowrap" style={{ width: 'auto', minWidth: '40px' }}>
                     {entry.rowAnchor || '-'}
                   </td>
-                  <td className="p-1 sticky bg-white group-hover:bg-white/90 z-40 border-r border-[#E2E8F0] text-center" style={{ left: '48px', width: '48px', minWidth: '48px' }}>
+                  <td className="p-1 sticky bg-white group-hover:bg-white/90 z-40 border-r border-[#E2E8F0] text-center whitespace-nowrap" style={{ left: '40px', width: 'auto', minWidth: '40px' }}>
                     {entry.reconciliationConfidence === 'low' ? (
                        <div className="text-red-600 flex justify-center" title="Alignment uncertain between pages">
                          <ICONS.Refresh />
@@ -511,7 +511,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       </div>
                     )}
                   </td>
-                  <td className="p-1 sticky bg-white group-hover:bg-white/90 z-20 border-r border-[#E2E8F0]" style={{ left: '96px', width: '100px', minWidth: '100px', maxWidth: '100px' }}>
+                  <td className="p-1 sticky bg-white group-hover:bg-white/90 z-20 border-r border-[#E2E8F0] whitespace-nowrap" style={{ left: '80px', width: 'auto', minWidth: '100px' }}>
                     <input 
                       type="text"
                       value={formatDateForDisplay(entry.date)}
@@ -519,10 +519,10 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       placeholder="MM/DD/YYYY"
                       inputMode="numeric"
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'date', "bg-white hover:border-[#007BFF] focus:border-[#007BFF] rounded px-1.5 py-2 sm:py-1.5 w-full outline-none text-xs text-black font-semibold min-h-[44px] sm:min-h-0 border border-[#E2E8F0]")}
+                      className={getFieldClass(entry, 'date', "bg-white hover:border-[#007BFF] focus:border-[#007BFF] rounded px-1.5 py-2 sm:py-1.5 w-full outline-none text-xs text-black font-semibold min-h-[44px] sm:min-h-0 border border-[#E2E8F0] text-center")}
                     />
                   </td>
-                  <td className="p-1 sticky bg-white group-hover:bg-white/90 z-20 border-r border-[#E2E8F0] shadow-[4px_0_8px_rgba(0,0,0,0.05)]" style={{ left: '196px', width: '80px', minWidth: '80px', maxWidth: '80px' }}>
+                  <td className="p-1 sticky bg-white group-hover:bg-white/90 z-20 border-r border-[#E2E8F0] shadow-[4px_0_8px_rgba(0,0,0,0.05)] whitespace-nowrap" style={{ left: '180px', width: 'auto', minWidth: '80px' }}>
                     <input 
                       type="text"
                       value={entry.aircraftId}
@@ -543,7 +543,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                         }
                       }}
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'aircraftId', "bg-white hover:border-[#007BFF] focus:border-[#007BFF] rounded px-2 py-1.5 w-full outline-none text-xs font-bold uppercase border border-[#E2E8F0] text-black")}
+                      className={getFieldClass(entry, 'aircraftId', "bg-white hover:border-[#007BFF] focus:border-[#007BFF] rounded px-2 py-1.5 w-full outline-none text-xs font-bold uppercase border border-[#E2E8F0] text-black text-center")}
                       placeholder="N123AB"
                     />
                   </td>
@@ -574,13 +574,14 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       className={getFieldClass(entry, 'totalTime', "bg-white hover:border-[#007BFF] focus:border-[#007BFF] rounded px-1 py-1.5 w-full outline-none text-xs font-mono text-center text-[#007BFF] font-bold border border-[#E2E8F0]")}
                     />
                   </td>
-                  <td className="p-0.5 w-10 bg-[#F4F7FA]">
+                  <td className="p-1 bg-[#F4F7FA]">
                     <input 
                       type="text" 
                       value={entry.day} 
                       onChange={(e) => onUpdate(entry.id, 'day', e.target.value)} 
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'day', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border-0")} 
+                      className={getFieldClass(entry, 'day', "bg-transparent outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border-0")}
+                      style={{ width: 'auto', minWidth: '40px' }}
                     />
                   </td>
                   <td className="p-1 bg-white">
@@ -719,7 +720,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       className={getFieldClass(entry, 'comments', "bg-white w-full outline-none text-xs px-2 py-2 sm:py-1.5 rounded truncate focus:bg-white min-h-[44px] sm:min-h-0 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
                     />
                   </td>
-                  <td className="px-2 py-2 text-center sticky right-0 bg-white group-hover:bg-white/90 z-20 border-l border-[#E2E8F0] shadow-[-4px_0_8px_rgba(0,0,0,0.05)]">
+                  <td className="px-2 py-2 text-center bg-white">
                     <button onClick={() => onDelete(entry.id)} className="p-2 text-black hover:text-red-600 transition-colors"><ICONS.Trash /></button>
                   </td>
                 </tr>
@@ -727,13 +728,13 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
             )}
             
             <tr className="bg-[#003366] font-mono text-[11px] border-t-2 border-[#003366]">
-                <td className="p-3 sticky left-0 bg-[#003366] z-40 border-r border-[#003366]/50 text-center text-white uppercase font-black tracking-tighter" style={{ width: '48px', minWidth: '48px' }}>OCR</td>
-                <td className="p-3 sticky bg-[#003366] z-40 border-r border-[#003366]/50 text-center text-white font-bold uppercase tracking-tight" style={{ left: '48px', width: '48px', minWidth: '48px' }}>Sync</td>
-                <td className="p-3 sticky bg-[#003366] z-30 border-r border-[#003366]/50 text-white font-bold uppercase tracking-tight" style={{ left: '96px', width: '100px', minWidth: '100px', maxWidth: '100px' }}>Date</td>
-                <td className="p-3 sticky bg-[#003366] z-30 border-r border-[#003366]/50 text-white font-bold uppercase tracking-tight" style={{ left: '196px', width: '80px', minWidth: '80px', maxWidth: '80px' }}>Tail #</td>
+                <td className="p-3 sticky left-0 bg-[#003366] z-40 border-r border-[#003366]/50 text-center text-white uppercase font-black tracking-tighter whitespace-nowrap" style={{ width: 'auto', minWidth: '40px' }}>OCR</td>
+                <td className="p-3 sticky bg-[#003366] z-40 border-r border-[#003366]/50 text-center text-white font-bold uppercase tracking-tight whitespace-nowrap" style={{ left: '40px', width: 'auto', minWidth: '40px' }}>Sync</td>
+                <td className="p-3 sticky bg-[#003366] z-30 border-r border-[#003366]/50 text-white font-bold uppercase tracking-tight whitespace-nowrap text-center" style={{ left: '80px', width: 'auto', minWidth: '100px' }}>Date</td>
+                <td className="p-3 sticky bg-[#003366] z-30 border-r border-[#003366]/50 text-white font-bold uppercase tracking-tight whitespace-nowrap text-center" style={{ left: '180px', width: 'auto', minWidth: '80px' }}>Tail #</td>
                 <td colSpan={2} className="px-3 py-3 bg-white"></td>
                 <td className="p-3 text-center text-[#007BFF] font-bold bg-[#007BFF]/10 border-r border-[#E2E8F0] ring-1 ring-inset ring-[#007BFF]/20">{sumTotal.toFixed(1)}</td>
-                <td className="w-10 bg-[#F4F7FA]"></td>
+                <td className="bg-[#F4F7FA]"></td>
                 <td colSpan={7} className="bg-white"></td>
                 <td className="p-3 text-center text-emerald-700 font-bold bg-emerald-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-emerald-200">{sumInst.toFixed(1)}</td>
                 <td className="p-3 text-center text-cyan-700 font-bold bg-cyan-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-cyan-200">{sumSim.toFixed(1)}</td>
