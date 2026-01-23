@@ -453,13 +453,13 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
             maxWidth: useTableOnMobile ? '100vw' : 'none'
           }}
         >
-        <table className="w-full text-left border-collapse min-w-[2050px] text-[11px] sm:text-xs" style={{ width: 'max-content' }}>
+        <table className="w-full text-left border-collapse min-w-[1950px] text-[11px] sm:text-xs" style={{ width: 'max-content' }}>
           <thead>
             <tr className="bg-[#003366] backdrop-blur-sm text-white text-[10px] uppercase tracking-wider font-bold">
               <th className="px-3 py-4 w-12 sticky left-0 bg-[#003366] z-40 border-r border-[#003366]/50">#</th>
               <th className="px-3 py-4 w-12 sticky left-12 bg-[#003366] z-40 border-r border-[#003366]/50 text-center">Sync</th>
-              <th className="px-3 py-4 w-32 sticky left-24 bg-[#003366] z-30 border-r border-[#003366]/50">Date</th>
-              <th className="px-3 py-4 w-32 sticky left-56 bg-[#003366] z-30 border-r border-[#003366]/50 shadow-[4px_0_8px_rgba(0,0,0,0.1)]">Tail #</th>
+              <th className="px-2 py-4 w-20 sticky left-24 bg-[#003366] z-30 border-r border-[#003366]/50">Date</th>
+              <th className="px-2 py-4 w-20 sticky left-44 bg-[#003366] z-30 border-r border-[#003366]/50 shadow-[4px_0_8px_rgba(0,0,0,0.1)]">Tail #</th>
               <th className="px-3 py-4 w-24">From</th>
               <th className="px-3 py-4 w-24">To</th>
               <th className="px-3 py-4 w-24 text-[#007BFF] bg-[#007BFF]/10">Total</th>
@@ -519,10 +519,10 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       placeholder="MM/DD/YYYY"
                       inputMode="numeric"
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'date', "bg-white hover:border-[#007BFF] focus:border-[#007BFF] rounded px-2 py-2 sm:py-1.5 w-full outline-none text-xs text-[#003366] font-medium min-h-[44px] sm:min-h-0 border border-[#E2E8F0]")}
+                      className={getFieldClass(entry, 'date', "bg-white hover:border-[#007BFF] focus:border-[#007BFF] rounded px-1.5 py-2 sm:py-1.5 w-full outline-none text-xs text-[#003366] font-medium min-h-[44px] sm:min-h-0 border border-[#E2E8F0]")}
                     />
                   </td>
-                  <td className="p-1 sticky left-56 bg-white group-hover:bg-white/90 z-20 border-r border-[#E2E8F0] shadow-[4px_0_8px_rgba(0,0,0,0.05)]">
+                  <td className="p-1 sticky left-44 bg-white group-hover:bg-white/90 z-20 border-r border-[#E2E8F0] shadow-[4px_0_8px_rgba(0,0,0,0.05)]">
                     <input 
                       type="text"
                       value={entry.aircraftId}
@@ -730,7 +730,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                 <td className="p-3 sticky left-0 bg-[#003366] z-40 border-r border-[#003366]/50 text-center text-white uppercase font-black tracking-tighter">OCR</td>
                 <td className="p-3 sticky left-12 bg-[#003366] z-40 border-r border-[#003366]/50 text-center text-white font-bold uppercase tracking-tight">Sync</td>
                 <td className="p-3 sticky left-24 bg-[#003366] z-30 border-r border-[#003366]/50 text-white font-bold uppercase tracking-tight">Date</td>
-                <td className="p-3 sticky left-56 bg-[#003366] z-30 border-r border-[#003366]/50 text-white font-bold uppercase tracking-tight">Tail #</td>
+                <td className="p-3 sticky left-44 bg-[#003366] z-30 border-r border-[#003366]/50 text-white font-bold uppercase tracking-tight">Tail #</td>
                 <td colSpan={2} className="px-3 py-3 bg-white"></td>
                 <td className="p-3 text-center text-[#007BFF] font-bold bg-[#007BFF]/10 border-r border-[#E2E8F0] ring-1 ring-inset ring-[#007BFF]/20">{sumTotal.toFixed(1)}</td>
                 <td className="w-10 bg-[#F4F7FA]"></td>
