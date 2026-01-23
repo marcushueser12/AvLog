@@ -341,7 +341,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.instrument}
                       onChange={(e) => onUpdate(entry.id, 'instrument', e.target.value)}
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'instrument', `w-full bg-white border border-[#E2E8F0] rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-emerald-600 font-bold text-center outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF] min-h-[44px]`)}
+                      className={getFieldClass(entry, 'instrument', `w-full bg-white border border-[#E2E8F0] rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-black font-bold text-center outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF] min-h-[44px]`)}
                     />
                   </div>
                   
@@ -352,7 +352,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.simulatedInstrument}
                       onChange={(e) => onUpdate(entry.id, 'simulatedInstrument', e.target.value)}
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'simulatedInstrument', `w-full bg-white border border-[#E2E8F0] rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-cyan-600 text-center outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF] min-h-[44px]`)}
+                      className={getFieldClass(entry, 'simulatedInstrument', `w-full bg-white border border-[#E2E8F0] rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-black text-center outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF] min-h-[44px]`)}
                     />
                   </div>
                   
@@ -363,7 +363,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.approaches}
                       onChange={(e) => onUpdate(entry.id, 'approaches', e.target.value)}
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'approaches', `w-full bg-white border border-[#E2E8F0] rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-amber-600 font-bold text-center outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF] min-h-[44px]`)}
+                      className={getFieldClass(entry, 'approaches', `w-full bg-white border border-[#E2E8F0] rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-black font-bold text-center outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF] min-h-[44px]`)}
                     />
                   </div>
                   
@@ -459,7 +459,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
               <th className="px-2 py-4 sticky left-0 bg-[#003366] z-40 border-r border-[#003366]/50 text-center whitespace-nowrap" style={{ width: 'auto', minWidth: '40px' }}>#</th>
               <th className="px-2 py-4 sticky bg-[#003366] z-40 border-r border-[#003366]/50 text-center whitespace-nowrap" style={{ left: '40px', width: 'auto', minWidth: '40px' }}>Sync</th>
               <th className="px-2 py-4 sticky bg-[#003366] z-30 border-r border-[#003366]/50 text-center whitespace-nowrap" style={{ left: '80px', width: 'auto', minWidth: '100px' }}>Date</th>
-              <th className="px-2 py-4 sticky bg-[#003366] z-30 border-r border-[#003366]/50 text-center whitespace-nowrap shadow-[4px_0_8px_rgba(0,0,0,0.1)]" style={{ left: '180px', width: 'auto', minWidth: '80px' }}>Tail #</th>
+              <th className="px-2 py-4 sticky bg-[#003366] z-30 border-r border-[#003366]/50 text-center whitespace-nowrap shadow-[4px_0_8px_rgba(0,0,0,0.1)]" style={{ left: '190px', width: 'auto', minWidth: '80px' }}>Tail #</th>
               <th className="px-2 py-4 text-center whitespace-nowrap">From</th>
               <th className="px-2 py-4 text-center whitespace-nowrap">To</th>
               <th className="px-2 py-4 text-center whitespace-nowrap text-[#007BFF] bg-[#007BFF]/10">Total</th>
@@ -522,7 +522,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       className={getFieldClass(entry, 'date', "bg-white hover:border-[#007BFF] focus:border-[#007BFF] rounded px-1.5 py-2 sm:py-1.5 w-full outline-none text-xs text-black font-semibold min-h-[44px] sm:min-h-0 border border-[#E2E8F0] text-center")}
                     />
                   </td>
-                  <td className="p-1 sticky bg-white group-hover:bg-white/90 z-20 border-r border-[#E2E8F0] shadow-[4px_0_8px_rgba(0,0,0,0.05)] whitespace-nowrap" style={{ left: '180px', width: 'auto', minWidth: '80px' }}>
+                  <td className="p-1 sticky bg-white group-hover:bg-white/90 z-20 border-r border-[#E2E8F0] shadow-[4px_0_8px_rgba(0,0,0,0.05)] whitespace-nowrap" style={{ left: '190px', width: 'auto', minWidth: '80px' }}>
                     <input 
                       type="text"
                       value={entry.aircraftId}
@@ -653,7 +653,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.instrument} 
                       onChange={(e) => onUpdate(entry.id, 'instrument', e.target.value)} 
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'instrument', "bg-white w-full outline-none text-xs font-mono text-center text-emerald-700 font-bold rounded py-1.5 border border-transparent hover:border-emerald-300")} 
+                      className={getFieldClass(entry, 'instrument', "bg-white w-full outline-none text-xs font-mono text-center text-black font-bold rounded py-1.5 border border-transparent hover:border-emerald-300")} 
                     />
                   </td>
                   <td className="p-1 bg-cyan-50">
@@ -662,7 +662,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.simulatedInstrument} 
                       onChange={(e) => onUpdate(entry.id, 'simulatedInstrument', e.target.value)} 
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'simulatedInstrument', "bg-white w-full outline-none text-xs font-mono text-center text-cyan-700 rounded py-1.5 border border-transparent hover:border-cyan-300")} 
+                      className={getFieldClass(entry, 'simulatedInstrument', "bg-white w-full outline-none text-xs font-mono text-center text-black rounded py-1.5 border border-transparent hover:border-cyan-300")} 
                     />
                   </td>
                   <td className="p-1 bg-amber-50">
@@ -671,7 +671,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.approaches} 
                       onChange={(e) => onUpdate(entry.id, 'approaches', e.target.value)} 
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'approaches', "bg-white w-full outline-none text-xs font-mono text-center text-amber-700 font-bold rounded py-1.5 border border-transparent hover:border-amber-300")} 
+                      className={getFieldClass(entry, 'approaches', "bg-white w-full outline-none text-xs font-mono text-center text-black font-bold rounded py-1.5 border border-transparent hover:border-amber-300")} 
                     />
                   </td>
                   <td className="p-1 bg-white">
@@ -731,14 +731,14 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                 <td className="p-3 sticky left-0 bg-[#003366] z-40 border-r border-[#003366]/50 text-center text-white uppercase font-black tracking-tighter whitespace-nowrap" style={{ width: 'auto', minWidth: '40px' }}>OCR</td>
                 <td className="p-3 sticky bg-[#003366] z-40 border-r border-[#003366]/50 text-center text-white font-bold uppercase tracking-tight whitespace-nowrap" style={{ left: '40px', width: 'auto', minWidth: '40px' }}>Sync</td>
                 <td className="p-3 sticky bg-[#003366] z-30 border-r border-[#003366]/50 text-white font-bold uppercase tracking-tight whitespace-nowrap text-center" style={{ left: '80px', width: 'auto', minWidth: '100px' }}>Date</td>
-                <td className="p-3 sticky bg-[#003366] z-30 border-r border-[#003366]/50 text-white font-bold uppercase tracking-tight whitespace-nowrap text-center" style={{ left: '180px', width: 'auto', minWidth: '80px' }}>Tail #</td>
+                <td className="p-3 sticky bg-[#003366] z-30 border-r border-[#003366]/50 text-white font-bold uppercase tracking-tight whitespace-nowrap text-center" style={{ left: '190px', width: 'auto', minWidth: '80px' }}>Tail #</td>
                 <td colSpan={2} className="px-3 py-3 bg-white"></td>
                 <td className="p-3 text-center text-[#007BFF] font-bold bg-[#007BFF]/10 border-r border-[#E2E8F0] ring-1 ring-inset ring-[#007BFF]/20">{sumTotal.toFixed(1)}</td>
                 <td className="bg-[#F4F7FA]"></td>
                 <td colSpan={7} className="bg-white"></td>
-                <td className="p-3 text-center text-emerald-700 font-bold bg-emerald-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-emerald-200">{sumInst.toFixed(1)}</td>
-                <td className="p-3 text-center text-cyan-700 font-bold bg-cyan-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-cyan-200">{sumSim.toFixed(1)}</td>
-                <td className="p-3 text-center text-amber-700 font-bold bg-amber-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-amber-200">{sumAppr}</td>
+                <td className="p-3 text-center text-black font-bold bg-emerald-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-emerald-200">{sumInst.toFixed(1)}</td>
+                <td className="p-3 text-center text-black font-bold bg-cyan-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-cyan-200">{sumSim.toFixed(1)}</td>
+                <td className="p-3 text-center text-black font-bold bg-amber-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-amber-200">{sumAppr}</td>
                 <td colSpan={6} className="bg-white"></td>
             </tr>
           </tbody>
