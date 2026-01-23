@@ -885,37 +885,7 @@ const App: React.FC = () => {
     return map;
   }, [entries]);
 
-  // Show loading state while auth is loading
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-400 text-sm">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (view === 'landing') {
-    return <LandingPage onStart={handleSignIn} />;
-  }
-
-  const currentTotalTime = entries.reduce((acc, curr) => acc + (parseFloat(curr.totalTime) || 0), 0);
-
-  const NavButton = ({ tab, label, icon: Icon }: { tab: AppTab, label: string, icon: React.FC }) => (
-    <motion.button 
-      onClick={() => setActiveTab(tab)}
-      className={`flex items-center gap-3 px-4 py-3 sm:py-3 rounded-xl font-semibold text-sm transition-all border min-h-[44px] sm:min-h-0 ${activeTab === tab ? 'bg-[#007BFF]/10 text-[#007BFF] border-[#007BFF]/30 shadow-sm' : 'text-[#003366]/70 hover:text-[#003366] hover:bg-[#F4F7FA] border-transparent'}`}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-    >
-      <Icon />
-      {label}
-    </motion.button>
-  );
-
-  // Calculate stats for Bento Grid
+  // Calculate stats for Bento Grid - MUST be before early returns
   const stats = useMemo(() => {
     const totalTime = entries.reduce((acc, curr) => acc + (parseFloat(curr.totalTime) || 0), 0);
     const pic = entries.reduce((acc, curr) => acc + (parseFloat(curr.pic) || 0), 0);
@@ -929,6 +899,38 @@ const App: React.FC = () => {
     
     return { totalTime, pic, multiEngine, night, instrument, crossCountry };
   }, [entries]);
+
+  const currentTotalTime = useMemo(() => {
+    return entries.reduce((acc, curr) => acc + (parseFloat(curr.totalTime) || 0), 0);
+  }, [entries]);
+
+  // Show loading state while auth is loading
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#F4F7FA] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[#007BFF] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-[#003366]/70 text-sm">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'landing') {
+    return <LandingPage onStart={handleSignIn} />;
+  }
+
+  const NavButton = ({ tab, label, icon: Icon }: { tab: AppTab, label: string, icon: React.FC }) => (
+    <motion.button 
+      onClick={() => setActiveTab(tab)}
+      className={`flex items-center gap-3 px-4 py-3 sm:py-3 rounded-xl font-semibold text-sm transition-all border min-h-[44px] sm:min-h-0 ${activeTab === tab ? 'bg-[#007BFF]/10 text-[#007BFF] border-[#007BFF]/30 shadow-sm' : 'text-[#003366]/70 hover:text-[#003366] hover:bg-[#F4F7FA] border-transparent'}`}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+    >
+      <Icon />
+      {label}
+    </motion.button>
+  );
 
   return (
     <div className="min-h-screen bg-[#F4F7FA] flex flex-col md:flex-row overflow-hidden text-[#003366] pb-16 md:pb-0">
