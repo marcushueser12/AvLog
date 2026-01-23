@@ -281,8 +281,8 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({
 
   if (images.length === 0) {
     return (
-      <div className="w-full bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-center" style={{ minHeight: '600px' }}>
-        <div className="text-center text-slate-500">
+      <div className="w-full bg-slate-950 rounded-xl border border-[#E2E8F0] flex items-center justify-center" style={{ minHeight: '600px' }}>
+        <div className="text-center text-[#003366]/70">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
@@ -300,7 +300,7 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({
   // If stitching failed, show original images side by side as fallback
   if (images.length === 2 && !stitchedImage && !isLoading && imageError) {
     return (
-      <div className="w-full bg-slate-950 rounded-xl border border-slate-800">
+      <div className="w-full bg-slate-950 rounded-xl border border-[#E2E8F0]">
         {imageError && (
           <div className="px-4 py-2 bg-amber-500/10 border-b border-amber-500/20 text-amber-400 text-xs">
             {imageError}
@@ -327,8 +327,8 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({
 
   if (!displayImage || (images.length === 2 && !stitchedImage && isLoading)) {
     return (
-      <div className="w-full bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-center" style={{ minHeight: '600px' }}>
-        <div className="text-center text-slate-500">
+      <div className="w-full bg-slate-950 rounded-xl border border-[#E2E8F0] flex items-center justify-center" style={{ minHeight: '600px' }}>
+        <div className="text-center text-[#003366]/70">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
@@ -350,33 +350,33 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({
     <div className="w-full">
       {/* Rotation controls */}
       {onRotationChange && images.length > 0 && (
-        <div className="flex items-center justify-between px-4 py-2 bg-slate-900 border-b border-slate-800">
+        <div className="flex items-center justify-between px-4 py-2 bg-white/80 backdrop-blur-sm border-b border-[#E2E8F0]">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-400 font-medium">Image Orientation:</span>
+            <span className="text-xs text-[#003366]/70 font-medium">Image Orientation:</span>
             {images.map((_, index) => (
               <div key={index} className="flex items-center gap-1">
                 {images.length === 2 && (
-                  <span className="text-xs text-slate-500 mr-1">Page {index + 1}:</span>
+                  <span className="text-xs text-[#003366]/70 mr-1">Page {index + 1}:</span>
                 )}
                 <button
                   onClick={() => handleRotate(index, 'left')}
-                  className="p-1.5 hover:bg-slate-800 rounded border border-slate-700 hover:border-slate-600 transition-colors"
+                  className="p-1.5 hover:bg-white/80 backdrop-blur-sm rounded border border-[#E2E8F0] hover:border-[#E2E8F0] transition-colors"
                   title="Rotate 90° counterclockwise"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#003366]/70">
                     <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
                   </svg>
                 </button>
                 <button
                   onClick={() => handleRotate(index, 'right')}
-                  className="p-1.5 hover:bg-slate-800 rounded border border-slate-700 hover:border-slate-600 transition-colors"
+                  className="p-1.5 hover:bg-white/80 backdrop-blur-sm rounded border border-[#E2E8F0] hover:border-[#E2E8F0] transition-colors"
                   title="Rotate 90° clockwise"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#003366]/70">
                     <path d="M21.5 2v6h-6M2.5 22v-6h6M22 11.5a10 10 0 0 1-18.8 4.3M2 12.5a10 10 0 0 1 18.8-4.2"/>
                   </svg>
                 </button>
-                <span className="text-xs text-slate-500 ml-1 min-w-[3rem]">
+                <span className="text-xs text-[#003366]/70 ml-1 min-w-[3rem]">
                   {rotations[index] || 0}°
                 </span>
               </div>
@@ -388,7 +388,7 @@ const ImageViewer = forwardRef<ImageViewerHandle, ImageViewerProps>(({
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="w-full bg-slate-950 rounded-xl border border-slate-800 overflow-x-auto overflow-y-hidden custom-scrollbar"
+        className="w-full bg-slate-950 rounded-xl border border-[#E2E8F0] overflow-x-auto overflow-y-hidden custom-scrollbar"
         style={{ height: '600px' }}
       >
         <div className="flex items-center justify-start h-full" style={{ padding: '16px' }}>

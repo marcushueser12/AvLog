@@ -1,6 +1,6 @@
 import React from 'react';
 import { PageTotals } from '../types';
-import { ICONS } from '../constants';
+import { ChevronDown } from 'lucide-react';
 
 interface ScanReviewRowProps {
   pageNumber: number;
@@ -26,11 +26,11 @@ const ScanReviewRow: React.FC<ScanReviewRowProps> = ({
   return (
     <div 
       onClick={onToggleExpand}
-      className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden cursor-pointer hover:border-slate-700 transition-all"
+      className="bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-xl overflow-hidden cursor-pointer hover:border-[#007BFF]/30 hover:shadow-md transition-all shadow-sm"
     >
-      <div className="flex items-center border-b border-slate-800">
+      <div className="flex items-center border-b border-[#E2E8F0]">
         {/* Verify checkbox and page number */}
-        <div className="flex items-center gap-3 px-4 py-3 border-r border-slate-800 bg-slate-950/50">
+        <div className="flex items-center gap-3 px-4 py-3 border-r border-[#E2E8F0] bg-[#F4F7FA]/50">
           <input
             type="checkbox"
             checked={isVerified}
@@ -39,85 +39,72 @@ const ScanReviewRow: React.FC<ScanReviewRowProps> = ({
               onToggleVerify(e.target.checked);
             }}
             onClick={(e) => e.stopPropagation()}
-            className="w-5 h-5 rounded border-2 border-slate-600 bg-slate-900 text-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer accent-blue-500"
+            className="w-5 h-5 rounded border-2 border-[#E2E8F0] bg-white text-[#007BFF] focus:ring-2 focus:ring-[#007BFF] focus:ring-offset-0 cursor-pointer accent-[#007BFF]"
           />
-          <span className="text-sm font-bold text-slate-400 min-w-[2rem]">#{pageNumber}</span>
+          <span className="text-sm font-bold text-[#003366]/70 min-w-[2rem]">#{pageNumber}</span>
         </div>
 
         {/* Totals row - styled similar to table rows */}
         <div className="flex-1 flex items-center gap-4 px-4 py-3 overflow-x-auto">
           <div className="flex items-center gap-4 min-w-max">
             <div className="flex flex-col">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Total</span>
-              <span className="text-sm font-bold text-blue-400">{totals.totalTime || '0.0'}</span>
+              <span className="text-[10px] text-[#003366]/60 uppercase tracking-wider font-bold">Total</span>
+              <span className="text-sm font-bold text-[#007BFF]">{totals.totalTime || '0.0'}</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Day</span>
-              <span className="text-sm font-bold text-slate-300">{totals.day || '0.0'}</span>
+              <span className="text-[10px] text-[#003366]/60 uppercase tracking-wider font-bold">Day</span>
+              <span className="text-sm font-bold text-[#003366]">{totals.day || '0.0'}</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Night</span>
-              <span className="text-sm font-bold text-slate-300">{totals.night || '0.0'}</span>
+              <span className="text-[10px] text-[#003366]/60 uppercase tracking-wider font-bold">Night</span>
+              <span className="text-sm font-bold text-[#003366]">{totals.night || '0.0'}</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">XC</span>
-              <span className="text-sm font-bold text-slate-300">{totals.crossCountry || '0.0'}</span>
+              <span className="text-[10px] text-[#003366]/60 uppercase tracking-wider font-bold">XC</span>
+              <span className="text-sm font-bold text-[#003366]">{totals.crossCountry || '0.0'}</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">PIC</span>
-              <span className="text-sm font-bold text-slate-300">{totals.pic || '0.0'}</span>
+              <span className="text-[10px] text-[#003366]/60 uppercase tracking-wider font-bold">PIC</span>
+              <span className="text-sm font-bold text-[#003366]">{totals.pic || '0.0'}</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">SIC</span>
-              <span className="text-sm font-bold text-slate-300">{totals.sic || '0.0'}</span>
+              <span className="text-[10px] text-[#003366]/60 uppercase tracking-wider font-bold">SIC</span>
+              <span className="text-sm font-bold text-[#003366]">{totals.sic || '0.0'}</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Dual Rec</span>
-              <span className="text-sm font-bold text-slate-300">{totals.dualReceived || '0.0'}</span>
+              <span className="text-[10px] text-[#003366]/60 uppercase tracking-wider font-bold">Dual Rec</span>
+              <span className="text-sm font-bold text-[#003366]">{totals.dualReceived || '0.0'}</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Dual Giv</span>
-              <span className="text-sm font-bold text-slate-300">{totals.dualGiven || '0.0'}</span>
+              <span className="text-[10px] text-[#003366]/60 uppercase tracking-wider font-bold">Dual Giv</span>
+              <span className="text-sm font-bold text-[#003366]">{totals.dualGiven || '0.0'}</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Inst</span>
-              <span className="text-sm font-bold text-emerald-400">{totals.instrument || '0.0'}</span>
+              <span className="text-[10px] text-[#003366]/60 uppercase tracking-wider font-bold">Inst</span>
+              <span className="text-sm font-bold text-emerald-600">{totals.instrument || '0.0'}</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Sim Inst</span>
-              <span className="text-sm font-bold text-cyan-400">{totals.simulatedInstrument || '0.0'}</span>
+              <span className="text-[10px] text-[#003366]/60 uppercase tracking-wider font-bold">Sim Inst</span>
+              <span className="text-sm font-bold text-cyan-600">{totals.simulatedInstrument || '0.0'}</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Appr</span>
-              <span className="text-sm font-bold text-amber-400">{totals.approaches || '0'}</span>
+              <span className="text-[10px] text-[#003366]/60 uppercase tracking-wider font-bold">Appr</span>
+              <span className="text-sm font-bold text-amber-600">{totals.approaches || '0'}</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Lnd D</span>
-              <span className="text-sm font-bold text-slate-300">{totals.landingsDay || '0'}</span>
+              <span className="text-[10px] text-[#003366]/60 uppercase tracking-wider font-bold">Lnd D</span>
+              <span className="text-sm font-bold text-[#003366]">{totals.landingsDay || '0'}</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Lnd N</span>
-              <span className="text-sm font-bold text-slate-300">{totals.landingsNight || '0'}</span>
+              <span className="text-[10px] text-[#003366]/60 uppercase tracking-wider font-bold">Lnd N</span>
+              <span className="text-sm font-bold text-[#003366]">{totals.landingsNight || '0'}</span>
             </div>
           </div>
         </div>
 
         {/* Expand indicator */}
-        <div className="px-4 text-slate-500">
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            width="16" 
-            height="16" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2" 
-            strokeLinecap="round" 
-            strokeLinejoin="round"
-            className="transform transition-transform"
-          >
-            <path d="M6 9l6 6 6-6"/>
-          </svg>
+        <div className="px-4 text-[#003366]/60">
+          <ChevronDown className="w-4 h-4 transform transition-transform" />
         </div>
       </div>
     </div>

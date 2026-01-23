@@ -283,7 +283,7 @@ const AircraftProfilesTab: React.FC = () => {
   if (authLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="text-slate-400">Loading...</div>
+        <div className="text-[#003366]/70">Loading...</div>
       </div>
     );
   }
@@ -292,12 +292,12 @@ const AircraftProfilesTab: React.FC = () => {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="max-w-md w-full text-center space-y-6">
-          <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-3xl">
-            <div className="w-16 h-16 bg-blue-600/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="p-6 bg-white/80 backdrop-blur-sm/50 border border-[#E2E8F0] rounded-3xl">
+            <div className="w-16 h-16 bg-[#003366]/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <ICONS.Aircraft />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">Sign In Required</h3>
-            <p className="text-slate-400 text-sm">
+            <h3 className="text-xl font-bold text-[#003366] mb-2">Sign In Required</h3>
+            <p className="text-[#003366]/70 text-sm">
               Please sign in to manage your aircraft profiles.
             </p>
           </div>
@@ -309,7 +309,7 @@ const AircraftProfilesTab: React.FC = () => {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="text-slate-400">Loading aircraft profiles...</div>
+        <div className="text-[#003366]/70">Loading aircraft profiles...</div>
       </div>
     );
   }
@@ -318,8 +318,8 @@ const AircraftProfilesTab: React.FC = () => {
     <div className="flex-1 overflow-y-auto p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="mb-8">
-          <h2 className="text-xl md:text-2xl font-bold text-white mb-2">Aircraft Profiles</h2>
-          <p className="text-slate-400 text-sm">
+          <h2 className="text-xl md:text-2xl font-bold text-[#003366] mb-2">Aircraft Profiles</h2>
+          <p className="text-[#003366]/70 text-sm">
             Manage aircraft information for ForeFlight import. Aircraft are automatically added from your logbook entries.
           </p>
         </div>
@@ -327,7 +327,7 @@ const AircraftProfilesTab: React.FC = () => {
         <div className="mb-4">
           <button
             onClick={() => setShowCreateForm(!showCreateForm)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-bold transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-[#003366] hover:bg-blue-500 text-[#003366] rounded-xl text-sm font-bold transition-all"
           >
             <ICONS.Plus />
             Add Aircraft
@@ -335,11 +335,11 @@ const AircraftProfilesTab: React.FC = () => {
         </div>
 
         {showCreateForm && (
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-6">
-            <h3 className="text-lg font-bold text-white mb-4">New Aircraft Profile</h3>
+          <div className="bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl p-6 mb-6">
+            <h3 className="text-lg font-bold text-[#003366] mb-4">New Aircraft Profile</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-400 mb-2">Aircraft ID (Tail Number) *</label>
+                <label className="block text-sm font-semibold text-[#003366]/70 mb-2">Aircraft ID (Tail Number) *</label>
                 <input
                   type="text"
                   value={newAircraft.aircraftId || ''}
@@ -348,65 +348,65 @@ const AircraftProfilesTab: React.FC = () => {
                     setNewAircraft({ ...newAircraft, aircraftId: normalized });
                   }}
                   placeholder="N123AB"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-400 mb-2">Type Code</label>
+                <label className="block text-sm font-semibold text-[#003366]/70 mb-2">Type Code</label>
                 <input
                   type="text"
                   value={newAircraft.typeCode || ''}
                   onChange={(e) => setNewAircraft({ ...newAircraft, typeCode: e.target.value.toUpperCase() })}
                   placeholder="C172"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-400 mb-2">Year</label>
+                <label className="block text-sm font-semibold text-[#003366]/70 mb-2">Year</label>
                 <input
                   type="text"
                   value={newAircraft.year || ''}
                   onChange={(e) => setNewAircraft({ ...newAircraft, year: e.target.value })}
                   placeholder="2020"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-400 mb-2">Make</label>
+                <label className="block text-sm font-semibold text-[#003366]/70 mb-2">Make</label>
                 <input
                   type="text"
                   value={newAircraft.make || ''}
                   onChange={(e) => setNewAircraft({ ...newAircraft, make: e.target.value })}
                   placeholder="Cessna"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-400 mb-2">Model</label>
+                <label className="block text-sm font-semibold text-[#003366]/70 mb-2">Model</label>
                 <input
                   type="text"
                   value={newAircraft.model || ''}
                   onChange={(e) => setNewAircraft({ ...newAircraft, model: e.target.value })}
                   placeholder="172S"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-400 mb-2">Equipment Type</label>
+                <label className="block text-sm font-semibold text-[#003366]/70 mb-2">Equipment Type</label>
                 <input
                   type="text"
                   value={newAircraft.equipmentType || ''}
                   onChange={(e) => setNewAircraft({ ...newAircraft, equipmentType: e.target.value })}
                   placeholder="Full description"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-400 mb-2">Gear Type</label>
+                <label className="block text-sm font-semibold text-[#003366]/70 mb-2">Gear Type</label>
                 <select
                   value={findDisplayText(newAircraft.gearType || '', GEAR_TYPE_OPTIONS)}
                   onChange={(e) => setNewAircraft({ ...newAircraft, gearType: extractAbbreviation(e.target.value) })}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
                 >
                   <option value="">Select Gear Type</option>
                   {GEAR_TYPE_OPTIONS.map(option => (
@@ -415,11 +415,11 @@ const AircraftProfilesTab: React.FC = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-400 mb-2">Engine Type</label>
+                <label className="block text-sm font-semibold text-[#003366]/70 mb-2">Engine Type</label>
                 <select
                   value={findDisplayText(newAircraft.engineType || '', ENGINE_TYPE_OPTIONS)}
                   onChange={(e) => setNewAircraft({ ...newAircraft, engineType: extractAbbreviation(e.target.value) })}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
                 >
                   <option value="">Select Engine Type</option>
                   {ENGINE_TYPE_OPTIONS.map(option => (
@@ -428,11 +428,11 @@ const AircraftProfilesTab: React.FC = () => {
                 </select>
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-slate-400 mb-2">Category/Class</label>
+                <label className="block text-sm font-semibold text-[#003366]/70 mb-2">Category/Class</label>
                 <select
                   value={findDisplayText(newAircraft.categoryClass || '', CATEGORY_CLASS_OPTIONS)}
                   onChange={(e) => setNewAircraft({ ...newAircraft, categoryClass: extractAbbreviation(e.target.value) })}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
                 >
                   <option value="">Select Category/Class</option>
                   {CATEGORY_CLASS_OPTIONS.map(option => (
@@ -446,43 +446,43 @@ const AircraftProfilesTab: React.FC = () => {
                     type="checkbox"
                     checked={newAircraft.complex || false}
                     onChange={(e) => setNewAircraft({ ...newAircraft, complex: e.target.checked })}
-                    className="w-4 h-4 text-blue-600 bg-slate-800 border-slate-700 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-blue-600 bg-white/80 backdrop-blur-sm border-[#E2E8F0] rounded focus:ring-[#007BFF]"
                   />
-                  <span className="text-sm text-slate-300">Complex</span>
+                  <span className="text-sm text-[#003366]">Complex</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={newAircraft.highPerformance || false}
                     onChange={(e) => setNewAircraft({ ...newAircraft, highPerformance: e.target.checked })}
-                    className="w-4 h-4 text-blue-600 bg-slate-800 border-slate-700 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-blue-600 bg-white/80 backdrop-blur-sm border-[#E2E8F0] rounded focus:ring-[#007BFF]"
                   />
-                  <span className="text-sm text-slate-300">High Performance</span>
+                  <span className="text-sm text-[#003366]">High Performance</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={newAircraft.pressurized || false}
                     onChange={(e) => setNewAircraft({ ...newAircraft, pressurized: e.target.checked })}
-                    className="w-4 h-4 text-blue-600 bg-slate-800 border-slate-700 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-blue-600 bg-white/80 backdrop-blur-sm border-[#E2E8F0] rounded focus:ring-[#007BFF]"
                   />
-                  <span className="text-sm text-slate-300">Pressurized</span>
+                  <span className="text-sm text-[#003366]">Pressurized</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={newAircraft.taa || false}
                     onChange={(e) => setNewAircraft({ ...newAircraft, taa: e.target.checked })}
-                    className="w-4 h-4 text-blue-600 bg-slate-800 border-slate-700 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-blue-600 bg-white/80 backdrop-blur-sm border-[#E2E8F0] rounded focus:ring-[#007BFF]"
                   />
-                  <span className="text-sm text-slate-300">TAA</span>
+                  <span className="text-sm text-[#003366]">TAA</span>
                 </label>
               </div>
               <div className="md:col-span-2 flex gap-3">
                 <button
                   onClick={handleCreate}
                   disabled={saving.has('new')}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg font-semibold transition-all"
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-[#003366] rounded-lg font-semibold transition-all"
                 >
                   {saving.has('new') ? 'Saving...' : 'Create'}
                 </button>
@@ -505,7 +505,7 @@ const AircraftProfilesTab: React.FC = () => {
                       taa: false
                     });
                   }}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-semibold transition-all"
+                  className="px-4 py-2 bg-white/80 backdrop-blur-sm hover:bg-white text-[#003366] rounded-lg font-semibold transition-all"
                 >
                   Cancel
                 </button>
@@ -515,12 +515,12 @@ const AircraftProfilesTab: React.FC = () => {
         )}
 
         {aircraft.length === 0 ? (
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center">
-            <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl p-12 text-center">
+            <div className="w-16 h-16 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
               <ICONS.Aircraft />
             </div>
-            <h3 className="text-lg font-bold text-white mb-2">No Aircraft Profiles</h3>
-            <p className="text-slate-400 text-sm mb-4">
+            <h3 className="text-lg font-bold text-[#003366] mb-2">No Aircraft Profiles</h3>
+            <p className="text-[#003366]/70 text-sm mb-4">
               Aircraft will automatically be added when you scan logbook entries, or you can add them manually above.
             </p>
           </div>
@@ -531,12 +531,12 @@ const AircraftProfilesTab: React.FC = () => {
               const profile = isEditing ? editedAircraft : aircraftProfile;
 
               return (
-                <div key={aircraftProfile.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                <div key={aircraftProfile.id} className="bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h3 className="text-lg font-bold text-white">{aircraftProfile.aircraftId}</h3>
+                      <h3 className="text-lg font-bold text-[#003366]">{aircraftProfile.aircraftId}</h3>
                       {aircraftProfile.typeCode && (
-                        <p className="text-sm text-slate-400">{aircraftProfile.typeCode}</p>
+                        <p className="text-sm text-[#003366]/70">{aircraftProfile.typeCode}</p>
                       )}
                     </div>
                     <div className="flex gap-2">
@@ -545,13 +545,13 @@ const AircraftProfilesTab: React.FC = () => {
                           <button
                             onClick={() => handleSave(aircraftProfile.id)}
                             disabled={saving.has(aircraftProfile.id)}
-                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg text-sm font-semibold transition-all"
+                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-[#003366] rounded-lg text-sm font-semibold transition-all"
                           >
                             {saving.has(aircraftProfile.id) ? 'Saving...' : 'Save'}
                           </button>
                           <button
                             onClick={handleCancelEdit}
-                            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-semibold transition-all"
+                            className="px-3 py-1.5 bg-white/80 backdrop-blur-sm hover:bg-white text-[#003366] rounded-lg text-sm font-semibold transition-all"
                           >
                             Cancel
                           </button>
@@ -560,13 +560,13 @@ const AircraftProfilesTab: React.FC = () => {
                         <>
                           <button
                             onClick={() => handleEdit(aircraftProfile)}
-                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition-all"
+                            className="px-3 py-1.5 bg-[#003366] hover:bg-blue-500 text-[#003366] rounded-lg text-sm font-semibold transition-all"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDelete(aircraftProfile.id)}
-                            className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-semibold transition-all"
+                            className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-[#003366] rounded-lg text-sm font-semibold transition-all"
                           >
                             Delete
                           </button>
@@ -577,7 +577,7 @@ const AircraftProfilesTab: React.FC = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-500 mb-1">Aircraft ID</label>
+                      <label className="block text-xs font-semibold text-[#003366]/70 mb-1">Aircraft ID</label>
                       {isEditing ? (
                         <input
                           type="text"
@@ -586,84 +586,84 @@ const AircraftProfilesTab: React.FC = () => {
                             const normalized = normalizeAircraftId(e.target.value);
                             setEditedAircraft({ ...editedAircraft, aircraftId: normalized });
                           }}
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF]"
                         />
                       ) : (
-                        <p className="text-sm text-white">{aircraftProfile.aircraftId}</p>
+                        <p className="text-sm text-[#003366]">{aircraftProfile.aircraftId}</p>
                       )}
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-500 mb-1">Type Code</label>
+                      <label className="block text-xs font-semibold text-[#003366]/70 mb-1">Type Code</label>
                       {isEditing ? (
                         <input
                           type="text"
                           value={profile.typeCode || ''}
                           onChange={(e) => setEditedAircraft({ ...editedAircraft, typeCode: e.target.value.toUpperCase() })}
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF]"
                         />
                       ) : (
-                        <p className="text-sm text-white">{aircraftProfile.typeCode || '-'}</p>
+                        <p className="text-sm text-[#003366]">{aircraftProfile.typeCode || '-'}</p>
                       )}
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-500 mb-1">Year</label>
+                      <label className="block text-xs font-semibold text-[#003366]/70 mb-1">Year</label>
                       {isEditing ? (
                         <input
                           type="text"
                           value={profile.year || ''}
                           onChange={(e) => setEditedAircraft({ ...editedAircraft, year: e.target.value })}
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF]"
                         />
                       ) : (
-                        <p className="text-sm text-white">{aircraftProfile.year || '-'}</p>
+                        <p className="text-sm text-[#003366]">{aircraftProfile.year || '-'}</p>
                       )}
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-500 mb-1">Make</label>
+                      <label className="block text-xs font-semibold text-[#003366]/70 mb-1">Make</label>
                       {isEditing ? (
                         <input
                           type="text"
                           value={profile.make || ''}
                           onChange={(e) => setEditedAircraft({ ...editedAircraft, make: e.target.value })}
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF]"
                         />
                       ) : (
-                        <p className="text-sm text-white">{aircraftProfile.make || '-'}</p>
+                        <p className="text-sm text-[#003366]">{aircraftProfile.make || '-'}</p>
                       )}
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-500 mb-1">Model</label>
+                      <label className="block text-xs font-semibold text-[#003366]/70 mb-1">Model</label>
                       {isEditing ? (
                         <input
                           type="text"
                           value={profile.model || ''}
                           onChange={(e) => setEditedAircraft({ ...editedAircraft, model: e.target.value })}
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF]"
                         />
                       ) : (
-                        <p className="text-sm text-white">{aircraftProfile.model || '-'}</p>
+                        <p className="text-sm text-[#003366]">{aircraftProfile.model || '-'}</p>
                       )}
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-500 mb-1">Equipment Type</label>
+                      <label className="block text-xs font-semibold text-[#003366]/70 mb-1">Equipment Type</label>
                       {isEditing ? (
                         <input
                           type="text"
                           value={profile.equipmentType || ''}
                           onChange={(e) => setEditedAircraft({ ...editedAircraft, equipmentType: e.target.value })}
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF]"
                         />
                       ) : (
-                        <p className="text-sm text-white">{aircraftProfile.equipmentType || '-'}</p>
+                        <p className="text-sm text-[#003366]">{aircraftProfile.equipmentType || '-'}</p>
                       )}
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-500 mb-1">Gear Type</label>
+                      <label className="block text-xs font-semibold text-[#003366]/70 mb-1">Gear Type</label>
                       {isEditing ? (
                         <select
                           value={findDisplayText(profile.gearType || '', GEAR_TYPE_OPTIONS)}
                           onChange={(e) => setEditedAircraft({ ...editedAircraft, gearType: extractAbbreviation(e.target.value) })}
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF]"
                         >
                           <option value="">Select Gear Type</option>
                           {GEAR_TYPE_OPTIONS.map(option => (
@@ -671,16 +671,16 @@ const AircraftProfilesTab: React.FC = () => {
                           ))}
                         </select>
                       ) : (
-                        <p className="text-sm text-white">{findDisplayText(aircraftProfile.gearType || '', GEAR_TYPE_OPTIONS) || '-'}</p>
+                        <p className="text-sm text-[#003366]">{findDisplayText(aircraftProfile.gearType || '', GEAR_TYPE_OPTIONS) || '-'}</p>
                       )}
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-500 mb-1">Engine Type</label>
+                      <label className="block text-xs font-semibold text-[#003366]/70 mb-1">Engine Type</label>
                       {isEditing ? (
                         <select
                           value={findDisplayText(profile.engineType || '', ENGINE_TYPE_OPTIONS)}
                           onChange={(e) => setEditedAircraft({ ...editedAircraft, engineType: extractAbbreviation(e.target.value) })}
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF]"
                         >
                           <option value="">Select Engine Type</option>
                           {ENGINE_TYPE_OPTIONS.map(option => (
@@ -688,16 +688,16 @@ const AircraftProfilesTab: React.FC = () => {
                           ))}
                         </select>
                       ) : (
-                        <p className="text-sm text-white">{findDisplayText(aircraftProfile.engineType || '', ENGINE_TYPE_OPTIONS) || '-'}</p>
+                        <p className="text-sm text-[#003366]">{findDisplayText(aircraftProfile.engineType || '', ENGINE_TYPE_OPTIONS) || '-'}</p>
                       )}
                     </div>
                     <div className="md:col-span-2">
-                      <label className="block text-xs font-semibold text-slate-500 mb-1">Category/Class</label>
+                      <label className="block text-xs font-semibold text-[#003366]/70 mb-1">Category/Class</label>
                       {isEditing ? (
                         <select
                           value={findDisplayText(profile.categoryClass || '', CATEGORY_CLASS_OPTIONS)}
                           onChange={(e) => setEditedAircraft({ ...editedAircraft, categoryClass: extractAbbreviation(e.target.value) })}
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF]"
                         >
                           <option value="">Select Category/Class</option>
                           {CATEGORY_CLASS_OPTIONS.map(option => (
@@ -705,7 +705,7 @@ const AircraftProfilesTab: React.FC = () => {
                           ))}
                         </select>
                       ) : (
-                        <p className="text-sm text-white">{findDisplayText(aircraftProfile.categoryClass || '', CATEGORY_CLASS_OPTIONS) || '-'}</p>
+                        <p className="text-sm text-[#003366]">{findDisplayText(aircraftProfile.categoryClass || '', CATEGORY_CLASS_OPTIONS) || '-'}</p>
                       )}
                     </div>
                     <div className="md:col-span-2 flex gap-4 flex-wrap">
@@ -715,9 +715,9 @@ const AircraftProfilesTab: React.FC = () => {
                           checked={profile.complex || false}
                           disabled={!isEditing}
                           onChange={(e) => isEditing && setEditedAircraft({ ...editedAircraft, complex: e.target.checked })}
-                          className="w-4 h-4 text-blue-600 bg-slate-800 border-slate-700 rounded focus:ring-blue-500 disabled:opacity-50"
+                          className="w-4 h-4 text-blue-600 bg-white/80 backdrop-blur-sm border-[#E2E8F0] rounded focus:ring-[#007BFF] disabled:opacity-50"
                         />
-                        <span className={`text-sm ${isEditing ? 'text-slate-300' : 'text-slate-400'}`}>Complex</span>
+                        <span className={`text-sm ${isEditing ? 'text-[#003366]' : 'text-[#003366]/70'}`}>Complex</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -725,9 +725,9 @@ const AircraftProfilesTab: React.FC = () => {
                           checked={profile.highPerformance || false}
                           disabled={!isEditing}
                           onChange={(e) => isEditing && setEditedAircraft({ ...editedAircraft, highPerformance: e.target.checked })}
-                          className="w-4 h-4 text-blue-600 bg-slate-800 border-slate-700 rounded focus:ring-blue-500 disabled:opacity-50"
+                          className="w-4 h-4 text-blue-600 bg-white/80 backdrop-blur-sm border-[#E2E8F0] rounded focus:ring-[#007BFF] disabled:opacity-50"
                         />
-                        <span className={`text-sm ${isEditing ? 'text-slate-300' : 'text-slate-400'}`}>High Performance</span>
+                        <span className={`text-sm ${isEditing ? 'text-[#003366]' : 'text-[#003366]/70'}`}>High Performance</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -735,9 +735,9 @@ const AircraftProfilesTab: React.FC = () => {
                           checked={profile.pressurized || false}
                           disabled={!isEditing}
                           onChange={(e) => isEditing && setEditedAircraft({ ...editedAircraft, pressurized: e.target.checked })}
-                          className="w-4 h-4 text-blue-600 bg-slate-800 border-slate-700 rounded focus:ring-blue-500 disabled:opacity-50"
+                          className="w-4 h-4 text-blue-600 bg-white/80 backdrop-blur-sm border-[#E2E8F0] rounded focus:ring-[#007BFF] disabled:opacity-50"
                         />
-                        <span className={`text-sm ${isEditing ? 'text-slate-300' : 'text-slate-400'}`}>Pressurized</span>
+                        <span className={`text-sm ${isEditing ? 'text-[#003366]' : 'text-[#003366]/70'}`}>Pressurized</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -745,9 +745,9 @@ const AircraftProfilesTab: React.FC = () => {
                           checked={profile.taa || false}
                           disabled={!isEditing}
                           onChange={(e) => isEditing && setEditedAircraft({ ...editedAircraft, taa: e.target.checked })}
-                          className="w-4 h-4 text-blue-600 bg-slate-800 border-slate-700 rounded focus:ring-blue-500 disabled:opacity-50"
+                          className="w-4 h-4 text-blue-600 bg-white/80 backdrop-blur-sm border-[#E2E8F0] rounded focus:ring-[#007BFF] disabled:opacity-50"
                         />
-                        <span className={`text-sm ${isEditing ? 'text-slate-300' : 'text-slate-400'}`}>TAA</span>
+                        <span className={`text-sm ${isEditing ? 'text-[#003366]' : 'text-[#003366]/70'}`}>TAA</span>
                       </label>
                     </div>
                   </div>

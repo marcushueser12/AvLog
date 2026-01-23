@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { ICONS } from '../constants';
+import { X } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -51,23 +51,23 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 w-full max-w-md shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
+      <div className="bg-white/90 backdrop-blur-md border border-[#E2E8F0] rounded-2xl p-8 w-full max-w-md shadow-2xl">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-black text-white">
+          <h2 className="text-2xl font-black text-[#003366]">
             {isSignUp ? 'Create Account' : 'Sign In'}
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white transition-colors"
+            className="text-[#003366]/60 hover:text-[#003366] transition-colors"
           >
-            <ICONS.Close />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-bold text-slate-400 mb-2">
+            <label htmlFor="email" className="block text-sm font-semibold text-[#003366]/70 mb-2">
               Email
             </label>
             <input
@@ -76,13 +76,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 bg-white border border-[#E2E8F0] rounded-xl text-[#003366] placeholder-[#003366]/40 focus:outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
               placeholder="you@example.com"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-bold text-slate-400 mb-2">
+            <label htmlFor="password" className="block text-sm font-semibold text-[#003366]/70 mb-2">
               Password
             </label>
             <input
@@ -92,13 +92,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 bg-white border border-[#E2E8F0] rounded-xl text-[#003366] placeholder-[#003366]/40 focus:outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
               placeholder="••••••••"
             />
           </div>
 
           {error && (
-            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+            <div className="p-3 bg-red-100 border border-red-300 rounded-xl text-red-600 text-sm">
               {error}
             </div>
           )}
@@ -106,7 +106,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/50 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20 disabled:cursor-not-allowed"
+            className="w-full px-6 py-3 bg-[#003366] hover:bg-[#003366]/90 disabled:bg-[#003366]/50 text-white rounded-xl font-bold transition-all shadow-lg shadow-[#003366]/20 disabled:cursor-not-allowed shiny-button"
           >
             {loading ? 'Loading...' : isSignUp ? 'Create Account' : 'Sign In'}
           </button>
@@ -118,7 +118,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               setIsSignUp(!isSignUp);
               setError(null);
             }}
-            className="text-sm text-slate-400 hover:text-white transition-colors"
+            className="text-sm text-[#003366]/70 hover:text-[#007BFF] transition-colors"
           >
             {isSignUp
               ? 'Already have an account? Sign in'

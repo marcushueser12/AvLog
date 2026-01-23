@@ -167,34 +167,34 @@ const NewAircraftModal: React.FC<NewAircraftModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-        <div className="p-6 border-b border-slate-800">
+      <div className="bg-white/90 backdrop-blur-md border border-[#E2E8F0] rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="p-6 border-b border-[#E2E8F0]">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white">Create New Aircraft Profile</h2>
+            <h2 className="text-xl font-bold text-[#003366]">Create New Aircraft Profile</h2>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+              className="p-2 hover:bg-[#F4F7FA] rounded-lg transition-colors"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#003366]/60">
                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
               </svg>
             </button>
           </div>
-          <p className="text-sm text-slate-400 mt-2">
-            Create a new aircraft profile for <span className="font-bold text-white">{formData.aircraftId}</span>
+          <p className="text-sm text-[#003366]/70 mt-2">
+            Create a new aircraft profile for <span className="font-bold text-[#003366]">{formData.aircraftId}</span>
           </p>
         </div>
 
         <div className="p-6 space-y-4">
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg text-sm">
+            <div className="bg-red-100 border border-red-300 text-red-600 px-4 py-3 rounded-lg text-sm">
               {error}
             </div>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-slate-400 mb-2">Aircraft ID (Tail Number) *</label>
+              <label className="block text-sm font-semibold text-[#003366]/70 mb-2">Aircraft ID (Tail Number) *</label>
               <input
                 type="text"
                 value={formData.aircraftId}
@@ -203,55 +203,55 @@ const NewAircraftModal: React.FC<NewAircraftModalProps> = ({
                   setFormData({ ...formData, aircraftId: normalized });
                 }}
                 placeholder="N123AB"
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 uppercase"
+                className="w-full bg-white border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF] uppercase"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-400 mb-2">Type Code</label>
+              <label className="block text-sm font-semibold text-[#003366]/70 mb-2">Type Code</label>
               <input
                 type="text"
                 value={formData.typeCode}
                 onChange={(e) => setFormData({ ...formData, typeCode: e.target.value.toUpperCase() })}
                 placeholder="C172"
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full bg-white border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-400 mb-2">Year</label>
+              <label className="block text-sm font-semibold text-[#003366]/70 mb-2">Year</label>
               <input
                 type="text"
                 value={formData.year}
                 onChange={(e) => setFormData({ ...formData, year: e.target.value })}
                 placeholder="2020"
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full bg-white border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-400 mb-2">Make</label>
+              <label className="block text-sm font-semibold text-[#003366]/70 mb-2">Make</label>
               <input
                 type="text"
                 value={formData.make}
                 onChange={(e) => setFormData({ ...formData, make: e.target.value })}
                 placeholder="Cessna"
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full bg-white border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-400 mb-2">Model</label>
+              <label className="block text-sm font-semibold text-[#003366]/70 mb-2">Model</label>
               <input
                 type="text"
                 value={formData.model}
                 onChange={(e) => setFormData({ ...formData, model: e.target.value })}
                 placeholder="172S"
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full bg-white border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-400 mb-2">Gear Type</label>
+              <label className="block text-sm font-semibold text-[#003366]/70 mb-2">Gear Type</label>
               <select
                 value={findDisplayText(formData.gearType || '', GEAR_TYPE_OPTIONS)}
                 onChange={(e) => setFormData({ ...formData, gearType: extractAbbreviation(e.target.value) })}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full bg-white border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
               >
                 <option value="">Select Gear Type</option>
                 {GEAR_TYPE_OPTIONS.map(option => (
@@ -260,11 +260,11 @@ const NewAircraftModal: React.FC<NewAircraftModalProps> = ({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-400 mb-2">Engine Type</label>
+              <label className="block text-sm font-semibold text-[#003366]/70 mb-2">Engine Type</label>
               <select
                 value={findDisplayText(formData.engineType || '', ENGINE_TYPE_OPTIONS)}
                 onChange={(e) => setFormData({ ...formData, engineType: extractAbbreviation(e.target.value) })}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full bg-white border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
               >
                 <option value="">Select Engine Type</option>
                 {ENGINE_TYPE_OPTIONS.map(option => (
@@ -273,11 +273,11 @@ const NewAircraftModal: React.FC<NewAircraftModalProps> = ({
               </select>
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-slate-400 mb-2">Category/Class</label>
+              <label className="block text-sm font-semibold text-[#003366]/70 mb-2">Category/Class</label>
               <select
                 value={findDisplayText(formData.categoryClass || '', CATEGORY_CLASS_OPTIONS)}
                 onChange={(e) => setFormData({ ...formData, categoryClass: extractAbbreviation(e.target.value) })}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full bg-white border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
               >
                 <option value="">Select Category/Class</option>
                 {CATEGORY_CLASS_OPTIONS.map(option => (
@@ -291,35 +291,35 @@ const NewAircraftModal: React.FC<NewAircraftModalProps> = ({
                   type="checkbox"
                   checked={formData.complex}
                   onChange={(e) => setFormData({ ...formData, complex: e.target.checked })}
-                  className="w-4 h-4 text-blue-600 bg-slate-800 border-slate-700 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-[#007BFF] bg-white border-[#E2E8F0] rounded focus:ring-[#007BFF]"
                 />
-                <span className="text-sm text-slate-300">Complex</span>
+                <span className="text-sm text-[#003366]">Complex</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={formData.highPerformance}
                   onChange={(e) => setFormData({ ...formData, highPerformance: e.target.checked })}
-                  className="w-4 h-4 text-blue-600 bg-slate-800 border-slate-700 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-[#007BFF] bg-white border-[#E2E8F0] rounded focus:ring-[#007BFF]"
                 />
-                <span className="text-sm text-slate-300">High Performance</span>
+                <span className="text-sm text-[#003366]">High Performance</span>
               </label>
             </div>
           </div>
         </div>
 
-        <div className="p-6 border-t border-slate-800 flex gap-3 justify-end">
+        <div className="p-6 border-t border-[#E2E8F0] flex gap-3 justify-end">
           <button
             onClick={onClose}
             disabled={saving}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-white rounded-lg font-semibold transition-all"
+            className="px-4 py-2 bg-white border border-[#E2E8F0] hover:bg-[#F4F7FA] disabled:opacity-50 text-[#003366] rounded-lg font-semibold transition-all"
           >
             Cancel
           </button>
           <button
             onClick={handleCreate}
             disabled={saving || !formData.aircraftId.trim()}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg font-semibold transition-all flex items-center gap-2"
+            className="px-4 py-2 bg-[#003366] hover:bg-[#003366]/90 disabled:opacity-50 text-white rounded-lg font-semibold transition-all flex items-center gap-2 shiny-button"
           >
             {saving ? (
               <>

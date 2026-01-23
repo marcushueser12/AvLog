@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { ICONS } from '../constants';
+import { X, ShoppingCart, Loader2 } from 'lucide-react';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -92,23 +92,21 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSuccess 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md">
-      <div className="absolute inset-0 bg-slate-950/80" onClick={onClose}></div>
-      <div className="relative bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose}></div>
+      <div className="relative bg-white/90 backdrop-blur-md border border-[#E2E8F0] rounded-3xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-black text-white">Purchase Credits</h2>
+          <h2 className="text-2xl font-black text-[#003366]">Purchase Credits</h2>
           <button
             onClick={onClose}
-            className="text-slate-500 hover:text-white transition-colors"
+            className="text-[#003366]/60 hover:text-[#003366] transition-colors"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
+            <X className="w-6 h-6" />
           </button>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-600/10 border border-red-600/30 rounded-xl">
-            <p className="text-red-400 text-sm font-medium">{error}</p>
+          <div className="mb-6 p-4 bg-red-100 border border-red-300 rounded-xl">
+            <p className="text-red-600 text-sm font-medium">{error}</p>
           </div>
         )}
 
@@ -116,50 +114,48 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSuccess 
           {Object.entries(PRICING_TIERS).map(([key, tier]) => (
             <div
               key={key}
-              className={`relative p-6 rounded-2xl border-2 transition-all ${
+              className={`relative p-6 rounded-2xl border-2 transition-all shadow-sm hover:shadow-md ${
                 tier.popular
-                  ? 'border-blue-500 bg-blue-600/5'
-                  : 'border-slate-800 bg-slate-900/50 hover:border-slate-700'
+                  ? 'border-[#007BFF] bg-[#007BFF]/5'
+                  : 'border-[#E2E8F0] bg-white/80 hover:border-[#007BFF]/30'
               }`}
             >
               {tier.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-full">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-[#007BFF] text-white text-xs font-bold rounded-full">
                   MOST POPULAR
                 </div>
               )}
               
               <div className="text-center mb-6">
-                <h3 className="text-xl font-black text-white mb-2">{tier.name}</h3>
+                <h3 className="text-xl font-black text-[#003366] mb-2">{tier.name}</h3>
                 <div className="mb-2">
-                  <span className="text-4xl font-black text-white">${tier.price}</span>
+                  <span className="text-4xl font-black text-[#003366]">${tier.price}</span>
                 </div>
-                <p className="text-2xl font-bold text-blue-400 mb-1">{tier.credits} Credits</p>
-                <p className="text-xs text-slate-500">${(tier.price / tier.credits).toFixed(2)} per credit</p>
+                <p className="text-2xl font-bold text-[#007BFF] mb-1">{tier.credits} Credits</p>
+                <p className="text-xs text-[#003366]/60">${(tier.price / tier.credits).toFixed(2)} per credit</p>
               </div>
 
-              <p className="text-sm text-slate-400 text-center mb-6 min-h-[40px]">
+              <p className="text-sm text-[#003366]/70 text-center mb-6 min-h-[40px]">
                 {tier.description}
               </p>
 
               <button
                 onClick={() => handlePurchase(key as keyof typeof PRICING_TIERS)}
                 disabled={loading !== null || !user}
-                className={`w-full py-3 rounded-xl font-black text-lg transition-all ${
+                className={`w-full py-3 rounded-xl font-bold text-lg transition-all ${
                   tier.popular
-                    ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20'
-                    : 'bg-slate-800 hover:bg-slate-700 text-white'
+                    ? 'bg-[#003366] hover:bg-[#003366]/90 text-white shadow-lg shadow-[#003366]/20 shiny-button'
+                    : 'bg-white border-2 border-[#E2E8F0] hover:border-[#007BFF] text-[#003366] hover:text-[#007BFF]'
                 } disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
               >
                 {loading === key ? (
                   <>
-                    <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
+                    <Loader2 className="w-5 h-5 animate-spin" />
                     Processing...
                   </>
                 ) : (
                   <>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20 7h-4M4 7h4m0 0a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2M8 7v10a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V7M8 7H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"/>
-                    </svg>
+                    <ShoppingCart className="w-5 h-5" />
                     Purchase
                   </>
                 )}
@@ -168,8 +164,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSuccess 
           ))}
         </div>
 
-        <div className="mt-8 p-4 bg-slate-950/50 rounded-xl border border-slate-800">
-          <p className="text-xs text-slate-500 text-center">
+        <div className="mt-8 p-4 bg-[#F4F7FA] rounded-xl border border-[#E2E8F0]">
+          <p className="text-xs text-[#003366]/60 text-center">
             Secure payment powered by Stripe. Your payment information is encrypted and secure.
           </p>
         </div>

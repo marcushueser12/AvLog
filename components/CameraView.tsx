@@ -70,24 +70,24 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture, onCancel }) => {
 
   return (
     <div className="fixed inset-0 bg-black z-50 flex flex-col">
-      <div className="p-4 flex justify-between items-center bg-slate-900 border-b border-slate-800">
+      <div className="p-4 flex justify-between items-center bg-white/80 backdrop-blur-sm border-b border-[#E2E8F0]">
         <h2 className="text-xl font-bold flex items-center gap-2">
           <ICONS.Camera /> Scan Logbook Page
         </h2>
-        <button onClick={onCancel} className="p-2 hover:bg-slate-800 rounded-full">
+        <button onClick={onCancel} className="p-2 hover:bg-white/80 backdrop-blur-sm rounded-full">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
 
       <div className="flex-1 relative flex items-center justify-center bg-black overflow-hidden">
         {error ? (
-          <div className="text-center p-8 bg-slate-900 rounded-xl max-w-sm">
+          <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-xl max-w-sm">
             <p className="text-red-400 mb-4">{error}</p>
             <input 
               type="file" 
               accept="image/*" 
               onChange={handleFileUpload}
-              className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+              className="block w-full text-sm text-[#003366]/70 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#003366] file:text-[#003366] hover:file:bg-blue-700"
             />
           </div>
         ) : (
@@ -101,16 +101,16 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture, onCancel }) => {
             {/* Guide overlay */}
             <div className="absolute inset-0 border-[40px] border-black/40 pointer-events-none">
                 <div className="w-full h-full border-2 border-dashed border-blue-400/50 rounded-lg flex items-center justify-center">
-                    <p className="text-white/30 text-xs font-medium uppercase tracking-widest">Align logbook page here</p>
+                    <p className="text-[#003366]/30 text-xs font-medium uppercase tracking-widest">Align logbook page here</p>
                 </div>
             </div>
           </>
         )}
       </div>
 
-      <div className="p-8 bg-slate-900 flex justify-around items-center border-t border-slate-800">
+      <div className="p-8 bg-white/80 backdrop-blur-sm flex justify-around items-center border-t border-[#E2E8F0]">
         <div className="w-12">
-            <label className="cursor-pointer hover:text-blue-400 transition-colors">
+            <label className="cursor-pointer hover:text-[#007BFF] transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                 <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
             </label>
