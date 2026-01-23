@@ -148,6 +148,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             onClick={() => {
               setIsSignUp(!isSignUp);
               setError(null);
+              setAcceptedTerms(false);
             }}
             className="text-sm text-[#003366]/70 hover:text-[#007BFF] transition-colors"
           >
