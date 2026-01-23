@@ -274,9 +274,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             <span className="font-bold text-[#003366]">LOGEXTRACT</span>
           </div>
           <div className="flex gap-8">
-            <a href="#" className="hover:text-[#007BFF] transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-[#007BFF] transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-[#007BFF] transition-colors">API Documentation</a>
+            <a href="/PRIVACY_POLICY.md" target="_blank" rel="noopener noreferrer" className="hover:text-[#007BFF] transition-colors">Privacy Policy</a>
+            <a href="/TERMS_OF_SERVICE.md" target="_blank" rel="noopener noreferrer" className="hover:text-[#007BFF] transition-colors">Terms of Service</a>
           </div>
           <p>© {new Date().getFullYear()} LogExtract Technologies. All rights reserved.</p>
         </div>

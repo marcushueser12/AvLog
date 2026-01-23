@@ -70,6 +70,7 @@ const App: React.FC = () => {
   const [showNewAircraftModal, setShowNewAircraftModal] = useState(false);
   const [newAircraftData, setNewAircraftData] = useState<{ aircraftId: string; aircraftType?: string; entryId?: string } | null>(null);
   const [existingAircraftIds, setExistingAircraftIds] = useState<Set<string>>(new Set());
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const handleSignIn = (tab: AppTab = 'dashboard') => {
     setView('app');
@@ -292,6 +293,12 @@ const App: React.FC = () => {
     if (!user) {
       alert('You must be signed in to use the extraction feature. Please sign in to continue.');
       setShowAuthModal(true);
+      return;
+    }
+
+    // Check if Terms are accepted
+    if (!acceptedTerms) {
+      alert('You must accept the Terms of Service and acknowledge that you are responsible for verifying the accuracy of all AI-generated flight data before proceeding.');
       return;
     }
 
@@ -1147,31 +1154,51 @@ const App: React.FC = () => {
                     <h3 className="text-lg md:text-xl font-bold text-[#003366]">Staging Area</h3>
                     <p className="text-xs md:text-sm text-[#003366]/70">The software verifies row alignment and image clarity before extraction.</p>
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <div className="flex gap-3">
-                      <motion.button 
-                        onClick={() => addStagingSlot('single')}
-                        className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-3 bg-white/80 hover:bg-white border border-[#E2E8F0] text-[#003366] rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md min-h-[44px]"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <Plus className="w-4 h-4" /> <span className="hidden sm:inline">New</span> Single
-                      </motion.button>
-                      <motion.button 
-                        onClick={() => addStagingSlot('spread')}
-                        className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-3 bg-white/80 hover:bg-white border border-[#E2E8F0] text-[#003366] rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md min-h-[44px]"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <Plus className="w-4 h-4" /> <span className="hidden sm:inline">New</span> Spread
-                      </motion.button>
+                  <div className="space-y-3">
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <div className="flex gap-3">
+                        <motion.button 
+                          onClick={() => addStagingSlot('single')}
+                          className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-3 bg-white/80 hover:bg-white border border-[#E2E8F0] text-[#003366] rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md min-h-[44px]"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <Plus className="w-4 h-4" /> <span className="hidden sm:inline">New</span> Single
+                        </motion.button>
+                        <motion.button 
+                          onClick={() => addStagingSlot('spread')}
+                          className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-3 bg-white/80 hover:bg-white border border-[#E2E8F0] text-[#003366] rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md min-h-[44px]"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <Plus className="w-4 h-4" /> <span className="hidden sm:inline">New</span> Spread
+                        </motion.button>
+                      </div>
                     </div>
+                    
+                    <div className="flex items-start gap-2 p-3 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-xl">
+                      <input
+                        type="checkbox"
+                        id="terms-checkbox-upload"
+                        checked={acceptedTerms}
+                        onChange={(e) => setAcceptedTerms(e.target.checked)}
+                        className="mt-1 w-4 h-4 text-[#007BFF] bg-white border-[#E2E8F0] rounded focus:ring-[#007BFF] focus:ring-2"
+                      />
+                      <label htmlFor="terms-checkbox-upload" className="text-xs text-[#003366]/70 cursor-pointer flex-1">
+                        I agree to the{' '}
+                        <a href="/TERMS_OF_SERVICE.md" target="_blank" rel="noopener noreferrer" className="text-[#007BFF] hover:underline font-semibold">
+                          Terms of Service
+                        </a>
+                        {' '}and acknowledge that I am responsible for verifying the accuracy of all AI-generated flight data.
+                      </label>
+                    </div>
+                    
                     <motion.button 
                       onClick={processPendingScans}
-                      disabled={isBatchProcessing || !user || (userCredits !== null && userCredits < 1) || !scans.some(s => s.status === 'pending' && (s.mode === 'single' ? s.images.length >= 1 : s.images.length === 2))}
-                      className="flex items-center justify-center gap-2 px-6 py-3 bg-[#003366] hover:bg-[#003366]/90 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-[#003366]/20 min-h-[44px] shiny-button"
-                      title={!user ? 'Sign in required' : (userCredits !== null && userCredits < 1) ? 'Insufficient credits' : 'Start extraction (1 credit per scan)'}
-                      whileHover={{ scale: isBatchProcessing || !user || (userCredits !== null && userCredits < 1) ? 1 : 1.05 }}
+                      disabled={isBatchProcessing || !user || (userCredits !== null && userCredits < 1) || !acceptedTerms || !scans.some(s => s.status === 'pending' && (s.mode === 'single' ? s.images.length >= 1 : s.images.length === 2))}
+                      className="flex items-center justify-center gap-2 px-6 py-3 bg-[#003366] hover:bg-[#003366]/90 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-[#003366]/20 min-h-[44px] shiny-button w-full sm:w-auto"
+                      title={!user ? 'Sign in required' : !acceptedTerms ? 'You must accept the Terms of Service' : (userCredits !== null && userCredits < 1) ? 'Insufficient credits' : 'Start extraction (1 credit per scan)'}
+                      whileHover={{ scale: isBatchProcessing || !user || (userCredits !== null && userCredits < 1) || !acceptedTerms ? 1 : 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
                       {isBatchProcessing ? (

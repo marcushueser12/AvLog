@@ -13,6 +13,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const { signIn, signUp } = useAuth();
 
   if (!isOpen) return null;
@@ -20,6 +21,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    
+    if (isSignUp && !acceptedTerms) {
+      setError('You must accept the Terms of Service to create an account.');
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -42,6 +49,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         onClose();
         setEmail('');
         setPassword('');
+        setAcceptedTerms(false);
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred');
@@ -97,6 +105,29 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             />
           </div>
 
+          {isSignUp && (
+            <div className="flex items-start gap-2">
+              <input
+                type="checkbox"
+                id="terms-checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-1 w-4 h-4 text-[#007BFF] bg-white border-[#E2E8F0] rounded focus:ring-[#007BFF] focus:ring-2"
+              />
+              <label htmlFor="terms-checkbox" className="text-xs text-[#003366]/70 cursor-pointer">
+                I agree to the{' '}
+                <a href="/TERMS_OF_SERVICE.md" target="_blank" rel="noopener noreferrer" className="text-[#007BFF] hover:underline">
+                  Terms of Service
+                </a>
+                {' '}and{' '}
+                <a href="/PRIVACY_POLICY.md" target="_blank" rel="noopener noreferrer" className="text-[#007BFF] hover:underline">
+                  Privacy Policy
+                </a>
+                . I acknowledge that I am responsible for verifying the accuracy of all AI-generated flight data.
+              </label>
+            </div>
+          )}
+
           {error && (
             <div className="p-3 bg-red-100 border border-red-300 rounded-xl text-red-600 text-sm">
               {error}
@@ -105,7 +136,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || (isSignUp && !acceptedTerms)}
             className="w-full px-6 py-3 bg-[#003366] hover:bg-[#003366]/90 disabled:bg-[#003366]/50 text-white rounded-xl font-bold transition-all shadow-lg shadow-[#003366]/20 disabled:cursor-not-allowed shiny-button"
           >
             {loading ? 'Loading...' : isSignUp ? 'Create Account' : 'Sign In'}
