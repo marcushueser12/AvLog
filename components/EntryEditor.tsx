@@ -341,7 +341,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.instrument}
                       onChange={(e) => onUpdate(entry.id, 'instrument', e.target.value)}
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'instrument', `w-full bg-white border border-[#E2E8F0] rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-emerald-400 text-center outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF] min-h-[44px]`)}
+                      className={getFieldClass(entry, 'instrument', `w-full bg-white border border-[#E2E8F0] rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-emerald-600 font-bold text-center outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF] min-h-[44px]`)}
                     />
                   </div>
                   
@@ -352,7 +352,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.simulatedInstrument}
                       onChange={(e) => onUpdate(entry.id, 'simulatedInstrument', e.target.value)}
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'simulatedInstrument', `w-full bg-white border border-[#E2E8F0] rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-cyan-400 text-center outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF] min-h-[44px]`)}
+                      className={getFieldClass(entry, 'simulatedInstrument', `w-full bg-white border border-[#E2E8F0] rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-cyan-600 text-center outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF] min-h-[44px]`)}
                     />
                   </div>
                   
@@ -363,7 +363,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.approaches}
                       onChange={(e) => onUpdate(entry.id, 'approaches', e.target.value)}
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'approaches', `w-full bg-white border border-[#E2E8F0] rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-amber-400 text-center outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF] min-h-[44px]`)}
+                      className={getFieldClass(entry, 'approaches', `w-full bg-white border border-[#E2E8F0] rounded-lg ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-amber-600 font-bold text-center outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF] min-h-[44px]`)}
                     />
                   </div>
                   
@@ -455,7 +455,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
         >
         <table className="w-full text-left border-collapse min-w-[2050px] text-[11px] sm:text-xs" style={{ width: 'max-content' }}>
           <thead>
-            <tr className="bg-white/80 backdrop-blur-sm text-[#003366]/70 text-[10px] uppercase tracking-wider font-bold">
+            <tr className="bg-white/80 backdrop-blur-sm text-[#003366] text-[10px] uppercase tracking-wider font-bold">
               <th className="px-3 py-4 w-12 sticky left-0 bg-white/80 backdrop-blur-sm z-40 border-r border-[#E2E8F0]">#</th>
               <th className="px-3 py-4 w-12 sticky left-12 bg-white/80 backdrop-blur-sm z-40 border-r border-[#E2E8F0] text-center">Sync</th>
               <th className="px-3 py-4 w-32 sticky left-24 bg-white/80 backdrop-blur-sm z-30 border-r border-[#E2E8F0]">Date</th>
@@ -473,9 +473,9 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
               <th className="px-3 py-4 w-20">SIC</th>
               <th className="px-3 py-4 w-20">Dual Rec</th>
               <th className="px-3 py-4 w-20">Dual Giv</th>
-              <th className="px-3 py-4 w-28 text-emerald-400 bg-emerald-400/5">Actual Inst</th>
-              <th className="px-3 py-4 w-28 text-cyan-400 bg-cyan-400/5">Sim Inst</th>
-              <th className="px-3 py-4 w-20 text-amber-400 bg-amber-400/5">Appr</th>
+              <th className="px-3 py-4 w-28 text-emerald-600 bg-emerald-50">Actual Inst</th>
+              <th className="px-3 py-4 w-28 text-cyan-600 bg-cyan-50">Sim Inst</th>
+              <th className="px-3 py-4 w-20 text-amber-600 bg-amber-50">Appr</th>
               <th className="px-3 py-4 w-20">Lnd D</th>
               <th className="px-3 py-4 w-20">Lnd N</th>
               <th className="px-3 py-4 w-20">Gnd Rec</th>
@@ -484,7 +484,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
               <th className="px-3 py-4 w-16 text-center sticky right-0 bg-white/80 backdrop-blur-sm z-30 border-l border-[#E2E8F0] shadow-[-4px_0_8px_rgba(0,0,0,0.3)]">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800">
+          <tbody className="divide-y divide-[#E2E8F0]">
             {entries.length === 0 ? (
               <tr>
                 <td colSpan={21} className="px-4 py-20 text-center text-[#003366]/70 italic font-medium">
@@ -496,22 +496,22 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
               </tr>
             ) : (
               entries.map((entry) => (
-                <tr key={entry.id} className="hover:bg-white/80 backdrop-blur-sm/50 transition-colors group">
-                  <td className="p-1 sticky left-0 bg-slate-900 group-hover:bg-white/80 backdrop-blur-sm z-40 border-r border-[#E2E8F0] text-center text-[10px] text-[#003366]/70 font-mono">
+                <tr key={entry.id} className="hover:bg-white/50 transition-colors group bg-white/30">
+                  <td className="p-1 sticky left-0 bg-white/80 backdrop-blur-sm group-hover:bg-white z-40 border-r border-[#E2E8F0] text-center text-[10px] text-[#003366] font-mono">
                     {entry.rowAnchor || '-'}
                   </td>
-                  <td className="p-1 sticky left-12 bg-slate-900 group-hover:bg-white/80 backdrop-blur-sm z-40 border-r border-[#E2E8F0] text-center">
+                  <td className="p-1 sticky left-12 bg-white/80 backdrop-blur-sm group-hover:bg-white z-40 border-r border-[#E2E8F0] text-center">
                     {entry.reconciliationConfidence === 'low' ? (
-                       <div className="text-red-400 flex justify-center" title="Alignment uncertain between pages">
+                       <div className="text-red-600 flex justify-center" title="Alignment uncertain between pages">
                          <ICONS.Refresh />
                        </div>
                     ) : (
-                      <div className="text-emerald-500 flex justify-center opacity-40 group-hover:opacity-100 transition-opacity">
+                      <div className="text-emerald-600 flex justify-center opacity-60 group-hover:opacity-100 transition-opacity">
                         <ICONS.Check />
                       </div>
                     )}
                   </td>
-                  <td className="p-1 sticky left-24 bg-slate-900 group-hover:bg-white/80 backdrop-blur-sm z-20 border-r border-[#E2E8F0]">
+                  <td className="p-1 sticky left-24 bg-white/80 backdrop-blur-sm group-hover:bg-white z-20 border-r border-[#E2E8F0]">
                     <input 
                       type="text"
                       value={formatDateForDisplay(entry.date)}
@@ -519,10 +519,10 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       placeholder="MM/DD/YYYY"
                       inputMode="numeric"
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'date', "bg-transparent hover:border-[#E2E8F0] focus:border-[#007BFF] rounded px-2 py-2 sm:py-1.5 w-full outline-none text-xs min-h-[44px] sm:min-h-0")}
+                      className={getFieldClass(entry, 'date', "bg-transparent hover:border-[#E2E8F0] focus:border-[#007BFF] rounded px-2 py-2 sm:py-1.5 w-full outline-none text-xs text-[#003366] min-h-[44px] sm:min-h-0")}
                     />
                   </td>
-                  <td className="p-1 sticky left-56 bg-slate-900 group-hover:bg-white/80 backdrop-blur-sm z-20 border-r border-[#E2E8F0] shadow-[4px_0_8_rgba(0,0,0,0.3)]">
+                  <td className="p-1 sticky left-56 bg-white/80 backdrop-blur-sm group-hover:bg-white z-20 border-r border-[#E2E8F0] shadow-[4px_0_8px_rgba(0,0,0,0.1)]">
                     <input 
                       type="text"
                       value={entry.aircraftId}
@@ -543,7 +543,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                         }
                       }}
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'aircraftId', "bg-transparent hover:border-[#E2E8F0] focus:border-[#007BFF] rounded px-2 py-1.5 w-full outline-none text-xs font-bold uppercase border border-transparent")}
+                      className={getFieldClass(entry, 'aircraftId', "bg-transparent hover:border-[#E2E8F0] focus:border-[#007BFF] rounded px-2 py-1.5 w-full outline-none text-xs font-bold uppercase border border-transparent text-[#003366]")}
                       placeholder="N123AB"
                     />
                   </td>
@@ -553,7 +553,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.from} 
                       onChange={(e) => onUpdate(entry.id, 'from', e.target.value)} 
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'from', "bg-transparent w-full outline-none text-xs uppercase text-center rounded py-1.5")} 
+                      className={getFieldClass(entry, 'from', "bg-transparent w-full outline-none text-xs uppercase text-center rounded py-1.5 text-[#003366]")} 
                     />
                   </td>
                   <td className="p-1">
@@ -562,16 +562,16 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.to} 
                       onChange={(e) => onUpdate(entry.id, 'to', e.target.value)} 
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'to', "bg-transparent w-full outline-none text-xs uppercase text-center rounded py-1.5")} 
+                      className={getFieldClass(entry, 'to', "bg-transparent w-full outline-none text-xs uppercase text-center rounded py-1.5 text-[#003366]")} 
                     />
                   </td>
-                  <td className="p-1 bg-blue-500/[0.03]">
+                  <td className="p-1 bg-[#007BFF]/5">
                     <input 
                       type="text"
                       value={entry.totalTime}
                       onChange={(e) => onUpdate(entry.id, 'totalTime', e.target.value)}
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'totalTime', "bg-transparent hover:border-[#E2E8F0] focus:border-[#007BFF] rounded px-1 py-1.5 w-full outline-none text-xs font-mono text-center text-[#007BFF]")}
+                      className={getFieldClass(entry, 'totalTime', "bg-transparent hover:border-[#E2E8F0] focus:border-[#007BFF] rounded px-1 py-1.5 w-full outline-none text-xs font-mono text-center text-[#007BFF] font-bold")}
                     />
                   </td>
                   <td className="p-0.5 w-10">
@@ -580,7 +580,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.day} 
                       onChange={(e) => onUpdate(entry.id, 'day', e.target.value)} 
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'day', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5 text-[#003366]/70 bg-slate-400/5 border-0")} 
+                      className={getFieldClass(entry, 'day', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5 text-[#003366] bg-[#F4F7FA] border-0")} 
                     />
                   </td>
                   <td className="p-1">
@@ -589,7 +589,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.night} 
                       onChange={(e) => onUpdate(entry.id, 'night', e.target.value)} 
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'night', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
+                      className={getFieldClass(entry, 'night', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5 text-[#003366]")} 
                     />
                   </td>
                   <td className="p-1">
@@ -598,7 +598,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.crossCountry} 
                       onChange={(e) => onUpdate(entry.id, 'crossCountry', e.target.value)} 
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'crossCountry', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
+                      className={getFieldClass(entry, 'crossCountry', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5 text-[#003366]")} 
                     />
                   </td>
                   <td className="p-1">
@@ -607,7 +607,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.pic} 
                       onChange={(e) => onUpdate(entry.id, 'pic', e.target.value)} 
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'pic', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
+                      className={getFieldClass(entry, 'pic', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5 text-[#003366]")} 
                     />
                   </td>
                   <td className="p-1">
@@ -616,7 +616,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.solo || ''} 
                       onChange={(e) => onUpdate(entry.id, 'solo', e.target.value)} 
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'solo', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
+                      className={getFieldClass(entry, 'solo', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5 text-[#003366]")} 
                     />
                   </td>
                   <td className="p-1">
@@ -625,7 +625,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.sic} 
                       onChange={(e) => onUpdate(entry.id, 'sic', e.target.value)} 
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'sic', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
+                      className={getFieldClass(entry, 'sic', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5 text-[#003366]")} 
                     />
                   </td>
                   <td className="p-1">
@@ -634,7 +634,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.dualReceived} 
                       onChange={(e) => onUpdate(entry.id, 'dualReceived', e.target.value)} 
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'dualReceived', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
+                      className={getFieldClass(entry, 'dualReceived', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5 text-[#003366]")} 
                     />
                   </td>
                   <td className="p-1">
@@ -643,34 +643,34 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.dualGiven} 
                       onChange={(e) => onUpdate(entry.id, 'dualGiven', e.target.value)} 
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'dualGiven', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
+                      className={getFieldClass(entry, 'dualGiven', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5 text-[#003366]")} 
                     />
                   </td>
-                  <td className="p-1 bg-emerald-400/[0.05]">
+                  <td className="p-1 bg-emerald-50">
                     <input 
                       type="text" 
                       value={entry.instrument} 
                       onChange={(e) => onUpdate(entry.id, 'instrument', e.target.value)} 
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'instrument', "bg-transparent w-full outline-none text-xs font-mono text-center text-emerald-400 font-bold rounded py-1.5")} 
+                      className={getFieldClass(entry, 'instrument', "bg-transparent w-full outline-none text-xs font-mono text-center text-emerald-600 font-bold rounded py-1.5")} 
                     />
                   </td>
-                  <td className="p-1 bg-cyan-400/[0.05]">
+                  <td className="p-1 bg-cyan-50">
                     <input 
                       type="text" 
                       value={entry.simulatedInstrument} 
                       onChange={(e) => onUpdate(entry.id, 'simulatedInstrument', e.target.value)} 
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'simulatedInstrument', "bg-transparent w-full outline-none text-xs font-mono text-center text-cyan-400 rounded py-1.5")} 
+                      className={getFieldClass(entry, 'simulatedInstrument', "bg-transparent w-full outline-none text-xs font-mono text-center text-cyan-600 rounded py-1.5")} 
                     />
                   </td>
-                  <td className="p-1 bg-amber-400/[0.05]">
+                  <td className="p-1 bg-amber-50">
                     <input 
                       type="text" 
                       value={entry.approaches} 
                       onChange={(e) => onUpdate(entry.id, 'approaches', e.target.value)} 
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'approaches', "bg-transparent w-full outline-none text-xs font-mono text-center text-amber-500 font-bold rounded py-1.5")} 
+                      className={getFieldClass(entry, 'approaches', "bg-transparent w-full outline-none text-xs font-mono text-center text-amber-600 font-bold rounded py-1.5")} 
                     />
                   </td>
                   <td className="p-1">
@@ -679,7 +679,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.landingsDay} 
                       onChange={(e) => onUpdate(entry.id, 'landingsDay', e.target.value)} 
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'landingsDay', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
+                      className={getFieldClass(entry, 'landingsDay', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5 text-[#003366]")} 
                     />
                   </td>
                   <td className="p-1">
@@ -688,7 +688,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.landingsNight} 
                       onChange={(e) => onUpdate(entry.id, 'landingsNight', e.target.value)} 
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'landingsNight', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
+                      className={getFieldClass(entry, 'landingsNight', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5 text-[#003366]")} 
                     />
                   </td>
                   <td className="p-1">
@@ -697,7 +697,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.groundReceived || ''} 
                       onChange={(e) => onUpdate(entry.id, 'groundReceived', e.target.value)} 
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'groundReceived', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
+                      className={getFieldClass(entry, 'groundReceived', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5 text-[#003366]")} 
                     />
                   </td>
                   <td className="p-1">
@@ -706,7 +706,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       value={entry.groundGiven || ''} 
                       onChange={(e) => onUpdate(entry.id, 'groundGiven', e.target.value)} 
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'groundGiven', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5")} 
+                      className={getFieldClass(entry, 'groundGiven', "bg-transparent w-full outline-none text-xs font-mono text-center rounded py-1.5 text-[#003366]")} 
                     />
                   </td>
                   <td className="p-1">
@@ -716,28 +716,28 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       placeholder="Remarks..."
                       onChange={(e) => onUpdate(entry.id, 'comments', e.target.value)} 
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'comments', "bg-transparent w-full outline-none text-xs px-2 py-2 sm:py-1.5 rounded truncate focus:bg-white/80 backdrop-blur-sm min-h-[44px] sm:min-h-0")} 
+                      className={getFieldClass(entry, 'comments', "bg-transparent w-full outline-none text-xs px-2 py-2 sm:py-1.5 rounded truncate focus:bg-white/80 backdrop-blur-sm min-h-[44px] sm:min-h-0 text-[#003366]")} 
                     />
                   </td>
-                  <td className="px-2 py-2 text-center sticky right-0 bg-slate-900 group-hover:bg-white/80 backdrop-blur-sm z-20 border-l border-[#E2E8F0] shadow-[-4px_0_8px_rgba(0,0,0,0.3)]">
-                    <button onClick={() => onDelete(entry.id)} className="p-2 text-[#003366]/70 hover:text-red-400 transition-colors"><ICONS.Trash /></button>
+                  <td className="px-2 py-2 text-center sticky right-0 bg-white/80 backdrop-blur-sm group-hover:bg-white z-20 border-l border-[#E2E8F0] shadow-[-4px_0_8px_rgba(0,0,0,0.1)]">
+                    <button onClick={() => onDelete(entry.id)} className="p-2 text-[#003366]/70 hover:text-red-600 transition-colors"><ICONS.Trash /></button>
                   </td>
                 </tr>
               ))
             )}
             
-            <tr className="bg-slate-950/90 font-mono text-[11px] border-t-2 border-[#E2E8F0] shadow-inner">
-                <td className="p-3 sticky left-0 bg-slate-950 z-40 border-r border-[#E2E8F0] text-center text-[#003366]/70 uppercase font-black tracking-tighter">OCR</td>
-                <td className="p-3 sticky left-12 bg-slate-950 z-40 border-r border-[#E2E8F0] text-center text-[#003366]/70 font-bold uppercase tracking-tight">Sync</td>
-                <td className="p-3 sticky left-24 bg-slate-950 z-30 border-r border-[#E2E8F0] text-[#003366]/70 font-bold uppercase tracking-tight">Date</td>
-                <td className="p-3 sticky left-56 bg-slate-950 z-30 border-r border-[#E2E8F0] text-[#003366]/70 font-bold uppercase tracking-tight">Tail #</td>
+            <tr className="bg-[#F4F7FA] font-mono text-[11px] border-t-2 border-[#E2E8F0]">
+                <td className="p-3 sticky left-0 bg-[#F4F7FA] z-40 border-r border-[#E2E8F0] text-center text-[#003366] uppercase font-black tracking-tighter">OCR</td>
+                <td className="p-3 sticky left-12 bg-[#F4F7FA] z-40 border-r border-[#E2E8F0] text-center text-[#003366] font-bold uppercase tracking-tight">Sync</td>
+                <td className="p-3 sticky left-24 bg-[#F4F7FA] z-30 border-r border-[#E2E8F0] text-[#003366] font-bold uppercase tracking-tight">Date</td>
+                <td className="p-3 sticky left-56 bg-[#F4F7FA] z-30 border-r border-[#E2E8F0] text-[#003366] font-bold uppercase tracking-tight">Tail #</td>
                 <td colSpan={2} className="px-3 py-3"></td>
-                <td className="p-3 text-center text-[#007BFF] font-bold bg-blue-500/10 border-r border-slate-800 ring-1 ring-inset ring-blue-500/20">{sumTotal.toFixed(1)}</td>
+                <td className="p-3 text-center text-[#007BFF] font-bold bg-[#007BFF]/10 border-r border-[#E2E8F0] ring-1 ring-inset ring-[#007BFF]/20">{sumTotal.toFixed(1)}</td>
                 <td className="w-10"></td>
                 <td colSpan={7}></td>
-                <td className="p-3 text-center text-emerald-400 font-bold bg-emerald-500/10 border-r border-slate-800 ring-1 ring-inset ring-emerald-500/20">{sumInst.toFixed(1)}</td>
-                <td className="p-3 text-center text-cyan-400 font-bold bg-cyan-500/10 border-r border-slate-800 ring-1 ring-inset ring-cyan-500/20">{sumSim.toFixed(1)}</td>
-                <td className="p-3 text-center text-amber-500 font-bold bg-amber-500/10 border-r border-slate-800 ring-1 ring-inset ring-amber-500/20">{sumAppr}</td>
+                <td className="p-3 text-center text-emerald-600 font-bold bg-emerald-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-emerald-200">{sumInst.toFixed(1)}</td>
+                <td className="p-3 text-center text-cyan-600 font-bold bg-cyan-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-cyan-200">{sumSim.toFixed(1)}</td>
+                <td className="p-3 text-center text-amber-600 font-bold bg-amber-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-amber-200">{sumAppr}</td>
                 <td colSpan={6}></td>
             </tr>
           </tbody>
@@ -747,7 +747,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
       
       {/* Images - Show for both mobile and desktop */}
       {images.length > 0 && (
-        <div className="p-4 border-t border-slate-800">
+        <div className="p-4 border-t border-[#E2E8F0]">
           <ImageViewer 
             ref={imageViewerRef} 
             images={images} 
@@ -759,10 +759,10 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
       
       {/* Footer - Desktop only (mobile has add button in card view) */}
       {!isMobile && (
-      <div className="p-6 bg-white/80 backdrop-blur-sm/40 flex flex-col sm:flex-row justify-between items-center gap-4 border-t border-slate-800">
+      <div className="p-6 bg-white/80 backdrop-blur-sm flex flex-col sm:flex-row justify-between items-center gap-4 border-t border-[#E2E8F0]">
         <div className="flex flex-col">
             <span className="text-sm text-[#003366] font-bold uppercase tracking-tight flex items-center gap-2">
-              <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+              <span className="w-2 h-2 bg-emerald-600 rounded-full"></span>
               IFR CROSS-CHECK ACTIVE
             </span>
             <p className="text-[11px] text-[#003366]/70 mt-1 max-w-lg leading-relaxed">
@@ -771,7 +771,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
         </div>
         <button 
           onClick={onAdd}
-            className="flex items-center justify-center gap-2 px-6 py-3 sm:py-2.5 bg-white hover:bg-slate-600 rounded-xl text-sm font-bold text-[#003366] transition-all border border-[#E2E8F0] shadow-lg active:scale-95 min-h-[44px] sm:min-h-0 w-full sm:w-auto"
+            className="flex items-center justify-center gap-2 px-6 py-3 sm:py-2.5 bg-white hover:bg-[#F4F7FA] rounded-xl text-sm font-bold text-[#003366] transition-all border border-[#E2E8F0] shadow-sm hover:shadow-md active:scale-95 min-h-[44px] sm:min-h-0 w-full sm:w-auto"
         >
           <ICONS.Plus /> Manual Row
         </button>
@@ -780,9 +780,9 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { height: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 5px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #F4F7FA; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #CBD5E1; }
         ${useTableOnMobile ? `
           .custom-scrollbar {
             -webkit-overflow-scrolling: touch !important;

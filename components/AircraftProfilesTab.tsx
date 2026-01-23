@@ -327,7 +327,7 @@ const AircraftProfilesTab: React.FC = () => {
         <div className="mb-4">
           <button
             onClick={() => setShowCreateForm(!showCreateForm)}
-            className="flex items-center gap-2 px-4 py-2 bg-[#003366] hover:bg-blue-500 text-[#003366] rounded-xl text-sm font-bold transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-xl text-sm font-bold transition-all shadow-sm hover:shadow-md"
           >
             <ICONS.Plus />
             Add Aircraft
@@ -482,7 +482,7 @@ const AircraftProfilesTab: React.FC = () => {
                 <button
                   onClick={handleCreate}
                   disabled={saving.has('new')}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-[#003366] rounded-lg font-semibold transition-all"
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg font-semibold transition-all shadow-sm hover:shadow-md"
                 >
                   {saving.has('new') ? 'Saving...' : 'Create'}
                 </button>
@@ -545,7 +545,7 @@ const AircraftProfilesTab: React.FC = () => {
                           <button
                             onClick={() => handleSave(aircraftProfile.id)}
                             disabled={saving.has(aircraftProfile.id)}
-                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-[#003366] rounded-lg text-sm font-semibold transition-all"
+                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg text-sm font-semibold transition-all shadow-sm hover:shadow-md"
                           >
                             {saving.has(aircraftProfile.id) ? 'Saving...' : 'Save'}
                           </button>
@@ -560,7 +560,7 @@ const AircraftProfilesTab: React.FC = () => {
                         <>
                           <button
                             onClick={() => handleEdit(aircraftProfile)}
-                            className="px-3 py-1.5 bg-[#003366] hover:bg-blue-500 text-[#003366] rounded-lg text-sm font-semibold transition-all"
+                            className="px-3 py-1.5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-lg text-sm font-semibold transition-all shadow-sm hover:shadow-md"
                           >
                             Edit
                           </button>

@@ -87,7 +87,7 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture, onCancel }) => {
               type="file" 
               accept="image/*" 
               onChange={handleFileUpload}
-              className="block w-full text-sm text-[#003366]/70 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#003366] file:text-[#003366] hover:file:bg-blue-700"
+              className="block w-full text-sm text-[#003366]/70 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#003366] file:text-white hover:file:bg-[#003366]/90"
             />
           </div>
         ) : (

@@ -20,7 +20,7 @@ const TutorialTab: React.FC = () => {
       {/* The Workflow */}
       <section className="space-y-6">
         <h2 className="text-xl font-bold text-[#003366] flex items-center gap-3">
-          <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#003366] text-[#003366] text-sm">1</span>
+          <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#003366] text-white text-sm">1</span>
           The Standard Workflow
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

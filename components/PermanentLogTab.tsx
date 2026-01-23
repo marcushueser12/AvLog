@@ -549,7 +549,7 @@ const PermanentLogTab: React.FC = () => {
             </p>
             <button
               onClick={() => setShowAuthModal(true)}
-              className="px-6 py-3 bg-[#003366] hover:bg-blue-500 text-[#003366] rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20"
+              className="px-6 py-3 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-xl font-bold transition-all shadow-lg shadow-[#003366]/20 shiny-button"
             >
               Sign In
             </button>
@@ -640,7 +640,7 @@ const PermanentLogTab: React.FC = () => {
                                 e.stopPropagation();
                                 handleEditScan(scan.id);
                               }}
-                              className="px-4 py-2 bg-[#003366] hover:bg-blue-500 text-[#003366] rounded-xl text-sm font-bold transition-all flex items-center gap-2"
+                              className="px-4 py-2 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-xl text-sm font-bold transition-all flex items-center gap-2 shadow-sm hover:shadow-md"
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -652,7 +652,7 @@ const PermanentLogTab: React.FC = () => {
                                 e.stopPropagation();
                                 handleDeleteScan(scan.id);
                               }}
-                              className="px-4 py-2 bg-red-600/10 hover:bg-red-600/20 border border-red-600/30 text-red-400 rounded-xl text-sm font-bold transition-all flex items-center gap-2"
+                              className="px-4 py-2 bg-red-100 hover:bg-red-200 border border-red-300 text-red-600 rounded-xl text-sm font-bold transition-all flex items-center gap-2 shadow-sm hover:shadow-md"
                               title="Delete this verified scan"
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -669,7 +669,7 @@ const PermanentLogTab: React.FC = () => {
                                 e.stopPropagation();
                                 handleCancelEdit(scan.id);
                               }}
-                              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-[#003366] rounded-xl text-sm font-bold transition-all"
+                              className="px-4 py-2 bg-white hover:bg-[#F4F7FA] border border-[#E2E8F0] text-[#003366] rounded-xl text-sm font-bold transition-all shadow-sm hover:shadow-md"
                               disabled={isSavingScan}
                             >
                               Cancel
@@ -680,7 +680,7 @@ const PermanentLogTab: React.FC = () => {
                                 handleSaveScan(scan.id);
                               }}
                               disabled={isSavingScan}
-                              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-[#003366] rounded-xl text-sm font-bold transition-all flex items-center gap-2"
+                              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-all flex items-center gap-2 shadow-sm hover:shadow-md"
                             >
                               {isSavingScan ? (
                                 <>
@@ -698,7 +698,7 @@ const PermanentLogTab: React.FC = () => {
                         )}
                         <button
                           onClick={() => toggleScanExpand(scan.id)}
-                          className="text-[#003366]/70 hover:text-slate-300 transition-colors"
+                          className="text-[#003366]/70 hover:text-[#007BFF] transition-colors"
                         >
                           {isExpanded ? (
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

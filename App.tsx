@@ -1133,11 +1133,11 @@ const App: React.FC = () => {
                   className="p-6 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl shadow-sm hover:shadow-md transition-all"
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold text-[#003366]/70">Multi-Engine</span>
+                    <span className="text-sm font-semibold text-[#003366]/70">Cross Country</span>
                     <Plane className="w-5 h-5 text-[#007BFF]" />
                   </div>
-                  <p className="text-3xl font-black text-[#003366]">{stats.multiEngine}</p>
-                  <p className="text-xs text-[#003366]/60 mt-1">flights</p>
+                  <p className="text-3xl font-black text-[#003366]">{stats.crossCountry.toFixed(1)}</p>
+                  <p className="text-xs text-[#003366]/60 mt-1">hours</p>
                 </motion.div>
               </motion.section>
 
