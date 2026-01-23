@@ -458,8 +458,8 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
             <tr className="bg-[#003366] backdrop-blur-sm text-white text-[10px] uppercase tracking-wider font-bold">
               <th className="px-3 py-4 sticky left-0 bg-[#003366] z-40 border-r border-[#003366]/50" style={{ width: '48px', minWidth: '48px' }}>#</th>
               <th className="px-3 py-4 sticky bg-[#003366] z-40 border-r border-[#003366]/50 text-center" style={{ left: '48px', width: '48px', minWidth: '48px' }}>Sync</th>
-              <th className="px-2 py-4 whitespace-nowrap sticky bg-[#003366] z-30 border-r border-[#003366]/50" style={{ left: '96px', width: 'auto', minWidth: 'fit-content' }}>Date</th>
-              <th className="px-2 py-4 whitespace-nowrap sticky bg-[#003366] z-30 border-r border-[#003366]/50 shadow-[4px_0_8px_rgba(0,0,0,0.1)]" style={{ width: 'auto', minWidth: 'fit-content' }}>Tail #</th>
+              <th className="px-2 py-4 sticky bg-[#003366] z-30 border-r border-[#003366]/50" style={{ left: '96px', width: '100px', minWidth: '100px', maxWidth: '100px' }}>Date</th>
+              <th className="px-2 py-4 sticky bg-[#003366] z-30 border-r border-[#003366]/50 shadow-[4px_0_8px_rgba(0,0,0,0.1)]" style={{ left: '196px', width: '80px', minWidth: '80px', maxWidth: '80px' }}>Tail #</th>
               <th className="px-3 py-4 w-24">From</th>
               <th className="px-3 py-4 w-24">To</th>
               <th className="px-3 py-4 w-24 text-[#007BFF] bg-[#007BFF]/10">Total</th>
@@ -511,7 +511,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       </div>
                     )}
                   </td>
-                  <td className="p-1 sticky bg-white group-hover:bg-white/90 z-20 border-r border-[#E2E8F0] whitespace-nowrap" style={{ left: '96px', width: 'auto', minWidth: 'fit-content' }}>
+                  <td className="p-1 sticky bg-white group-hover:bg-white/90 z-20 border-r border-[#E2E8F0]" style={{ left: '96px', width: '100px', minWidth: '100px', maxWidth: '100px' }}>
                     <input 
                       type="text"
                       value={formatDateForDisplay(entry.date)}
@@ -519,11 +519,10 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       placeholder="MM/DD/YYYY"
                       inputMode="numeric"
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'date', "bg-white hover:border-[#007BFF] focus:border-[#007BFF] rounded px-1.5 py-2 sm:py-1.5 outline-none text-xs text-black font-semibold min-h-[44px] sm:min-h-0 border border-[#E2E8F0]")}
-                      style={{ width: 'auto', minWidth: '90px' }}
+                      className={getFieldClass(entry, 'date', "bg-white hover:border-[#007BFF] focus:border-[#007BFF] rounded px-1.5 py-2 sm:py-1.5 w-full outline-none text-xs text-black font-semibold min-h-[44px] sm:min-h-0 border border-[#E2E8F0]")}
                     />
                   </td>
-                  <td className="p-1 sticky bg-white group-hover:bg-white/90 z-20 border-r border-[#E2E8F0] shadow-[4px_0_8px_rgba(0,0,0,0.05)] whitespace-nowrap" style={{ width: 'auto', minWidth: 'fit-content' }}>
+                  <td className="p-1 sticky bg-white group-hover:bg-white/90 z-20 border-r border-[#E2E8F0] shadow-[4px_0_8px_rgba(0,0,0,0.05)]" style={{ left: '196px', width: '80px', minWidth: '80px', maxWidth: '80px' }}>
                     <input 
                       type="text"
                       value={entry.aircraftId}
@@ -544,9 +543,8 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                         }
                       }}
                       readOnly={readOnly}
-                      className={getFieldClass(entry, 'aircraftId', "bg-white hover:border-[#007BFF] focus:border-[#007BFF] rounded px-2 py-1.5 outline-none text-xs font-bold uppercase border border-[#E2E8F0] text-black")}
+                      className={getFieldClass(entry, 'aircraftId', "bg-white hover:border-[#007BFF] focus:border-[#007BFF] rounded px-2 py-1.5 w-full outline-none text-xs font-bold uppercase border border-[#E2E8F0] text-black")}
                       placeholder="N123AB"
-                      style={{ width: 'auto', minWidth: '80px' }}
                     />
                   </td>
                   <td className="p-1 bg-white">
@@ -731,8 +729,8 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
             <tr className="bg-[#003366] font-mono text-[11px] border-t-2 border-[#003366]">
                 <td className="p-3 sticky left-0 bg-[#003366] z-40 border-r border-[#003366]/50 text-center text-white uppercase font-black tracking-tighter" style={{ width: '48px', minWidth: '48px' }}>OCR</td>
                 <td className="p-3 sticky bg-[#003366] z-40 border-r border-[#003366]/50 text-center text-white font-bold uppercase tracking-tight" style={{ left: '48px', width: '48px', minWidth: '48px' }}>Sync</td>
-                <td className="p-3 sticky bg-[#003366] z-30 border-r border-[#003366]/50 text-white font-bold uppercase tracking-tight whitespace-nowrap" style={{ left: '96px', width: 'auto', minWidth: 'fit-content' }}>Date</td>
-                <td className="p-3 sticky bg-[#003366] z-30 border-r border-[#003366]/50 text-white font-bold uppercase tracking-tight whitespace-nowrap" style={{ width: 'auto', minWidth: 'fit-content' }}>Tail #</td>
+                <td className="p-3 sticky bg-[#003366] z-30 border-r border-[#003366]/50 text-white font-bold uppercase tracking-tight" style={{ left: '96px', width: '100px', minWidth: '100px', maxWidth: '100px' }}>Date</td>
+                <td className="p-3 sticky bg-[#003366] z-30 border-r border-[#003366]/50 text-white font-bold uppercase tracking-tight" style={{ left: '196px', width: '80px', minWidth: '80px', maxWidth: '80px' }}>Tail #</td>
                 <td colSpan={2} className="px-3 py-3 bg-white"></td>
                 <td className="p-3 text-center text-[#007BFF] font-bold bg-[#007BFF]/10 border-r border-[#E2E8F0] ring-1 ring-inset ring-[#007BFF]/20">{sumTotal.toFixed(1)}</td>
                 <td className="w-10 bg-[#F4F7FA]"></td>
