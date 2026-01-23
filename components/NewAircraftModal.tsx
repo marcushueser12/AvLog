@@ -72,7 +72,7 @@ interface NewAircraftModalProps {
   aircraftId: string;
   aircraftType?: string;
   onClose: () => void;
-  onCreated: () => void;
+  onCreated: (createdProfile?: { aircraftId: string; typeCode: string }) => void;
 }
 
 const NewAircraftModal: React.FC<NewAircraftModalProps> = ({
@@ -149,7 +149,11 @@ const NewAircraftModal: React.FC<NewAircraftModalProps> = ({
         return;
       }
 
-      onCreated();
+      // Pass back the created profile data
+      onCreated({
+        aircraftId: normalizedId,
+        typeCode: formData.typeCode.trim() || ''
+      });
       onClose();
     } catch (error: any) {
       console.error('Error creating aircraft profile:', error);

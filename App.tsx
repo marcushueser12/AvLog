@@ -635,9 +635,27 @@ const App: React.FC = () => {
     }
   };
 
-  const handleAircraftCreated = () => {
+  const handleAircraftCreated = (createdProfile?: { aircraftId: string; typeCode: string }) => {
     // Reload existing aircraft IDs after creation
     loadExistingAircraft();
+    
+    // Update the entry's aircraftType and ensure aircraftId is normalized if we have the entryId and created profile
+    if (createdProfile && newAircraftData?.entryId) {
+      setEntries(prev => prev.map(entry => {
+        if (entry.id === newAircraftData.entryId) {
+          // Update aircraftId to ensure it's normalized and update aircraftType with typeCode
+          return { 
+            ...entry, 
+            aircraftId: createdProfile.aircraftId,
+            aircraftType: createdProfile.typeCode || entry.aircraftType 
+          };
+        }
+        return entry;
+      }));
+    }
+    
+    // Clear the new aircraft data
+    setNewAircraftData(null);
   };
 
   const handleDeleteEntry = (id: string) => {
