@@ -458,7 +458,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
             <tr className="bg-[#003366] backdrop-blur-sm text-white text-[10px] uppercase tracking-wider font-bold">
               <th className="px-3 py-4 sticky left-0 bg-[#003366] z-40 border-r border-[#003366]/50" style={{ width: '48px', minWidth: '48px' }}>#</th>
               <th className="px-3 py-4 sticky bg-[#003366] z-40 border-r border-[#003366]/50 text-center" style={{ left: '48px', width: '48px', minWidth: '48px' }}>Sync</th>
-              <th className="px-2 py-4 whitespace-nowrap sticky left-24 bg-[#003366] z-30 border-r border-[#003366]/50" style={{ width: 'auto', minWidth: 'fit-content' }}>Date</th>
+              <th className="px-2 py-4 whitespace-nowrap sticky bg-[#003366] z-30 border-r border-[#003366]/50" style={{ left: '96px', width: 'auto', minWidth: 'fit-content' }}>Date</th>
               <th className="px-2 py-4 whitespace-nowrap sticky bg-[#003366] z-30 border-r border-[#003366]/50 shadow-[4px_0_8px_rgba(0,0,0,0.1)]" style={{ width: 'auto', minWidth: 'fit-content' }}>Tail #</th>
               <th className="px-3 py-4 w-24">From</th>
               <th className="px-3 py-4 w-24">To</th>
