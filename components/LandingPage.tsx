@@ -32,7 +32,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
     { id: 'dashboard', label: 'Scanner Dashboard', icon: Grid3x3, desc: 'Main logbook digitization tool' },
     { id: 'permanent-log', label: 'Permanent Log', icon: FileText, desc: 'View and export saved entries' },
     { id: 'aircraft', label: 'Aircraft Profiles', icon: Plane, desc: 'Manage your fleet details' },
-    { id: 'stats', label: 'Currency & Stats', icon: Clock, desc: 'Track hours and proficiency' },
     { id: 'tutorial', label: 'App Tutorial', icon: FileText, desc: 'Learn how to use LogExtract' },
   ];
 

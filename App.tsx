@@ -970,7 +970,6 @@ const App: React.FC = () => {
           <NavButton tab="dashboard" label="Scanner Dashboard" icon={() => <Grid3x3 className="w-4 h-4" />} />
           <NavButton tab="permanent-log" label="Permanent Log" icon={() => <FileText className="w-4 h-4" />} />
           <NavButton tab="aircraft" label="Aircraft Profiles" icon={ICONS.Aircraft} />
-          <NavButton tab="stats" label="Currency & Stats" icon={() => <Clock className="w-4 h-4" />} />
           <div className="my-4 border-t border-[#E2E8F0]"></div>
           <NavButton tab="tutorial" label="User Guide" icon={() => <FileText className="w-4 h-4" />} />
           <motion.button 
