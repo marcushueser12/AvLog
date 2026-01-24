@@ -861,42 +861,6 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       className={getFieldClass(entry, 'approaches', "bg-white w-full outline-none text-xs font-mono text-center text-black font-bold rounded py-1.5 border border-transparent hover:border-amber-300")} 
                     />
                   </td>
-                  <td className="p-1 bg-white">
-                    <input 
-                      type="text" 
-                      value={entry.landingsDay} 
-                      onChange={(e) => onUpdate(entry.id, 'landingsDay', e.target.value)} 
-                      readOnly={readOnly}
-                      className={getFieldClass(entry, 'landingsDay', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
-                    />
-                  </td>
-                  <td className="p-1 bg-white">
-                    <input 
-                      type="text" 
-                      value={entry.landingsNight} 
-                      onChange={(e) => onUpdate(entry.id, 'landingsNight', e.target.value)} 
-                      readOnly={readOnly}
-                      className={getFieldClass(entry, 'landingsNight', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
-                    />
-                  </td>
-                  <td className="p-1 bg-white">
-                    <input 
-                      type="text" 
-                      value={entry.groundReceived || ''} 
-                      onChange={(e) => onUpdate(entry.id, 'groundReceived', e.target.value)} 
-                      readOnly={readOnly}
-                      className={getFieldClass(entry, 'groundReceived', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
-                    />
-                  </td>
-                  <td className="p-1 bg-white">
-                    <input 
-                      type="text" 
-                      value={entry.groundGiven || ''} 
-                      onChange={(e) => onUpdate(entry.id, 'groundGiven', e.target.value)} 
-                      readOnly={readOnly}
-                      className={getFieldClass(entry, 'groundGiven', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
-                    />
-                  </td>
                   {/* IAP Column - Add IAP Button */}
                   <td className="p-1 bg-white text-center align-middle" style={{ whiteSpace: 'nowrap' }}>
                     {!readOnly && onUpdateApproaches && (
@@ -1001,6 +965,42 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       </React.Fragment>
                     );
                   })}
+                  <td className="p-1 bg-white">
+                    <input 
+                      type="text" 
+                      value={entry.landingsDay} 
+                      onChange={(e) => onUpdate(entry.id, 'landingsDay', e.target.value)} 
+                      readOnly={readOnly}
+                      className={getFieldClass(entry, 'landingsDay', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
+                    />
+                  </td>
+                  <td className="p-1 bg-white">
+                    <input 
+                      type="text" 
+                      value={entry.landingsNight} 
+                      onChange={(e) => onUpdate(entry.id, 'landingsNight', e.target.value)} 
+                      readOnly={readOnly}
+                      className={getFieldClass(entry, 'landingsNight', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
+                    />
+                  </td>
+                  <td className="p-1 bg-white">
+                    <input 
+                      type="text" 
+                      value={entry.groundReceived || ''} 
+                      onChange={(e) => onUpdate(entry.id, 'groundReceived', e.target.value)} 
+                      readOnly={readOnly}
+                      className={getFieldClass(entry, 'groundReceived', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
+                    />
+                  </td>
+                  <td className="p-1 bg-white">
+                    <input 
+                      type="text" 
+                      value={entry.groundGiven || ''} 
+                      onChange={(e) => onUpdate(entry.id, 'groundGiven', e.target.value)} 
+                      readOnly={readOnly}
+                      className={getFieldClass(entry, 'groundGiven', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
+                    />
+                  </td>
                   <td className="p-1 bg-white">
                     <input 
                       type="text" 
