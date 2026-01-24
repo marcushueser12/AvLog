@@ -662,11 +662,11 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
               <th className="px-2 py-4 text-center whitespace-nowrap text-emerald-300 bg-emerald-600/20">Actual Inst</th>
               <th className="px-2 py-4 text-center whitespace-nowrap text-cyan-300 bg-cyan-600/20">Sim Inst</th>
               <th className="px-2 py-4 text-center whitespace-nowrap text-amber-300 bg-amber-600/20">Appr</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap">IAP</th>
               <th className="px-2 py-4 text-center whitespace-nowrap">Lnd D</th>
               <th className="px-2 py-4 text-center whitespace-nowrap">Lnd N</th>
               <th className="px-2 py-4 text-center whitespace-nowrap">Gnd Rec</th>
               <th className="px-2 py-4 text-center whitespace-nowrap">Gnd Giv</th>
-              <th className="px-2 py-4 text-center whitespace-nowrap">IAP</th>
               <th className="px-2 py-4 text-center whitespace-nowrap">Comments / Remarks</th>
               <th className="px-2 py-4 text-center whitespace-nowrap">Actions</th>
             </tr>
@@ -897,99 +897,110 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       className={getFieldClass(entry, 'groundGiven', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
                     />
                   </td>
-                  {/* IAP Column - Contains button, saved approaches, and editing approaches */}
-                  <td className="p-1 bg-white align-top" style={{ minWidth: '200px' }}>
-                    <div className="flex flex-col gap-1">
-                      {/* Add IAP Button */}
-                      {!readOnly && onUpdateApproaches && (
-                        <button
-                          onClick={() => handleAddIAP(entry.id)}
-                          disabled={getMaxApproaches(entry.id) >= 6}
-                          className="flex items-center justify-center gap-1 px-2 py-1 text-[10px] font-bold text-[#007BFF] hover:text-[#007BFF]/80 disabled:opacity-30 disabled:cursor-not-allowed transition-colors whitespace-nowrap w-full"
-                          title="Add Instrument Approach Procedure"
-                        >
-                          <ICONS.Plus className="w-3 h-3" />
-                          Add IAP
-                        </button>
-                      )}
-                      {/* Saved Approaches - Display in packed format */}
-                      {getSavedApproaches(entry.id).map((approach, i) => (
-                        <div key={`saved-${i}`} className="flex items-center gap-1 p-1 bg-amber-50/50 rounded text-xs text-black font-semibold">
-                          <span className="flex-1">{formatApproachPacked(approach, i)}</span>
-                          {!readOnly && (
-                            <button
-                              onClick={() => handleDeleteApproach(entry.id, i)}
-                              className="p-0.5 text-red-600 hover:text-red-700 transition-colors flex-shrink-0"
-                              title="Delete approach"
-                            >
-                              <ICONS.Close className="w-3 h-3" />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                      {/* Editing Approaches - Show input fields with save/cancel */}
-                      {getEditingApproaches(entry.id).map((approach, i) => {
-                        const editingIndex = i;
-                        return (
-                          <div key={`editing-${i}`} className="p-1 bg-amber-50 rounded border border-amber-200">
-                            <div className="text-[9px] text-black font-bold mb-1">IAP {getSavedApproaches(entry.id).length + i + 1}</div>
-                            <div className="grid grid-cols-2 gap-1 mb-1">
-                              <input
-                                type="text"
-                                value={approach.type || ''}
-                                onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'type', e.target.value)}
-                                placeholder="Type"
-                                readOnly={readOnly}
-                                className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300"
-                              />
-                              <input
-                                type="text"
-                                value={approach.runway || ''}
-                                onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'runway', e.target.value)}
-                                placeholder="RWY"
-                                readOnly={readOnly}
-                                className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300"
-                              />
-                              <input
-                                type="text"
-                                value={approach.airport || ''}
-                                onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'airport', e.target.value)}
-                                placeholder="Airport Identifier"
-                                readOnly={readOnly}
-                                className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300"
-                              />
-                              <input
-                                type="text"
-                                value={approach.comments || ''}
-                                onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'comments', e.target.value)}
-                                placeholder="Notes"
-                                readOnly={readOnly}
-                                className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300"
-                              />
-                            </div>
-                            <div className="flex items-center justify-center gap-1">
-                              <button
-                                onClick={() => handleSaveApproach(entry.id, editingIndex)}
-                                disabled={readOnly}
-                                className="p-1 text-emerald-600 hover:text-emerald-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                                title="Save approach"
-                              >
-                                <ICONS.Check className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleCancelApproach(entry.id, editingIndex)}
-                                disabled={readOnly}
-                                className="p-1 text-red-600 hover:text-red-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                                title="Cancel"
-                              >
-                                <ICONS.Close className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                  {/* IAP Column - Add IAP Button */}
+                  <td className="p-1 bg-white text-center align-middle" style={{ whiteSpace: 'nowrap' }}>
+                    {!readOnly && onUpdateApproaches && (
+                      <button
+                        onClick={() => handleAddIAP(entry.id)}
+                        disabled={getMaxApproaches(entry.id) >= 6}
+                        className="flex items-center justify-center gap-1 px-2 py-1 text-[10px] font-bold text-[#007BFF] hover:text-[#007BFF]/80 disabled:opacity-30 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+                        title="Add Instrument Approach Procedure"
+                      >
+                        <ICONS.Plus className="w-3 h-3" />
+                        Add IAP
+                      </button>
+                    )}
                   </td>
+                  {/* Saved Approaches - Display in packed format horizontally */}
+                  {getSavedApproaches(entry.id).map((approach, i) => (
+                    <React.Fragment key={`saved-${i}`}>
+                      <td className="p-1 bg-amber-50/50 text-xs text-center text-black font-semibold" style={{ whiteSpace: 'nowrap' }}>
+                        {formatApproachPacked(approach, i)}
+                      </td>
+                      <td className="p-1 bg-amber-50/50 text-center align-middle" style={{ whiteSpace: 'nowrap' }}>
+                        {!readOnly && (
+                          <button
+                            onClick={() => handleDeleteApproach(entry.id, i)}
+                            className="p-1 text-red-600 hover:text-red-700 transition-colors"
+                            title="Delete approach"
+                          >
+                            <ICONS.Close className="w-3 h-3" />
+                          </button>
+                        )}
+                      </td>
+                    </React.Fragment>
+                  ))}
+                  {/* Editing Approaches - Show input fields horizontally */}
+                  {getEditingApproaches(entry.id).map((approach, i) => {
+                    const editingIndex = i;
+                    return (
+                      <React.Fragment key={`editing-${i}`}>
+                        <td className="p-1 bg-amber-50" style={{ whiteSpace: 'nowrap' }}>
+                          <div className="text-[9px] text-center text-black font-bold">{getSavedApproaches(entry.id).length + i + 1}</div>
+                        </td>
+                        <td className="p-1 bg-amber-50" style={{ whiteSpace: 'nowrap' }}>
+                          <input
+                            type="text"
+                            value={approach.type || ''}
+                            onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'type', e.target.value)}
+                            placeholder="Type"
+                            readOnly={readOnly}
+                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300 min-w-[50px]"
+                          />
+                        </td>
+                        <td className="p-1 bg-amber-50" style={{ whiteSpace: 'nowrap' }}>
+                          <input
+                            type="text"
+                            value={approach.runway || ''}
+                            onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'runway', e.target.value)}
+                            placeholder="RWY"
+                            readOnly={readOnly}
+                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300 min-w-[50px]"
+                          />
+                        </td>
+                        <td className="p-1 bg-amber-50" style={{ whiteSpace: 'nowrap' }}>
+                          <input
+                            type="text"
+                            value={approach.airport || ''}
+                            onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'airport', e.target.value)}
+                            placeholder="Airport Identifier"
+                            readOnly={readOnly}
+                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300 min-w-[80px]"
+                          />
+                        </td>
+                        <td className="p-1 bg-amber-50" style={{ whiteSpace: 'nowrap' }}>
+                          <input
+                            type="text"
+                            value={approach.comments || ''}
+                            onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'comments', e.target.value)}
+                            placeholder="Notes"
+                            readOnly={readOnly}
+                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300 min-w-[80px]"
+                          />
+                        </td>
+                        <td className="p-1 bg-amber-50 text-center" style={{ whiteSpace: 'nowrap' }}>
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() => handleSaveApproach(entry.id, editingIndex)}
+                              disabled={readOnly}
+                              className="p-1 text-emerald-600 hover:text-emerald-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                              title="Save approach"
+                            >
+                              <ICONS.Check className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleCancelApproach(entry.id, editingIndex)}
+                              disabled={readOnly}
+                              className="p-1 text-red-600 hover:text-red-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                              title="Cancel"
+                            >
+                              <ICONS.Close className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </React.Fragment>
+                    );
+                  })}
                   <td className="p-1 bg-white">
                     <input 
                       type="text" 
