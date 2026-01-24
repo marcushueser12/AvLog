@@ -50,6 +50,21 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   const sumSim = entries.reduce((acc, e) => acc + (parseFloat(e.simulatedInstrument) || 0), 0);
   const sumAppr = entries.reduce((acc, e) => acc + (parseInt(e.approaches) || 0), 0);
 
+  // Helper functions for approach management - must be defined first
+  const getSavedApproaches = (entryId: string): ApproachDetail[] => {
+    return entries.find(e => e.id === entryId)?.approachDetails || [];
+  };
+
+  const getEditingApproaches = (entryId: string): ApproachDetail[] => {
+    return editingApproaches[entryId] || [];
+  };
+
+  const getMaxApproaches = (entryId: string) => {
+    const saved = getSavedApproaches(entryId).length;
+    const editing = getEditingApproaches(entryId).length;
+    return saved + editing;
+  };
+
   // Calculate IAP column count for an entry
   // Structure: 1 (Add IAP button) + 2 per saved approach + 6 per editing approach
   const getIAPColumnCount = (entryId: string): number => {
@@ -62,21 +77,6 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   const maxIAPColumns = entries.length > 0 
     ? Math.max(...entries.map(e => getIAPColumnCount(e.id)), 1)
     : 1;
-
-  // Helper functions for approach management
-  const getMaxApproaches = (entryId: string) => {
-    const saved = (entries.find(e => e.id === entryId)?.approachDetails || []).length;
-    const editing = editingApproaches[entryId]?.length || 0;
-    return saved + editing;
-  };
-
-  const getSavedApproaches = (entryId: string): ApproachDetail[] => {
-    return entries.find(e => e.id === entryId)?.approachDetails || [];
-  };
-
-  const getEditingApproaches = (entryId: string): ApproachDetail[] => {
-    return editingApproaches[entryId] || [];
-  };
 
   // Format approach to packed data: #;type;runway;airport;comments
   const formatApproachPacked = (approach: ApproachDetail, index: number): string => {
@@ -1086,7 +1086,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
         </button>
       </div>
       )}
-      
+
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { height: 10px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #F4F7FA; }
