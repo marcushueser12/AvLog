@@ -74,9 +74,11 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   };
 
   // Calculate max IAP columns needed across all entries
-  const maxIAPColumns = entries.length > 0 
-    ? Math.max(...entries.map(e => getIAPColumnCount(e.id)), 1)
-    : 1;
+  // Recalculate whenever entries or editingApproaches change
+  const maxIAPColumns = React.useMemo(() => {
+    if (entries.length === 0) return 1;
+    return Math.max(...entries.map(e => getIAPColumnCount(e.id)), 1);
+  }, [entries, editingApproaches]);
 
   // Format approach to packed data: #;type;runway;airport;comments
   const formatApproachPacked = (approach: ApproachDetail, index: number): string => {
