@@ -19,6 +19,7 @@ import { getExifOrientation } from './utils/exifUtils';
 import { useMobile } from './utils/useMobile';
 import { motion } from 'framer-motion';
 import { Plane, Grid3x3, FileText, Clock, Home, LogOut, Download, Plus, Trash2, Upload, X } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -1827,6 +1828,7 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
+      <Analytics />
     </div>
   );
 };
