@@ -120,6 +120,13 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
     }
   };
 
+  const handleDeleteApproach = (entryId: string, approachIndex: number) => {
+    if (!onUpdateApproaches) return;
+    const saved = getSavedApproaches(entryId);
+    const updatedApproaches = saved.filter((_, i) => i !== approachIndex);
+    onUpdateApproaches(entryId, updatedApproaches);
+  };
+
   // Handle date format conversion
   // Dates are always stored in MM/DD/YYYY format. This dropdown lets users indicate
   // if their dates were originally written in DD/MM format so we can convert them.
@@ -896,9 +903,22 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                   )}
                   {/* Saved Approaches - Display in packed format */}
                   {getSavedApproaches(entry.id).map((approach, i) => (
-                    <td key={`saved-${i}`} className="p-1 bg-amber-50/50 text-[10px] font-mono text-center text-black font-semibold" style={{ whiteSpace: 'nowrap' }} colSpan={5}>
-                      {formatApproachPacked(approach, i)}
-                    </td>
+                    <React.Fragment key={`saved-${i}`}>
+                      <td className="p-1 bg-amber-50/50 text-xs text-center text-black font-semibold" style={{ whiteSpace: 'nowrap' }} colSpan={4}>
+                        {formatApproachPacked(approach, i)}
+                      </td>
+                      <td className="p-1 bg-amber-50/50 text-center align-middle" style={{ whiteSpace: 'nowrap' }}>
+                        {!readOnly && (
+                          <button
+                            onClick={() => handleDeleteApproach(entry.id, i)}
+                            className="p-1 text-red-600 hover:text-red-700 transition-colors"
+                            title="Delete approach"
+                          >
+                            <ICONS.Close className="w-4 h-4" />
+                          </button>
+                        )}
+                      </td>
+                    </React.Fragment>
                   ))}
                   {/* Editing Approaches - Show input fields with save/cancel */}
                   {getEditingApproaches(entry.id).map((approach, i) => {
