@@ -423,6 +423,18 @@ const PermanentLogTab: React.FC = () => {
     });
   };
 
+  const handleUpdateApproaches = (scanId: string, entryId: string, approaches: ApproachDetail[]) => {
+    setEditableEntries(prev => {
+      const scanEntries = prev[scanId] || [];
+      return {
+        ...prev,
+        [scanId]: scanEntries.map(e => 
+          e.id === entryId ? { ...e, approachDetails: approaches } : e
+        )
+      };
+    });
+  };
+
   const handleAddEntry = (scanId: string) => {
     setEditableEntries(prev => {
       const scanEntries = prev[scanId] || [];
@@ -746,6 +758,11 @@ const PermanentLogTab: React.FC = () => {
                         onAdd={() => {
                           if (isEditingScan) {
                             handleAddEntry(scan.id);
+                          }
+                        }}
+                        onUpdateApproaches={(entryId, approaches) => {
+                          if (isEditingScan) {
+                            handleUpdateApproaches(scan.id, entryId, approaches);
                           }
                         }}
                       />

@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { LogbookEntry } from '../types';
+import { LogbookEntry, ApproachDetail } from '../types';
 import { ICONS } from '../constants';
 import ImageViewer, { ImageViewerHandle } from './ImageViewer';
+import ApproachModal from './ApproachModal';
 import { convertDDMMtoMMDD, formatDateForDisplay, adjustYearForDate, normalizeAircraftId } from '../utils/logbookUtils';
 import { useMobile } from '../utils/useMobile';
 
@@ -17,6 +18,7 @@ interface EntryEditorProps {
   twoColumnCards?: boolean; // Use 2-column card layout on mobile instead of single column
   onAircraftIdChange?: (entryId: string, aircraftId: string) => void; // Callback when aircraft ID changes to check if it's new
   readOnly?: boolean; // If true, disable all inputs (for permanent log when not in edit mode)
+  onUpdateApproaches?: (id: string, approaches: ApproachDetail[]) => void; // Callback to update approach details
 }
 
 const EntryEditor: React.FC<EntryEditorProps> = ({ 
@@ -30,7 +32,8 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   forceTableOnMobile = false,
   twoColumnCards = false,
   onAircraftIdChange,
-  readOnly = false
+  readOnly = false,
+  onUpdateApproaches
 }) => {
   const isMobile = useMobile();
   const useTableOnMobile = forceTableOnMobile && isMobile;
@@ -39,6 +42,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   const isSyncingRef = useRef(false);
   const [dateFormat, setDateFormat] = useState<'MM/DD' | 'DD/MM'>('MM/DD');
   const [yearAdjustment, setYearAdjustment] = useState<string>('');
+  const [approachModalEntryId, setApproachModalEntryId] = useState<string | null>(null);
 
   const sumTotal = entries.reduce((acc, e) => acc + (parseFloat(e.totalTime) || 0), 0);
   const sumPIC = entries.reduce((acc, e) => acc + (parseFloat(e.pic) || 0), 0);
@@ -175,13 +179,24 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       </div>
                     )}
                   </div>
-                  <button
-                    onClick={() => onDelete(entry.id)}
-                    className="text-red-500 hover:text-red-600 p-1"
-                    title="Delete entry"
-                  >
-                    <ICONS.Trash />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {!readOnly && onUpdateApproaches && (
+                      <button
+                        onClick={() => setApproachModalEntryId(entry.id)}
+                        className="text-[#007BFF] hover:text-[#007BFF]/80 p-1 transition-colors"
+                        title="Edit approaches"
+                      >
+                        <ICONS.Plane />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => onDelete(entry.id)}
+                      className="text-red-500 hover:text-red-600 p-1"
+                      title="Delete entry"
+                    >
+                      <ICONS.Trash />
+                    </button>
+                  </div>
                 </div>
                 
                 <div className={`grid grid-cols-2 gap-${twoColumnCards ? '2' : '3'}`}>
@@ -721,7 +736,18 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     />
                   </td>
                   <td className="px-2 py-2 text-center bg-white">
-                    <button onClick={() => onDelete(entry.id)} className="p-2 text-black hover:text-red-600 transition-colors"><ICONS.Trash /></button>
+                    <div className="flex items-center justify-center gap-1">
+                      {!readOnly && onUpdateApproaches && (
+                        <button 
+                          onClick={() => setApproachModalEntryId(entry.id)} 
+                          className="p-2 text-black hover:text-[#007BFF] transition-colors"
+                          title="Edit approaches"
+                        >
+                          <ICONS.Plane />
+                        </button>
+                      )}
+                      <button onClick={() => onDelete(entry.id)} className="p-2 text-black hover:text-red-600 transition-colors"><ICONS.Trash /></button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -778,7 +804,22 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
         </button>
       </div>
       )}
-
+      
+      {/* Approach Modal */}
+      {approachModalEntryId && (
+        <ApproachModal
+          isOpen={!!approachModalEntryId}
+          onClose={() => setApproachModalEntryId(null)}
+          approaches={entries.find(e => e.id === approachModalEntryId)?.approachDetails || []}
+          onSave={(approaches) => {
+            if (onUpdateApproaches && approachModalEntryId) {
+              onUpdateApproaches(approachModalEntryId, approaches);
+            }
+            setApproachModalEntryId(null);
+          }}
+        />
+      )}
+      
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { height: 10px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #F4F7FA; }

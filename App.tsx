@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { LogbookEntry, ScanDocument, ScanMode, AppTab, PageTotals, AircraftProfile } from './types';
+import { LogbookEntry, ScanDocument, ScanMode, AppTab, PageTotals, AircraftProfile, ApproachDetail } from './types';
 import { ICONS } from './constants';
 import EntryEditor from './components/EntryEditor';
 import ScanReviewRow from './components/ScanReviewRow';
@@ -651,6 +651,15 @@ const App: React.FC = () => {
         }
         
         return updatedEntry;
+      }
+      return e;
+    }));
+  };
+
+  const handleUpdateApproaches = (id: string, approaches: ApproachDetail[]) => {
+    setEntries(prev => prev.map(e => {
+      if (e.id === id) {
+        return { ...e, approachDetails: approaches };
       }
       return e;
     }));
@@ -1449,6 +1458,7 @@ const App: React.FC = () => {
                                     };
                                     setEntries(prev => [...prev, newEntry]);
                                   }}
+                                  onUpdateApproaches={handleUpdateApproaches}
                                 />
                                 <div className="p-4 bg-slate-950/50 flex justify-between items-center">
                                     <label className="flex items-center gap-2 cursor-pointer">

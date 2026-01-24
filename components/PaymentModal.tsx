@@ -75,14 +75,29 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSuccess 
 
       const data = await response.json();
       
-      // Redirect to Stripe Checkout
+      // Validate and redirect to Stripe Checkout
       // Note: Scans and entries are automatically saved to localStorage via useEffect in App.tsx
       // They will be restored when the user returns from payment
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('No checkout URL received');
+      if (!data.url) {
+        throw new Error('No checkout URL received from server');
       }
+      
+      // Validate URL format
+      try {
+        const url = new URL(data.url);
+        if (!url.protocol.startsWith('http')) {
+          throw new Error('Invalid URL protocol');
+        }
+      } catch (urlError) {
+        console.error('Invalid checkout URL:', data.url);
+        throw new Error('Invalid checkout URL received. Please try again or contact support.');
+      }
+      
+      // Save payment redirect flag before redirecting
+      localStorage.setItem('pending_payment_redirect', 'true');
+      
+      // Redirect to Stripe Checkout
+      window.location.href = data.url;
     } catch (err: any) {
       console.error('Payment error:', err);
       setError(err.message || 'Failed to start payment. Please try again.');

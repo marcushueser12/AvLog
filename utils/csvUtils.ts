@@ -126,6 +126,54 @@ export const generateForeFlightCSV = (entries: LogbookEntry[], aircraftProfiles:
         case "GroundTraining": return formatNumeric(entry.groundReceived);
         case "GroundTrainingGiven": return formatNumeric(entry.groundGiven);
         case "Approaches": return entry.approaches || "";
+        case "Approach1": {
+          const approaches = entry.approachDetails || [];
+          if (approaches.length > 0) {
+            const ap = approaches[0];
+            return escapeCSV(`${ap.number || ''};${ap.type || ''};${ap.runway || ''};${ap.airport || ''};${ap.comments || ''}`);
+          }
+          return "";
+        }
+        case "Approach2": {
+          const approaches = entry.approachDetails || [];
+          if (approaches.length > 1) {
+            const ap = approaches[1];
+            return escapeCSV(`${ap.number || ''};${ap.type || ''};${ap.runway || ''};${ap.airport || ''};${ap.comments || ''}`);
+          }
+          return "";
+        }
+        case "Approach3": {
+          const approaches = entry.approachDetails || [];
+          if (approaches.length > 2) {
+            const ap = approaches[2];
+            return escapeCSV(`${ap.number || ''};${ap.type || ''};${ap.runway || ''};${ap.airport || ''};${ap.comments || ''}`);
+          }
+          return "";
+        }
+        case "Approach4": {
+          const approaches = entry.approachDetails || [];
+          if (approaches.length > 3) {
+            const ap = approaches[3];
+            return escapeCSV(`${ap.number || ''};${ap.type || ''};${ap.runway || ''};${ap.airport || ''};${ap.comments || ''}`);
+          }
+          return "";
+        }
+        case "Approach5": {
+          const approaches = entry.approachDetails || [];
+          if (approaches.length > 4) {
+            const ap = approaches[4];
+            return escapeCSV(`${ap.number || ''};${ap.type || ''};${ap.runway || ''};${ap.airport || ''};${ap.comments || ''}`);
+          }
+          return "";
+        }
+        case "Approach6": {
+          const approaches = entry.approachDetails || [];
+          if (approaches.length > 5) {
+            const ap = approaches[5];
+            return escapeCSV(`${ap.number || ''};${ap.type || ''};${ap.runway || ''};${ap.airport || ''};${ap.comments || ''}`);
+          }
+          return "";
+        }
         case "DayLandingsFullStop": return entry.landingsDay || "";
         case "NightLandingsFullStop": return entry.landingsNight || "";
         case "AllLandings": {

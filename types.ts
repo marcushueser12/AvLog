@@ -30,6 +30,18 @@ export interface BoundingBox {
  */
 export type FieldBoundingBoxes = Partial<Record<keyof LogbookEntry, BoundingBox>>;
 
+/**
+ * Approach detail for ForeFlight import
+ * Format: #;type;runway;airport;comments
+ */
+export interface ApproachDetail {
+  number?: string; // Approach number (#)
+  type?: string; // Approach type (ILS, RNAV, VOR, etc.)
+  runway?: string; // Runway identifier
+  airport?: string; // Airport identifier
+  comments?: string; // Additional comments
+}
+
 export interface LogbookEntry {
   id: string;
   scanId?: string; 
@@ -63,6 +75,7 @@ export interface LogbookEntry {
   validationError?: string;
   rowAnchor?: string; // The physical line number from the page
   fieldBoundingBoxes?: FieldBoundingBoxes; // Bounding boxes for each field on the image
+  approachDetails?: ApproachDetail[]; // Array of approach details (max 6) for ForeFlight import
 }
 
 export type ScanMode = 'single' | 'spread';
