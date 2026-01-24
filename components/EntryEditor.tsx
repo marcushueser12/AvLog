@@ -49,6 +49,38 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   const sumSim = entries.reduce((acc, e) => acc + (parseFloat(e.simulatedInstrument) || 0), 0);
   const sumAppr = entries.reduce((acc, e) => acc + (parseInt(e.approaches) || 0), 0);
 
+  // Helper functions for approach management
+  const getMaxApproaches = (entryId: string) => {
+    return expandedApproaches[entryId] || 0;
+  };
+
+  const handleAddIAP = (entryId: string) => {
+    const current = getMaxApproaches(entryId);
+    if (current < 6) {
+      setExpandedApproaches(prev => ({ ...prev, [entryId]: current + 1 }));
+      // Initialize approach if it doesn't exist
+      const entry = entries.find(e => e.id === entryId);
+      if (entry && onUpdateApproaches) {
+        const approaches = entry.approachDetails || [];
+        if (approaches.length <= current) {
+          onUpdateApproaches(entryId, [...approaches, {}]);
+        }
+      }
+    }
+  };
+
+  const handleUpdateApproach = (entryId: string, approachIndex: number, field: keyof ApproachDetail, value: string) => {
+    if (!onUpdateApproaches) return;
+    const entry = entries.find(e => e.id === entryId);
+    if (!entry) return;
+    const approaches = [...(entry.approachDetails || [])];
+    while (approaches.length <= approachIndex) {
+      approaches.push({});
+    }
+    approaches[approachIndex] = { ...approaches[approachIndex], [field]: value };
+    onUpdateApproaches(entryId, approaches);
+  };
+
   // Handle date format conversion
   // Dates are always stored in MM/DD/YYYY format. This dropdown lets users indicate
   // if their dates were originally written in DD/MM format so we can convert them.
