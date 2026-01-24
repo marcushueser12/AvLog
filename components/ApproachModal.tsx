@@ -4,18 +4,18 @@ import { ICONS } from '../constants';
 
 interface ApproachModalProps {
   isOpen: boolean;
-  onClose: () => void;
+  entryId: string;
   approaches: ApproachDetail[];
+  onClose: () => void;
   onSave: (approaches: ApproachDetail[]) => void;
-  maxApproaches?: number;
 }
 
 const ApproachModal: React.FC<ApproachModalProps> = ({
   isOpen,
-  onClose,
+  entryId,
   approaches,
-  onSave,
-  maxApproaches = 6
+  onClose,
+  onSave
 }) => {
   const [localApproaches, setLocalApproaches] = useState<ApproachDetail[]>([]);
 
@@ -26,16 +26,10 @@ const ApproachModal: React.FC<ApproachModalProps> = ({
     }
   }, [isOpen, approaches]);
 
-  if (!isOpen) return null;
-
   const handleAddApproach = () => {
-    if (localApproaches.length < maxApproaches) {
+    if (localApproaches.length < 6) {
       setLocalApproaches([...localApproaches, {}]);
     }
-  };
-
-  const handleRemoveApproach = (index: number) => {
-    setLocalApproaches(localApproaches.filter((_, i) => i !== index));
   };
 
   const handleUpdateApproach = (index: number, field: keyof ApproachDetail, value: string) => {
@@ -44,145 +38,140 @@ const ApproachModal: React.FC<ApproachModalProps> = ({
     setLocalApproaches(updated);
   };
 
+  const handleDeleteApproach = (index: number) => {
+    setLocalApproaches(localApproaches.filter((_, i) => i !== index));
+  };
+
   const handleSave = () => {
-    // Filter out completely empty approaches
-    const validApproaches = localApproaches.filter(ap => 
-      ap.number || ap.type || ap.runway || ap.airport || ap.comments
-    );
-    onSave(validApproaches);
+    onSave(localApproaches);
     onClose();
   };
 
+  const formatApproachPacked = (approach: ApproachDetail, index: number): string => {
+    const number = (index + 1).toString();
+    return `${number};${approach.type || ''};${approach.runway || ''};${approach.airport || ''};${approach.comments || ''}`;
+  };
+
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose}></div>
-      <div className="relative bg-white/90 backdrop-blur-md border border-[#E2E8F0] rounded-3xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-black text-[#003366]">Edit Approaches</h2>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-[#E2E8F0] flex items-center justify-between">
+          <h2 className="text-xl font-bold text-[#003366]">Instrument Approaches</h2>
           <button
             onClick={onClose}
-            className="text-[#003366]/60 hover:text-[#003366] transition-colors"
+            className="p-2 hover:bg-[#E2E8F0] rounded-full transition-colors"
+            title="Close"
           >
-            <ICONS.Close />
+            <ICONS.Close className="w-5 h-5 text-[#003366]" />
           </button>
         </div>
 
-        <div className="mb-4 p-3 bg-[#F4F7FA] rounded-xl border border-[#E2E8F0]">
-          <p className="text-sm text-[#003366]/70">
-            Format: <span className="font-mono font-semibold">#;type;runway;airport;comments</span>
-          </p>
-          <p className="text-xs text-[#003366]/60 mt-1">
-            Maximum {maxApproaches} approaches per entry. Empty approaches will be removed when saved.
-          </p>
-        </div>
-
-        <div className="space-y-4 mb-6">
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-6">
           {localApproaches.length === 0 ? (
-            <div className="text-center py-8 text-[#003366]/60">
-              <p className="text-sm">No approaches added yet. Click "Add Approach" to get started.</p>
+            <div className="text-center py-12 text-[#003366]/70">
+              <p className="mb-4">No approaches added yet.</p>
+              <p className="text-sm">Click "Add Approach" to get started.</p>
             </div>
           ) : (
-            localApproaches.map((approach, index) => (
-              <div
-                key={index}
-                className="p-4 bg-white border-2 border-[#E2E8F0] rounded-xl hover:border-[#007BFF]/30 transition-colors"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-[#003366]">Approach {index + 1}</h3>
-                  <button
-                    onClick={() => handleRemoveApproach(index)}
-                    className="text-red-500 hover:text-red-600 p-1 transition-colors"
-                    title="Remove approach"
-                  >
-                    <ICONS.Trash />
-                  </button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-[#003366]/70 mb-1">
-                      # (Approach Number)
-                    </label>
-                    <input
-                      type="text"
-                      value={approach.number || ''}
-                      onChange={(e) => handleUpdateApproach(index, 'number', e.target.value)}
-                      placeholder="#"
-                      className="w-full px-3 py-2 bg-white border border-[#E2E8F0] rounded-lg text-sm text-black font-semibold outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
-                    />
+            <div className="space-y-4">
+              {localApproaches.map((approach, index) => (
+                <div key={index} className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-bold text-[#003366]">Approach {index + 1}</h3>
+                    <button
+                      onClick={() => handleDeleteApproach(index)}
+                      className="p-1 text-red-600 hover:text-red-700 transition-colors"
+                      title="Delete approach"
+                    >
+                      <ICONS.Close className="w-4 h-4" />
+                    </button>
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-[#003366]/70 mb-1">
-                      Type (ILS, RNAV, VOR, etc.)
-                    </label>
-                    <input
-                      type="text"
-                      value={approach.type || ''}
-                      onChange={(e) => handleUpdateApproach(index, 'type', e.target.value)}
-                      placeholder="Type"
-                      className="w-full px-3 py-2 bg-white border border-[#E2E8F0] rounded-lg text-sm text-black font-semibold outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
-                    />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-[#003366]/70 uppercase tracking-wide mb-1">
+                        Type
+                      </label>
+                      <input
+                        type="text"
+                        value={approach.type || ''}
+                        onChange={(e) => handleUpdateApproach(index, 'type', e.target.value)}
+                        placeholder="ILS, VOR, GPS, etc."
+                        className="w-full bg-white border border-[#E2E8F0] rounded-lg px-3 py-2 text-sm text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[#003366]/70 uppercase tracking-wide mb-1">
+                        Runway
+                      </label>
+                      <input
+                        type="text"
+                        value={approach.runway || ''}
+                        onChange={(e) => handleUpdateApproach(index, 'runway', e.target.value)}
+                        placeholder="18, 23, etc."
+                        className="w-full bg-white border border-[#E2E8F0] rounded-lg px-3 py-2 text-sm text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[#003366]/70 uppercase tracking-wide mb-1">
+                        Airport Identifier
+                      </label>
+                      <input
+                        type="text"
+                        value={approach.airport || ''}
+                        onChange={(e) => handleUpdateApproach(index, 'airport', e.target.value)}
+                        placeholder="KORD, KLAX, etc."
+                        className="w-full bg-white border border-[#E2E8F0] rounded-lg px-3 py-2 text-sm text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[#003366]/70 uppercase tracking-wide mb-1">
+                        Notes/Comments
+                      </label>
+                      <input
+                        type="text"
+                        value={approach.comments || ''}
+                        onChange={(e) => handleUpdateApproach(index, 'comments', e.target.value)}
+                        placeholder="Optional notes"
+                        className="w-full bg-white border border-[#E2E8F0] rounded-lg px-3 py-2 text-sm text-[#003366] outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-[#003366]/70 mb-1">
-                      Runway
-                    </label>
-                    <input
-                      type="text"
-                      value={approach.runway || ''}
-                      onChange={(e) => handleUpdateApproach(index, 'runway', e.target.value)}
-                      placeholder="Runway"
-                      className="w-full px-3 py-2 bg-white border border-[#E2E8F0] rounded-lg text-sm text-black font-semibold outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-[#003366]/70 mb-1">
-                      Airport
-                    </label>
-                    <input
-                      type="text"
-                      value={approach.airport || ''}
-                      onChange={(e) => handleUpdateApproach(index, 'airport', e.target.value)}
-                      placeholder="Airport"
-                      className="w-full px-3 py-2 bg-white border border-[#E2E8F0] rounded-lg text-sm text-black font-semibold outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-xs font-semibold text-[#003366]/70 mb-1">
-                      Comments
-                    </label>
-                    <input
-                      type="text"
-                      value={approach.comments || ''}
-                      onChange={(e) => handleUpdateApproach(index, 'comments', e.target.value)}
-                      placeholder="Comments"
-                      className="w-full px-3 py-2 bg-white border border-[#E2E8F0] rounded-lg text-sm text-black font-semibold outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
-                    />
+                  <div className="mt-3 p-2 bg-white rounded border border-amber-200">
+                    <p className="text-xs text-[#003366]/70 font-mono">
+                      Packed format: {formatApproachPacked(approach, index)}
+                    </p>
                   </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-4">
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-[#E2E8F0] flex items-center justify-between">
           <button
             onClick={handleAddApproach}
-            disabled={localApproaches.length >= maxApproaches}
-            className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-[#F4F7FA] rounded-xl text-sm font-bold text-[#003366] transition-all border border-[#E2E8F0] shadow-sm hover:shadow-md disabled:opacity-30 disabled:cursor-not-allowed"
+            disabled={localApproaches.length >= 6}
+            className="flex items-center gap-2 px-4 py-2 bg-[#007BFF] text-white rounded-lg font-semibold hover:bg-[#007BFF]/90 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            title="Add Instrument Approach Procedure"
           >
-            <ICONS.Plus />
-            Add Approach {localApproaches.length > 0 && `(${localApproaches.length}/${maxApproaches})`}
+            <ICONS.Plus className="w-4 h-4" />
+            Add Approach {localApproaches.length > 0 && `(${localApproaches.length}/6)`}
           </button>
-          <div className="flex gap-3">
+          <div className="flex items-center gap-3">
             <button
               onClick={onClose}
-              className="px-6 py-2 bg-white hover:bg-[#F4F7FA] rounded-xl text-sm font-bold text-[#003366] transition-all border border-[#E2E8F0] shadow-sm hover:shadow-md"
+              className="px-4 py-2 bg-white border border-[#E2E8F0] text-[#003366] rounded-lg font-semibold hover:bg-[#E2E8F0] transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              className="px-6 py-2 bg-[#003366] hover:bg-[#003366]/90 rounded-xl text-sm font-bold text-white transition-all shadow-lg shadow-[#003366]/20"
+              className="px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
             >
               Save Approaches
             </button>

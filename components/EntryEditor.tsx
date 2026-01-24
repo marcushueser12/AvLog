@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { LogbookEntry, ApproachDetail } from '../types';
 import { ICONS } from '../constants';
 import ImageViewer, { ImageViewerHandle } from './ImageViewer';
+import ApproachModal from './ApproachModal';
 import { convertDDMMtoMMDD, formatDateForDisplay, adjustYearForDate, normalizeAircraftId } from '../utils/logbookUtils';
 import { useMobile } from '../utils/useMobile';
 
@@ -41,8 +42,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   const isSyncingRef = useRef(false);
   const [dateFormat, setDateFormat] = useState<'MM/DD' | 'DD/MM'>('MM/DD');
   const [yearAdjustment, setYearAdjustment] = useState<string>('');
-  const [expandedApproaches, setExpandedApproaches] = useState<Record<string, number>>({}); // Track how many approaches are shown per entry
-  const [editingApproaches, setEditingApproaches] = useState<Record<string, ApproachDetail[]>>({}); // Track unsaved approaches being edited
+  const [approachModalEntryId, setApproachModalEntryId] = useState<string | null>(null);
 
   const sumTotal = entries.reduce((acc, e) => acc + (parseFloat(e.totalTime) || 0), 0);
   const sumPIC = entries.reduce((acc, e) => acc + (parseFloat(e.pic) || 0), 0);
@@ -50,96 +50,15 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   const sumSim = entries.reduce((acc, e) => acc + (parseFloat(e.simulatedInstrument) || 0), 0);
   const sumAppr = entries.reduce((acc, e) => acc + (parseInt(e.approaches) || 0), 0);
 
-  // Helper functions for approach management - must be defined first
-  const getSavedApproaches = (entryId: string): ApproachDetail[] => {
-    return entries.find(e => e.id === entryId)?.approachDetails || [];
+  // Approach management functions
+  const handleOpenApproachModal = (entryId: string) => {
+    setApproachModalEntryId(entryId);
   };
 
-  const getEditingApproaches = (entryId: string): ApproachDetail[] => {
-    return editingApproaches[entryId] || [];
-  };
-
-  const getMaxApproaches = (entryId: string) => {
-    const saved = getSavedApproaches(entryId).length;
-    const editing = getEditingApproaches(entryId).length;
-    return saved + editing;
-  };
-
-  // Calculate IAP column count for an entry
-  // Structure: 1 (Add IAP button) + 2 per saved approach + 6 per editing approach
-  const getIAPColumnCount = (entryId: string): number => {
-    const saved = getSavedApproaches(entryId).length;
-    const editing = getEditingApproaches(entryId).length;
-    return 1 + (saved * 2) + (editing * 6);
-  };
-
-  // Calculate max IAP columns needed across all entries
-  // Recalculate whenever entries or editingApproaches change
-  const maxIAPColumns = React.useMemo(() => {
-    if (entries.length === 0) return 1;
-    return Math.max(...entries.map(e => getIAPColumnCount(e.id)), 1);
-  }, [entries, editingApproaches]);
-
-  // Format approach to packed data: #;type;runway;airport;comments
-  const formatApproachPacked = (approach: ApproachDetail, index: number): string => {
-    const number = (index + 1).toString();
-    return `${number};${approach.type || ''};${approach.runway || ''};${approach.airport || ''};${approach.comments || ''}`;
-  };
-
-  const handleAddIAP = (entryId: string) => {
-    const saved = getSavedApproaches(entryId).length;
-    const editing = getEditingApproaches(entryId).length;
-    if (saved + editing < 6) {
-      const currentEditing = [...getEditingApproaches(entryId)];
-      currentEditing.push({});
-      setEditingApproaches(prev => ({ ...prev, [entryId]: currentEditing }));
+  const handleSaveApproaches = (entryId: string, approaches: ApproachDetail[]) => {
+    if (onUpdateApproaches) {
+      onUpdateApproaches(entryId, approaches);
     }
-  };
-
-  const handleUpdateApproach = (entryId: string, approachIndex: number, field: keyof ApproachDetail, value: string) => {
-    const currentEditing = [...getEditingApproaches(entryId)];
-    if (currentEditing.length <= approachIndex) {
-      return;
-    }
-    currentEditing[approachIndex] = { ...currentEditing[approachIndex], [field]: value };
-    setEditingApproaches(prev => ({ ...prev, [entryId]: currentEditing }));
-  };
-
-  const handleSaveApproach = (entryId: string, approachIndex: number) => {
-    if (!onUpdateApproaches) return;
-    const editing = getEditingApproaches(entryId);
-    if (approachIndex >= editing.length) return;
-    
-    const approachToSave = editing[approachIndex];
-    // Auto-assign number based on saved approaches count
-    const saved = getSavedApproaches(entryId);
-    const savedApproaches = [...saved, approachToSave];
-    
-    // Remove from editing and save
-    const remainingEditing = editing.filter((_, i) => i !== approachIndex);
-    setEditingApproaches(prev => ({ ...prev, [entryId]: remainingEditing }));
-    onUpdateApproaches(entryId, savedApproaches);
-  };
-
-  const handleCancelApproach = (entryId: string, approachIndex: number) => {
-    const editing = getEditingApproaches(entryId);
-    const remainingEditing = editing.filter((_, i) => i !== approachIndex);
-    if (remainingEditing.length === 0) {
-      setEditingApproaches(prev => {
-        const updated = { ...prev };
-        delete updated[entryId];
-        return updated;
-      });
-    } else {
-      setEditingApproaches(prev => ({ ...prev, [entryId]: remainingEditing }));
-    }
-  };
-
-  const handleDeleteApproach = (entryId: string, approachIndex: number) => {
-    if (!onUpdateApproaches) return;
-    const saved = getSavedApproaches(entryId);
-    const updatedApproaches = saved.filter((_, i) => i !== approachIndex);
-    onUpdateApproaches(entryId, updatedApproaches);
   };
 
   // Handle date format conversion
@@ -677,15 +596,6 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
               <th className="px-2 py-4 text-center whitespace-nowrap text-emerald-300 bg-emerald-600/20">Actual Inst</th>
               <th className="px-2 py-4 text-center whitespace-nowrap text-cyan-300 bg-cyan-600/20">Sim Inst</th>
               <th className="px-2 py-4 text-center whitespace-nowrap text-amber-300 bg-amber-600/20">Appr</th>
-              {/* IAP Header - Render same number of cells as maxIAPColumns */}
-              {Array.from({ length: maxIAPColumns }).map((_, i) => (
-                <th 
-                  key={`iap-header-${i}`} 
-                  className={`px-2 py-4 text-center whitespace-nowrap ${i === 0 ? '' : 'bg-transparent'}`}
-                >
-                  {i === 0 ? 'IAP' : ''}
-                </th>
-              ))}
               <th className="px-2 py-4 text-center whitespace-nowrap">Lnd D</th>
               <th className="px-2 py-4 text-center whitespace-nowrap">Lnd N</th>
               <th className="px-2 py-4 text-center whitespace-nowrap">Gnd Rec</th>
@@ -697,7 +607,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
           <tbody className="divide-y divide-[#E2E8F0]">
             {entries.length === 0 ? (
               <tr>
-                <td colSpan={23} className="px-4 py-20 text-center text-[#003366]/70 italic font-medium">
+                <td colSpan={22} className="px-4 py-20 text-center text-[#003366]/70 italic font-medium">
                   <div className="flex flex-col items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                     Ready for consistent digital logs.
@@ -876,122 +786,25 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     />
                   </td>
                   <td className="p-1 bg-amber-50">
-                    <input 
-                      type="text" 
-                      value={entry.approaches} 
-                      onChange={(e) => onUpdate(entry.id, 'approaches', e.target.value)} 
-                      readOnly={readOnly}
-                      className={getFieldClass(entry, 'approaches', "bg-white w-full outline-none text-xs font-mono text-center text-black font-bold rounded py-1.5 border border-transparent hover:border-amber-300")} 
-                    />
+                    <div className="flex items-center gap-1">
+                      <input 
+                        type="text" 
+                        value={entry.approaches} 
+                        onChange={(e) => onUpdate(entry.id, 'approaches', e.target.value)} 
+                        readOnly={readOnly}
+                        className={getFieldClass(entry, 'approaches', "bg-white flex-1 outline-none text-xs font-mono text-center text-black font-bold rounded py-1.5 border border-transparent hover:border-amber-300")} 
+                      />
+                      {!readOnly && onUpdateApproaches && (
+                        <button
+                          onClick={() => handleOpenApproachModal(entry.id)}
+                          className="flex items-center justify-center p-1 text-[#007BFF] hover:text-[#007BFF]/80 transition-colors flex-shrink-0"
+                          title="Manage Instrument Approaches"
+                        >
+                          <ICONS.Plus className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </td>
-                  {/* IAP Column - Add IAP Button */}
-                  <td className="p-1 bg-white text-center align-middle" style={{ whiteSpace: 'nowrap' }}>
-                    {!readOnly && onUpdateApproaches && (
-                      <button
-                        onClick={() => handleAddIAP(entry.id)}
-                        disabled={getMaxApproaches(entry.id) >= 6}
-                        className="flex items-center justify-center gap-1 px-2 py-1 text-[10px] font-bold text-[#007BFF] hover:text-[#007BFF]/80 disabled:opacity-30 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
-                        title="Add Instrument Approach Procedure"
-                      >
-                        <ICONS.Plus className="w-3 h-3" />
-                        Add IAP
-                      </button>
-                    )}
-                  </td>
-                  {/* Saved Approaches - Display in packed format horizontally */}
-                  {getSavedApproaches(entry.id).map((approach, i) => (
-                    <React.Fragment key={`saved-${i}`}>
-                      <td className="p-1 bg-amber-50/50 text-xs text-center text-black font-semibold" style={{ whiteSpace: 'nowrap' }}>
-                        {formatApproachPacked(approach, i)}
-                      </td>
-                      <td className="p-1 bg-amber-50/50 text-center align-middle" style={{ whiteSpace: 'nowrap' }}>
-                        {!readOnly && (
-                          <button
-                            onClick={() => handleDeleteApproach(entry.id, i)}
-                            className="p-1 text-red-600 hover:text-red-700 transition-colors"
-                            title="Delete approach"
-                          >
-                            <ICONS.Close className="w-3 h-3" />
-                          </button>
-                        )}
-                      </td>
-                    </React.Fragment>
-                  ))}
-                  {/* Editing Approaches - Show input fields horizontally */}
-                  {getEditingApproaches(entry.id).map((approach, i) => {
-                    const editingIndex = i;
-                    return (
-                      <React.Fragment key={`editing-${i}`}>
-                        <td className="p-1 bg-amber-50" style={{ whiteSpace: 'nowrap' }}>
-                          <div className="text-[9px] text-center text-black font-bold">{getSavedApproaches(entry.id).length + i + 1}</div>
-                        </td>
-                        <td className="p-1 bg-amber-50" style={{ whiteSpace: 'nowrap' }}>
-                          <input
-                            type="text"
-                            value={approach.type || ''}
-                            onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'type', e.target.value)}
-                            placeholder="Type"
-                            readOnly={readOnly}
-                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300 min-w-[50px]"
-                          />
-                        </td>
-                        <td className="p-1 bg-amber-50" style={{ whiteSpace: 'nowrap' }}>
-                          <input
-                            type="text"
-                            value={approach.runway || ''}
-                            onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'runway', e.target.value)}
-                            placeholder="RWY"
-                            readOnly={readOnly}
-                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300 min-w-[50px]"
-                          />
-                        </td>
-                        <td className="p-1 bg-amber-50" style={{ whiteSpace: 'nowrap' }}>
-                          <input
-                            type="text"
-                            value={approach.airport || ''}
-                            onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'airport', e.target.value)}
-                            placeholder="Airport Identifier"
-                            readOnly={readOnly}
-                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300 min-w-[80px]"
-                          />
-                        </td>
-                        <td className="p-1 bg-amber-50" style={{ whiteSpace: 'nowrap' }}>
-                          <input
-                            type="text"
-                            value={approach.comments || ''}
-                            onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'comments', e.target.value)}
-                            placeholder="Notes"
-                            readOnly={readOnly}
-                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300 min-w-[80px]"
-                          />
-                        </td>
-                        <td className="p-1 bg-amber-50 text-center" style={{ whiteSpace: 'nowrap' }}>
-                          <div className="flex items-center justify-center gap-1">
-                            <button
-                              onClick={() => handleSaveApproach(entry.id, editingIndex)}
-                              disabled={readOnly}
-                              className="p-1 text-emerald-600 hover:text-emerald-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                              title="Save approach"
-                            >
-                              <ICONS.Check className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleCancelApproach(entry.id, editingIndex)}
-                              disabled={readOnly}
-                              className="p-1 text-red-600 hover:text-red-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                              title="Cancel"
-                            >
-                              <ICONS.Close className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </React.Fragment>
-                    );
-                  })}
-                  {/* Fill remaining IAP columns with empty cells to match header span */}
-                  {Array.from({ length: maxIAPColumns - getIAPColumnCount(entry.id) }).map((_, i) => (
-                    <td key={`fill-${i}`} className="p-1 bg-white"></td>
-                  ))}
                   <td className="p-1 bg-white">
                     <input 
                       type="text" 
@@ -1057,7 +870,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                 <td className="p-3 text-center text-black font-bold bg-emerald-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-emerald-200">{sumInst.toFixed(1)}</td>
                 <td className="p-3 text-center text-black font-bold bg-cyan-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-cyan-200">{sumSim.toFixed(1)}</td>
                 <td className="p-3 text-center text-black font-bold bg-amber-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-amber-200">{sumAppr}</td>
-                <td colSpan={4} className="bg-white"></td>
+                <td colSpan={3} className="bg-white"></td>
             </tr>
           </tbody>
         </table>
