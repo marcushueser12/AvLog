@@ -520,10 +520,19 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       </div>
                       {/* Saved Approaches - Display in packed format */}
                       {getSavedApproaches(entry.id).map((approach, i) => (
-                        <div key={`saved-${i}`} className="mb-2 p-2 bg-amber-50/50 rounded-lg border border-amber-200">
-                          <div className="text-[10px] font-mono text-black font-semibold">
+                        <div key={`saved-${i}`} className="mb-2 p-2 bg-amber-50/50 rounded-lg border border-amber-200 flex items-center justify-between gap-2">
+                          <div className="text-xs text-black font-semibold flex-1">
                             {formatApproachPacked(approach, i)}
                           </div>
+                          {!readOnly && (
+                            <button
+                              onClick={() => handleDeleteApproach(entry.id, i)}
+                              className="p-1 text-red-600 hover:text-red-700 transition-colors flex-shrink-0"
+                              title="Delete approach"
+                            >
+                              <ICONS.Close className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       ))}
                       {/* Editing Approaches - Show input fields with save/cancel */}
