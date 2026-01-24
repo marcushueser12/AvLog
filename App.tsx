@@ -299,7 +299,7 @@ const App: React.FC = () => {
 
     // Check if Terms are accepted
     if (!acceptedTerms) {
-      alert('You must accept the Terms of Service and acknowledge that you are responsible for verifying the accuracy of all AI-generated flight data before proceeding.');
+      alert('You must accept the Terms of Service and acknowledge that you are responsible for verifying the accuracy of all flight data before proceeding.');
       return;
     }
 
@@ -1198,7 +1198,7 @@ const App: React.FC = () => {
                         >
                           Terms of Service
                         </button>
-                        {' '}and acknowledge that I am responsible for verifying the accuracy of all AI-generated flight data.
+                        {' '}and acknowledge that I am responsible for verifying the accuracy of all flight data.
                       </label>
                     </div>
                     

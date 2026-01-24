@@ -123,7 +123,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 <a href="/PRIVACY_POLICY.md" target="_blank" rel="noopener noreferrer" className="text-[#007BFF] hover:underline">
                   Privacy Policy
                 </a>
-                . I acknowledge that I am responsible for verifying the accuracy of all AI-generated flight data.
+                . I acknowledge that I am responsible for verifying the accuracy of all flight data.
               </label>
             </div>
           )}
