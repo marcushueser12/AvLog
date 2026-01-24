@@ -923,6 +923,20 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
           }
         ` : ''}
       `}</style>
+
+      {/* Approach Modal */}
+      {approachModalEntryId && onUpdateApproaches && (
+        <ApproachModal
+          isOpen={!!approachModalEntryId}
+          entryId={approachModalEntryId}
+          approaches={entries.find(e => e.id === approachModalEntryId)?.approachDetails || []}
+          onClose={() => setApproachModalEntryId(null)}
+          onSave={(approaches) => {
+            handleSaveApproaches(approachModalEntryId, approaches);
+            setApproachModalEntryId(null);
+          }}
+        />
+      )}
     </div>
   );
 };
