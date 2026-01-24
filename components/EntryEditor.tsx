@@ -2,7 +2,6 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { LogbookEntry, ApproachDetail } from '../types';
 import { ICONS } from '../constants';
 import ImageViewer, { ImageViewerHandle } from './ImageViewer';
-import ApproachModal from './ApproachModal';
 import { convertDDMMtoMMDD, formatDateForDisplay, adjustYearForDate, normalizeAircraftId } from '../utils/logbookUtils';
 import { useMobile } from '../utils/useMobile';
 
@@ -42,7 +41,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   const isSyncingRef = useRef(false);
   const [dateFormat, setDateFormat] = useState<'MM/DD' | 'DD/MM'>('MM/DD');
   const [yearAdjustment, setYearAdjustment] = useState<string>('');
-  const [approachModalEntryId, setApproachModalEntryId] = useState<string | null>(null);
+  const [expandedApproaches, setExpandedApproaches] = useState<Record<string, number>>({}); // Track how many approaches are shown per entry
 
   const sumTotal = entries.reduce((acc, e) => acc + (parseFloat(e.totalTime) || 0), 0);
   const sumPIC = entries.reduce((acc, e) => acc + (parseFloat(e.pic) || 0), 0);
@@ -426,6 +425,69 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     />
                   </div>
                   
+                  {/* Approach Fields */}
+                  {!readOnly && onUpdateApproaches && (
+                    <div className="col-span-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-[#003366]/70 uppercase tracking-wide font-semibold`}>Instrument Approaches</label>
+                        <button
+                          onClick={() => handleAddIAP(entry.id)}
+                          disabled={getMaxApproaches(entry.id) >= 6}
+                          className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-[#007BFF] hover:text-[#007BFF]/80 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                          title="Add Instrument Approach Procedure"
+                        >
+                          <ICONS.Plus className="w-3 h-3" />
+                          Add IAP
+                        </button>
+                      </div>
+                      {Array.from({ length: getMaxApproaches(entry.id) }).map((_, i) => {
+                        const approaches = entry.approachDetails || [];
+                        const approach = approaches[i] || {};
+                        return (
+                          <div key={i} className="mb-2 p-2 bg-amber-50 rounded-lg border border-amber-200">
+                            <div className="grid grid-cols-2 gap-2 mb-2">
+                              <input
+                                type="text"
+                                value={approach.number || ''}
+                                onChange={(e) => handleUpdateApproach(entry.id, i, 'number', e.target.value)}
+                                placeholder="#"
+                                className="w-full bg-white border border-[#E2E8F0] rounded px-2 py-1 text-xs text-center text-black font-semibold"
+                              />
+                              <input
+                                type="text"
+                                value={approach.type || ''}
+                                onChange={(e) => handleUpdateApproach(entry.id, i, 'type', e.target.value)}
+                                placeholder="Type"
+                                className="w-full bg-white border border-[#E2E8F0] rounded px-2 py-1 text-xs text-center text-black font-semibold"
+                              />
+                              <input
+                                type="text"
+                                value={approach.runway || ''}
+                                onChange={(e) => handleUpdateApproach(entry.id, i, 'runway', e.target.value)}
+                                placeholder="RWY"
+                                className="w-full bg-white border border-[#E2E8F0] rounded px-2 py-1 text-xs text-center text-black font-semibold"
+                              />
+                              <input
+                                type="text"
+                                value={approach.airport || ''}
+                                onChange={(e) => handleUpdateApproach(entry.id, i, 'airport', e.target.value)}
+                                placeholder="APT"
+                                className="w-full bg-white border border-[#E2E8F0] rounded px-2 py-1 text-xs text-center text-black font-semibold"
+                              />
+                            </div>
+                            <input
+                              type="text"
+                              value={approach.comments || ''}
+                              onChange={(e) => handleUpdateApproach(entry.id, i, 'comments', e.target.value)}
+                              placeholder="Notes"
+                              className="w-full bg-white border border-[#E2E8F0] rounded px-2 py-1 text-xs text-black font-semibold"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  
                   <div className="col-span-2">
                     <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-[#003366]/70 uppercase tracking-wide font-semibold block mb-1`}>Comments / Remarks</label>
                     <input
@@ -468,7 +530,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
             maxWidth: useTableOnMobile ? '100vw' : 'none'
           }}
         >
-        <table className="w-full text-left border-collapse min-w-[1950px] text-[11px] sm:text-xs" style={{ width: 'max-content' }}>
+        <table className="w-full text-left border-collapse min-w-[3000px] text-[11px] sm:text-xs" style={{ width: 'max-content' }}>
           <thead>
             <tr className="bg-[#003366] backdrop-blur-sm text-white text-[10px] uppercase tracking-wider font-bold">
               <th className="px-2 py-4 sticky left-0 bg-[#003366] z-40 border-r border-[#003366]/50 text-center whitespace-nowrap" style={{ width: 'auto', minWidth: '40px' }}>#</th>
@@ -495,6 +557,16 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
               <th className="px-2 py-4 text-center whitespace-nowrap">Lnd N</th>
               <th className="px-2 py-4 text-center whitespace-nowrap">Gnd Rec</th>
               <th className="px-2 py-4 text-center whitespace-nowrap">Gnd Giv</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap">Add IAP</th>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <React.Fragment key={i}>
+                  <th className="px-2 py-4 text-center whitespace-nowrap text-[9px] bg-amber-50">IAP {i + 1} #</th>
+                  <th className="px-2 py-4 text-center whitespace-nowrap text-[9px] bg-amber-50">IAP {i + 1} Type</th>
+                  <th className="px-2 py-4 text-center whitespace-nowrap text-[9px] bg-amber-50">IAP {i + 1} RWY</th>
+                  <th className="px-2 py-4 text-center whitespace-nowrap text-[9px] bg-amber-50">IAP {i + 1} APT</th>
+                  <th className="px-2 py-4 text-center whitespace-nowrap text-[9px] bg-amber-50">IAP {i + 1} Notes</th>
+                </React.Fragment>
+              ))}
               <th className="px-2 py-4 text-center whitespace-nowrap">Comments / Remarks</th>
               <th className="px-2 py-4 text-center whitespace-nowrap">Actions</th>
             </tr>
@@ -502,7 +574,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
           <tbody className="divide-y divide-[#E2E8F0]">
             {entries.length === 0 ? (
               <tr>
-                <td colSpan={21} className="px-4 py-20 text-center text-[#003366]/70 italic font-medium">
+                <td colSpan={55} className="px-4 py-20 text-center text-[#003366]/70 italic font-medium">
                   <div className="flex flex-col items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                     Ready for consistent digital logs.
@@ -725,6 +797,92 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       className={getFieldClass(entry, 'groundGiven', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
                     />
                   </td>
+                  <td className="p-1 bg-white text-center">
+                    {!readOnly && onUpdateApproaches && (
+                      <button
+                        onClick={() => handleAddIAP(entry.id)}
+                        disabled={getMaxApproaches(entry.id) >= 6}
+                        className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-[#007BFF] hover:text-[#007BFF]/80 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        title="Add Instrument Approach Procedure"
+                      >
+                        <ICONS.Plus className="w-3 h-3" />
+                        Add IAP
+                      </button>
+                    )}
+                  </td>
+                  {Array.from({ length: 6 }).map((_, i) => {
+                    const maxApproaches = getMaxApproaches(entry.id);
+                    const approaches = entry.approachDetails || [];
+                    const approach = approaches[i] || {};
+                    const isVisible = i < maxApproaches;
+                    
+                    if (!isVisible) {
+                      return (
+                        <React.Fragment key={i}>
+                          <td className="p-1 bg-amber-50/30"></td>
+                          <td className="p-1 bg-amber-50/30"></td>
+                          <td className="p-1 bg-amber-50/30"></td>
+                          <td className="p-1 bg-amber-50/30"></td>
+                          <td className="p-1 bg-amber-50/30"></td>
+                        </React.Fragment>
+                      );
+                    }
+                    
+                    return (
+                      <React.Fragment key={i}>
+                        <td className="p-1 bg-amber-50">
+                          <input
+                            type="text"
+                            value={approach.number || ''}
+                            onChange={(e) => handleUpdateApproach(entry.id, i, 'number', e.target.value)}
+                            placeholder="#"
+                            readOnly={readOnly}
+                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300"
+                          />
+                        </td>
+                        <td className="p-1 bg-amber-50">
+                          <input
+                            type="text"
+                            value={approach.type || ''}
+                            onChange={(e) => handleUpdateApproach(entry.id, i, 'type', e.target.value)}
+                            placeholder="Type"
+                            readOnly={readOnly}
+                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300"
+                          />
+                        </td>
+                        <td className="p-1 bg-amber-50">
+                          <input
+                            type="text"
+                            value={approach.runway || ''}
+                            onChange={(e) => handleUpdateApproach(entry.id, i, 'runway', e.target.value)}
+                            placeholder="RWY"
+                            readOnly={readOnly}
+                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300"
+                          />
+                        </td>
+                        <td className="p-1 bg-amber-50">
+                          <input
+                            type="text"
+                            value={approach.airport || ''}
+                            onChange={(e) => handleUpdateApproach(entry.id, i, 'airport', e.target.value)}
+                            placeholder="APT"
+                            readOnly={readOnly}
+                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300"
+                          />
+                        </td>
+                        <td className="p-1 bg-amber-50">
+                          <input
+                            type="text"
+                            value={approach.comments || ''}
+                            onChange={(e) => handleUpdateApproach(entry.id, i, 'comments', e.target.value)}
+                            placeholder="Notes"
+                            readOnly={readOnly}
+                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300"
+                          />
+                        </td>
+                      </React.Fragment>
+                    );
+                  })}
                   <td className="p-1 bg-white">
                     <input 
                       type="text" 
@@ -736,18 +894,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     />
                   </td>
                   <td className="px-2 py-2 text-center bg-white">
-                    <div className="flex items-center justify-center gap-1">
-                      {!readOnly && onUpdateApproaches && (
-                        <button 
-                          onClick={() => setApproachModalEntryId(entry.id)} 
-                          className="p-2 text-black hover:text-[#007BFF] transition-colors"
-                          title="Edit approaches"
-                        >
-                          <ICONS.Plane />
-                        </button>
-                      )}
-                      <button onClick={() => onDelete(entry.id)} className="p-2 text-black hover:text-red-600 transition-colors"><ICONS.Trash /></button>
-                    </div>
+                    <button onClick={() => onDelete(entry.id)} className="p-2 text-black hover:text-red-600 transition-colors"><ICONS.Trash /></button>
                   </td>
                 </tr>
               ))
@@ -765,7 +912,8 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                 <td className="p-3 text-center text-black font-bold bg-emerald-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-emerald-200">{sumInst.toFixed(1)}</td>
                 <td className="p-3 text-center text-black font-bold bg-cyan-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-cyan-200">{sumSim.toFixed(1)}</td>
                 <td className="p-3 text-center text-black font-bold bg-amber-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-amber-200">{sumAppr}</td>
-                <td colSpan={6} className="bg-white"></td>
+                <td colSpan={3} className="bg-white"></td>
+                <td colSpan={31} className="bg-white"></td>
             </tr>
           </tbody>
         </table>
@@ -803,21 +951,6 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
           <ICONS.Plus /> Manual Row
         </button>
       </div>
-      )}
-      
-      {/* Approach Modal */}
-      {approachModalEntryId && (
-        <ApproachModal
-          isOpen={!!approachModalEntryId}
-          onClose={() => setApproachModalEntryId(null)}
-          approaches={entries.find(e => e.id === approachModalEntryId)?.approachDetails || []}
-          onSave={(approaches) => {
-            if (onUpdateApproaches && approachModalEntryId) {
-              onUpdateApproaches(approachModalEntryId, approaches);
-            }
-            setApproachModalEntryId(null);
-          }}
-        />
       )}
       
       <style>{`
