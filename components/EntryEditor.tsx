@@ -1019,7 +1019,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                 <td className="p-3 text-center text-black font-bold bg-emerald-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-emerald-200">{sumInst.toFixed(1)}</td>
                 <td className="p-3 text-center text-black font-bold bg-cyan-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-cyan-200">{sumSim.toFixed(1)}</td>
                 <td className="p-3 text-center text-black font-bold bg-amber-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-amber-200">{sumAppr}</td>
-                <td colSpan={3} className="bg-white"></td>
+                <td colSpan={4} className="bg-white"></td>
             </tr>
           </tbody>
         </table>
