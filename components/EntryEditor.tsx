@@ -589,16 +589,6 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
               <th className="px-2 py-4 text-center whitespace-nowrap">Lnd N</th>
               <th className="px-2 py-4 text-center whitespace-nowrap">Gnd Rec</th>
               <th className="px-2 py-4 text-center whitespace-nowrap">Gnd Giv</th>
-              <th className="px-2 py-4 text-center whitespace-nowrap">Add IAP</th>
-              {Array.from({ length: 6 }).map((_, i) => (
-                <React.Fragment key={i}>
-                  <th className="px-2 py-4 text-center whitespace-nowrap text-[9px] bg-amber-50">IAP {i + 1} #</th>
-                  <th className="px-2 py-4 text-center whitespace-nowrap text-[9px] bg-amber-50">IAP {i + 1} Type</th>
-                  <th className="px-2 py-4 text-center whitespace-nowrap text-[9px] bg-amber-50">IAP {i + 1} RWY</th>
-                  <th className="px-2 py-4 text-center whitespace-nowrap text-[9px] bg-amber-50">IAP {i + 1} APT</th>
-                  <th className="px-2 py-4 text-center whitespace-nowrap text-[9px] bg-amber-50">IAP {i + 1} Notes</th>
-                </React.Fragment>
-              ))}
               <th className="px-2 py-4 text-center whitespace-nowrap">Comments / Remarks</th>
               <th className="px-2 py-4 text-center whitespace-nowrap">Actions</th>
             </tr>
@@ -606,7 +596,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
           <tbody className="divide-y divide-[#E2E8F0]">
             {entries.length === 0 ? (
               <tr>
-                <td colSpan={55} className="px-4 py-20 text-center text-[#003366]/70 italic font-medium">
+                <td colSpan={22} className="px-4 py-20 text-center text-[#003366]/70 italic font-medium">
                   <div className="flex flex-col items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                     Ready for consistent digital logs.
@@ -829,92 +819,94 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       className={getFieldClass(entry, 'groundGiven', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
                     />
                   </td>
-                  <td className="p-1 bg-white text-center">
-                    {!readOnly && onUpdateApproaches && (
+                  {/* Add IAP Button - Always visible */}
+                  {!readOnly && onUpdateApproaches && (
+                    <td className="p-1 bg-white text-center align-middle" style={{ whiteSpace: 'nowrap' }}>
                       <button
                         onClick={() => handleAddIAP(entry.id)}
                         disabled={getMaxApproaches(entry.id) >= 6}
-                        className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-[#007BFF] hover:text-[#007BFF]/80 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-[#007BFF] hover:text-[#007BFF]/80 disabled:opacity-30 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
                         title="Add Instrument Approach Procedure"
                       >
                         <ICONS.Plus className="w-3 h-3" />
                         Add IAP
                       </button>
-                    )}
-                  </td>
-                  {Array.from({ length: 6 }).map((_, i) => {
-                    const maxApproaches = getMaxApproaches(entry.id);
+                    </td>
+                  )}
+                  {/* Approach Input Fields - Dynamically inserted when expanded */}
+                  {Array.from({ length: getMaxApproaches(entry.id) }).map((_, i) => {
                     const approaches = entry.approachDetails || [];
                     const approach = approaches[i] || {};
-                    const isVisible = i < maxApproaches;
-                    
-                    if (!isVisible) {
-                      return (
-                        <React.Fragment key={i}>
-                          <td className="p-1 bg-amber-50/30"></td>
-                          <td className="p-1 bg-amber-50/30"></td>
-                          <td className="p-1 bg-amber-50/30"></td>
-                          <td className="p-1 bg-amber-50/30"></td>
-                          <td className="p-1 bg-amber-50/30"></td>
-                        </React.Fragment>
-                      );
-                    }
                     
                     return (
                       <React.Fragment key={i}>
-                        <td className="p-1 bg-amber-50">
+                        <td className="p-1 bg-amber-50" style={{ whiteSpace: 'nowrap' }}>
                           <input
                             type="text"
                             value={approach.number || ''}
                             onChange={(e) => handleUpdateApproach(entry.id, i, 'number', e.target.value)}
                             placeholder="#"
                             readOnly={readOnly}
-                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300"
+                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300 min-w-[40px]"
                           />
                         </td>
-                        <td className="p-1 bg-amber-50">
+                        <td className="p-1 bg-amber-50" style={{ whiteSpace: 'nowrap' }}>
                           <input
                             type="text"
                             value={approach.type || ''}
                             onChange={(e) => handleUpdateApproach(entry.id, i, 'type', e.target.value)}
                             placeholder="Type"
                             readOnly={readOnly}
-                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300"
+                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300 min-w-[50px]"
                           />
                         </td>
-                        <td className="p-1 bg-amber-50">
+                        <td className="p-1 bg-amber-50" style={{ whiteSpace: 'nowrap' }}>
                           <input
                             type="text"
                             value={approach.runway || ''}
                             onChange={(e) => handleUpdateApproach(entry.id, i, 'runway', e.target.value)}
                             placeholder="RWY"
                             readOnly={readOnly}
-                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300"
+                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300 min-w-[50px]"
                           />
                         </td>
-                        <td className="p-1 bg-amber-50">
+                        <td className="p-1 bg-amber-50" style={{ whiteSpace: 'nowrap' }}>
                           <input
                             type="text"
                             value={approach.airport || ''}
                             onChange={(e) => handleUpdateApproach(entry.id, i, 'airport', e.target.value)}
                             placeholder="APT"
                             readOnly={readOnly}
-                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300"
+                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300 min-w-[60px]"
                           />
                         </td>
-                        <td className="p-1 bg-amber-50">
+                        <td className="p-1 bg-amber-50" style={{ whiteSpace: 'nowrap' }}>
                           <input
                             type="text"
                             value={approach.comments || ''}
                             onChange={(e) => handleUpdateApproach(entry.id, i, 'comments', e.target.value)}
                             placeholder="Notes"
                             readOnly={readOnly}
-                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300"
+                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300 min-w-[80px]"
                           />
                         </td>
                       </React.Fragment>
                     );
                   })}
+                  {/* Keep Add IAP button visible to the right if approaches are expanded */}
+                  {getMaxApproaches(entry.id) > 0 && !readOnly && onUpdateApproaches && (
+                    <td className="p-1 bg-white text-center align-middle" style={{ whiteSpace: 'nowrap' }}>
+                      <button
+                        onClick={() => handleAddIAP(entry.id)}
+                        disabled={getMaxApproaches(entry.id) >= 6}
+                        className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-[#007BFF] hover:text-[#007BFF]/80 disabled:opacity-30 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+                        title="Add Instrument Approach Procedure"
+                      >
+                        <ICONS.Plus className="w-3 h-3" />
+                        Add IAP
+                      </button>
+                    </td>
+                  )}
                   <td className="p-1 bg-white">
                     <input 
                       type="text" 
@@ -945,7 +937,6 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                 <td className="p-3 text-center text-black font-bold bg-cyan-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-cyan-200">{sumSim.toFixed(1)}</td>
                 <td className="p-3 text-center text-black font-bold bg-amber-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-amber-200">{sumAppr}</td>
                 <td colSpan={3} className="bg-white"></td>
-                <td colSpan={31} className="bg-white"></td>
             </tr>
           </tbody>
         </table>
