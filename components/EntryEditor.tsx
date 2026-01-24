@@ -978,6 +978,10 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       </React.Fragment>
                     );
                   })}
+                  {/* Fill remaining IAP columns with empty cells to match header span */}
+                  {Array.from({ length: maxIAPColumns - getIAPColumnCount(entry.id) }).map((_, i) => (
+                    <td key={`fill-${i}`} className="p-1 bg-white"></td>
+                  ))}
                   <td className="p-1 bg-white">
                     <input 
                       type="text" 
