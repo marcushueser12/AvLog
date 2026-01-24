@@ -733,6 +733,7 @@ const PermanentLogTab: React.FC = () => {
                         entries={currentEntries}
                         images={[]} // No images stored - just data
                         rotations={[0, 0]}
+                        forceTableOnMobile={true}
                         twoColumnCards={true}
                         readOnly={!isEditingScan}
                         onAircraftIdChange={handleAircraftIdChange}
