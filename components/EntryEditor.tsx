@@ -50,6 +50,19 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   const sumSim = entries.reduce((acc, e) => acc + (parseFloat(e.simulatedInstrument) || 0), 0);
   const sumAppr = entries.reduce((acc, e) => acc + (parseInt(e.approaches) || 0), 0);
 
+  // Calculate IAP column count for an entry
+  // Structure: 1 (Add IAP button) + 2 per saved approach + 6 per editing approach
+  const getIAPColumnCount = (entryId: string): number => {
+    const saved = getSavedApproaches(entryId).length;
+    const editing = getEditingApproaches(entryId).length;
+    return 1 + (saved * 2) + (editing * 6);
+  };
+
+  // Calculate max IAP columns needed across all entries
+  const maxIAPColumns = entries.length > 0 
+    ? Math.max(...entries.map(e => getIAPColumnCount(e.id)), 1)
+    : 1;
+
   // Helper functions for approach management
   const getMaxApproaches = (entryId: string) => {
     const saved = (entries.find(e => e.id === entryId)?.approachDetails || []).length;
@@ -662,7 +675,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
               <th className="px-2 py-4 text-center whitespace-nowrap text-emerald-300 bg-emerald-600/20">Actual Inst</th>
               <th className="px-2 py-4 text-center whitespace-nowrap text-cyan-300 bg-cyan-600/20">Sim Inst</th>
               <th className="px-2 py-4 text-center whitespace-nowrap text-amber-300 bg-amber-600/20">Appr</th>
-              <th className="px-2 py-4 text-center whitespace-nowrap">IAP</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap" colSpan={maxIAPColumns}>IAP</th>
               <th className="px-2 py-4 text-center whitespace-nowrap">Lnd D</th>
               <th className="px-2 py-4 text-center whitespace-nowrap">Lnd N</th>
               <th className="px-2 py-4 text-center whitespace-nowrap">Gnd Rec</th>
