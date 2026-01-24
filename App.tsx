@@ -1034,7 +1034,7 @@ const App: React.FC = () => {
               {activeTab === 'dashboard' ? 'Logbook Digitizer' : 
                activeTab === 'permanent-log' ? 'Permanent Log' :
                activeTab === 'tutorial' ? 'Tutorial' : 
-               activeTab === 'aircraft' ? 'Aircraft' : 'Statistics'}
+               activeTab === 'aircraft' ? 'Aircraft' : 'Dashboard'}
             </h2>
             <div className="hidden md:flex items-center gap-2 px-2.5 py-1 bg-[#007BFF]/10 rounded-lg border border-[#007BFF]/20 text-[#007BFF] text-[10px] font-bold">
               <span className="w-1.5 h-1.5 bg-[#007BFF] rounded-full animate-pulse"></span>
