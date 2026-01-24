@@ -51,7 +51,25 @@ router.post('/create-checkout-session', verifyAuth, async (req: AuthRequest, res
     }
 
     const tier = PRICING_TIERS[packageType as keyof typeof PRICING_TIERS];
-    const baseUrl = process.env.FRONTEND_URL || process.env.ALLOWED_ORIGINS?.split(',')[0] || 'http://localhost:5173';
+    
+    // Determine base URL for redirects
+    // Priority: FRONTEND_URL > first ALLOWED_ORIGINS > localhost
+    let baseUrl = process.env.FRONTEND_URL;
+    
+    if (!baseUrl && process.env.ALLOWED_ORIGINS) {
+      // Extract first origin from ALLOWED_ORIGINS (comma-separated)
+      const origins = process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(o => o);
+      baseUrl = origins[0] || 'http://localhost:5173';
+    }
+    
+    if (!baseUrl) {
+      baseUrl = 'http://localhost:5173';
+    }
+    
+    // Ensure baseUrl doesn't have trailing slash
+    baseUrl = baseUrl.replace(/\/$/, '');
+    
+    console.log('Stripe checkout redirect URL:', baseUrl);
 
     // Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({

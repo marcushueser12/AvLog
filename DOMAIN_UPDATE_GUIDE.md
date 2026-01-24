@@ -17,7 +17,7 @@ Update these in your Railway project settings:
   ```
   https://logextract.co
   ```
-  (Used for Stripe redirects)
+  (Used for Stripe redirects - **CRITICAL**: This must be set correctly or Stripe will redirect to the wrong URL)
 
 ### Optional (if your backend URL changed):
 - **`VITE_API_URL`**: Your Railway backend URL (e.g., `https://your-app.up.railway.app`)
@@ -106,7 +106,11 @@ After updating everything, test:
 **Solution**: Update Supabase Site URL and Redirect URLs (see section 3)
 
 ### Issue: Stripe checkout redirects to wrong URL
-**Solution**: Verify `FRONTEND_URL` in Railway is set to `https://logextract.co`
+**Solution**: 
+1. **CRITICAL**: Set `FRONTEND_URL` in Railway to exactly `https://logextract.co` (no trailing slash)
+2. After updating, redeploy your Railway service or restart it
+3. Check Railway logs - you should see: `Stripe checkout redirect URL: https://logextract.co`
+4. If you see a different URL in the logs, the environment variable isn't being read correctly
 
 ### Issue: Webhook not receiving events
 **Solution**: 
