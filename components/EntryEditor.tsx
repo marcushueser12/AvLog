@@ -42,6 +42,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   const [dateFormat, setDateFormat] = useState<'MM/DD' | 'DD/MM'>('MM/DD');
   const [yearAdjustment, setYearAdjustment] = useState<string>('');
   const [expandedApproaches, setExpandedApproaches] = useState<Record<string, number>>({}); // Track how many approaches are shown per entry
+  const [editingApproaches, setEditingApproaches] = useState<Record<string, ApproachDetail[]>>({}); // Track unsaved approaches being edited
 
   const sumTotal = entries.reduce((acc, e) => acc + (parseFloat(e.totalTime) || 0), 0);
   const sumPIC = entries.reduce((acc, e) => acc + (parseFloat(e.pic) || 0), 0);
@@ -51,34 +52,72 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
 
   // Helper functions for approach management
   const getMaxApproaches = (entryId: string) => {
-    return expandedApproaches[entryId] || 0;
+    const saved = (entries.find(e => e.id === entryId)?.approachDetails || []).length;
+    const editing = editingApproaches[entryId]?.length || 0;
+    return saved + editing;
+  };
+
+  const getSavedApproaches = (entryId: string): ApproachDetail[] => {
+    return entries.find(e => e.id === entryId)?.approachDetails || [];
+  };
+
+  const getEditingApproaches = (entryId: string): ApproachDetail[] => {
+    return editingApproaches[entryId] || [];
+  };
+
+  // Format approach to packed data: #;type;runway;airport;comments
+  const formatApproachPacked = (approach: ApproachDetail, index: number): string => {
+    const number = (index + 1).toString();
+    return `${number};${approach.type || ''};${approach.runway || ''};${approach.airport || ''};${approach.comments || ''}`;
   };
 
   const handleAddIAP = (entryId: string) => {
-    const current = getMaxApproaches(entryId);
-    if (current < 6) {
-      setExpandedApproaches(prev => ({ ...prev, [entryId]: current + 1 }));
-      // Initialize approach if it doesn't exist
-      const entry = entries.find(e => e.id === entryId);
-      if (entry && onUpdateApproaches) {
-        const approaches = entry.approachDetails || [];
-        if (approaches.length <= current) {
-          onUpdateApproaches(entryId, [...approaches, {}]);
-        }
-      }
+    const saved = getSavedApproaches(entryId).length;
+    const editing = getEditingApproaches(entryId).length;
+    if (saved + editing < 6) {
+      const currentEditing = [...getEditingApproaches(entryId)];
+      currentEditing.push({});
+      setEditingApproaches(prev => ({ ...prev, [entryId]: currentEditing }));
     }
   };
 
   const handleUpdateApproach = (entryId: string, approachIndex: number, field: keyof ApproachDetail, value: string) => {
-    if (!onUpdateApproaches) return;
-    const entry = entries.find(e => e.id === entryId);
-    if (!entry) return;
-    const approaches = [...(entry.approachDetails || [])];
-    while (approaches.length <= approachIndex) {
-      approaches.push({});
+    const currentEditing = [...getEditingApproaches(entryId)];
+    if (currentEditing.length <= approachIndex) {
+      return;
     }
-    approaches[approachIndex] = { ...approaches[approachIndex], [field]: value };
-    onUpdateApproaches(entryId, approaches);
+    currentEditing[approachIndex] = { ...currentEditing[approachIndex], [field]: value };
+    setEditingApproaches(prev => ({ ...prev, [entryId]: currentEditing }));
+  };
+
+  const handleSaveApproach = (entryId: string, approachIndex: number) => {
+    if (!onUpdateApproaches) return;
+    const editing = getEditingApproaches(entryId);
+    if (approachIndex >= editing.length) return;
+    
+    const approachToSave = editing[approachIndex];
+    // Auto-assign number based on saved approaches count
+    const saved = getSavedApproaches(entryId);
+    const savedApproaches = [...saved, approachToSave];
+    
+    // Remove from editing and save
+    const remainingEditing = editing.filter((_, i) => i !== approachIndex);
+    setEditingApproaches(prev => ({ ...prev, [entryId]: remainingEditing }));
+    onUpdateApproaches(entryId, savedApproaches);
+  };
+
+  const handleCancelApproach = (entryId: string, approachIndex: number) => {
+    const editing = getEditingApproaches(entryId);
+    const remainingEditing = editing.filter((_, i) => i !== approachIndex);
+    if (remainingEditing.length === 0) {
+      setEditingApproaches(prev => {
+        const updated = { ...prev };
+        delete updated[entryId];
+        return updated;
+      });
+    } else {
+      setEditingApproaches(prev => ({ ...prev, [entryId]: remainingEditing }));
+    }
   };
 
   // Handle date format conversion
@@ -472,48 +511,70 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                           Add IAP
                         </button>
                       </div>
-                      {Array.from({ length: getMaxApproaches(entry.id) }).map((_, i) => {
-                        const approaches = entry.approachDetails || [];
-                        const approach = approaches[i] || {};
+                      {/* Saved Approaches - Display in packed format */}
+                      {getSavedApproaches(entry.id).map((approach, i) => (
+                        <div key={`saved-${i}`} className="mb-2 p-2 bg-amber-50/50 rounded-lg border border-amber-200">
+                          <div className="text-[10px] font-mono text-black font-semibold">
+                            {formatApproachPacked(approach, i)}
+                          </div>
+                        </div>
+                      ))}
+                      {/* Editing Approaches - Show input fields with save/cancel */}
+                      {getEditingApproaches(entry.id).map((approach, i) => {
+                        const editingIndex = i;
                         return (
-                          <div key={i} className="mb-2 p-2 bg-amber-50 rounded-lg border border-amber-200">
+                          <div key={`editing-${i}`} className="mb-2 p-2 bg-amber-50 rounded-lg border border-amber-200">
+                            <div className="text-[9px] text-black font-bold mb-1">IAP {getSavedApproaches(entry.id).length + i + 1}</div>
                             <div className="grid grid-cols-2 gap-2 mb-2">
                               <input
                                 type="text"
-                                value={approach.number || ''}
-                                onChange={(e) => handleUpdateApproach(entry.id, i, 'number', e.target.value)}
-                                placeholder="#"
-                                className="w-full bg-white border border-[#E2E8F0] rounded px-2 py-1 text-xs text-center text-black font-semibold"
-                              />
-                              <input
-                                type="text"
                                 value={approach.type || ''}
-                                onChange={(e) => handleUpdateApproach(entry.id, i, 'type', e.target.value)}
+                                onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'type', e.target.value)}
                                 placeholder="Type"
                                 className="w-full bg-white border border-[#E2E8F0] rounded px-2 py-1 text-xs text-center text-black font-semibold"
                               />
                               <input
                                 type="text"
                                 value={approach.runway || ''}
-                                onChange={(e) => handleUpdateApproach(entry.id, i, 'runway', e.target.value)}
+                                onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'runway', e.target.value)}
                                 placeholder="RWY"
                                 className="w-full bg-white border border-[#E2E8F0] rounded px-2 py-1 text-xs text-center text-black font-semibold"
                               />
                               <input
                                 type="text"
                                 value={approach.airport || ''}
-                                onChange={(e) => handleUpdateApproach(entry.id, i, 'airport', e.target.value)}
-                                placeholder="APT"
+                                onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'airport', e.target.value)}
+                                placeholder="Airport Identifier"
                                 className="w-full bg-white border border-[#E2E8F0] rounded px-2 py-1 text-xs text-center text-black font-semibold"
                               />
+                              <input
+                                type="text"
+                                value={approach.comments || ''}
+                                onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'comments', e.target.value)}
+                                placeholder="Notes"
+                                className="w-full bg-white border border-[#E2E8F0] rounded px-2 py-1 text-xs text-black font-semibold"
+                              />
                             </div>
-                            <input
-                              type="text"
-                              value={approach.comments || ''}
-                              onChange={(e) => handleUpdateApproach(entry.id, i, 'comments', e.target.value)}
-                              placeholder="Notes"
-                              className="w-full bg-white border border-[#E2E8F0] rounded px-2 py-1 text-xs text-black font-semibold"
-                            />
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={() => handleSaveApproach(entry.id, editingIndex)}
+                                disabled={readOnly}
+                                className="flex items-center gap-1 px-3 py-1 text-xs font-bold text-emerald-600 hover:text-emerald-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                title="Save approach"
+                              >
+                                <ICONS.Check className="w-4 h-4" />
+                                Save
+                              </button>
+                              <button
+                                onClick={() => handleCancelApproach(entry.id, editingIndex)}
+                                disabled={readOnly}
+                                className="flex items-center gap-1 px-3 py-1 text-xs font-bold text-red-600 hover:text-red-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                title="Cancel"
+                              >
+                                <ICONS.Close className="w-4 h-4" />
+                                Cancel
+                              </button>
+                            </div>
                           </div>
                         );
                       })}
@@ -833,28 +894,25 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       </button>
                     </td>
                   )}
-                  {/* Approach Input Fields - Dynamically inserted when expanded */}
-                  {Array.from({ length: getMaxApproaches(entry.id) }).map((_, i) => {
-                    const approaches = entry.approachDetails || [];
-                    const approach = approaches[i] || {};
-                    
+                  {/* Saved Approaches - Display in packed format */}
+                  {getSavedApproaches(entry.id).map((approach, i) => (
+                    <td key={`saved-${i}`} className="p-1 bg-amber-50/50 text-[10px] font-mono text-center text-black font-semibold" style={{ whiteSpace: 'nowrap' }} colSpan={5}>
+                      {formatApproachPacked(approach, i)}
+                    </td>
+                  ))}
+                  {/* Editing Approaches - Show input fields with save/cancel */}
+                  {getEditingApproaches(entry.id).map((approach, i) => {
+                    const editingIndex = i;
                     return (
-                      <React.Fragment key={i}>
+                      <React.Fragment key={`editing-${i}`}>
                         <td className="p-1 bg-amber-50" style={{ whiteSpace: 'nowrap' }}>
-                          <input
-                            type="text"
-                            value={approach.number || ''}
-                            onChange={(e) => handleUpdateApproach(entry.id, i, 'number', e.target.value)}
-                            placeholder="#"
-                            readOnly={readOnly}
-                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300 min-w-[40px]"
-                          />
+                          <div className="text-[9px] text-center text-black font-bold">{getSavedApproaches(entry.id).length + i + 1}</div>
                         </td>
                         <td className="p-1 bg-amber-50" style={{ whiteSpace: 'nowrap' }}>
                           <input
                             type="text"
                             value={approach.type || ''}
-                            onChange={(e) => handleUpdateApproach(entry.id, i, 'type', e.target.value)}
+                            onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'type', e.target.value)}
                             placeholder="Type"
                             readOnly={readOnly}
                             className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300 min-w-[50px]"
@@ -864,7 +922,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                           <input
                             type="text"
                             value={approach.runway || ''}
-                            onChange={(e) => handleUpdateApproach(entry.id, i, 'runway', e.target.value)}
+                            onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'runway', e.target.value)}
                             placeholder="RWY"
                             readOnly={readOnly}
                             className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300 min-w-[50px]"
@@ -874,21 +932,41 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                           <input
                             type="text"
                             value={approach.airport || ''}
-                            onChange={(e) => handleUpdateApproach(entry.id, i, 'airport', e.target.value)}
-                            placeholder="APT"
+                            onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'airport', e.target.value)}
+                            placeholder="Airport Identifier"
                             readOnly={readOnly}
-                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300 min-w-[60px]"
+                            className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300 min-w-[80px]"
                           />
                         </td>
                         <td className="p-1 bg-amber-50" style={{ whiteSpace: 'nowrap' }}>
                           <input
                             type="text"
                             value={approach.comments || ''}
-                            onChange={(e) => handleUpdateApproach(entry.id, i, 'comments', e.target.value)}
+                            onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'comments', e.target.value)}
                             placeholder="Notes"
                             readOnly={readOnly}
                             className="bg-white w-full outline-none text-[10px] text-center rounded py-1 text-black font-semibold border border-transparent hover:border-amber-300 min-w-[80px]"
                           />
+                        </td>
+                        <td className="p-1 bg-amber-50 text-center" style={{ whiteSpace: 'nowrap' }}>
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() => handleSaveApproach(entry.id, editingIndex)}
+                              disabled={readOnly}
+                              className="p-1 text-emerald-600 hover:text-emerald-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                              title="Save approach"
+                            >
+                              <ICONS.Check className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleCancelApproach(entry.id, editingIndex)}
+                              disabled={readOnly}
+                              className="p-1 text-red-600 hover:text-red-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                              title="Cancel"
+                            >
+                              <ICONS.Close className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </React.Fragment>
                     );
