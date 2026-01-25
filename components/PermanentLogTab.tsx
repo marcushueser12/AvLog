@@ -248,14 +248,22 @@ const PermanentLogTab: React.FC = () => {
 
       const data = await response.json();
       const loadedEntries = data.entries || [];
+      
+      // Sort entries by date
+      const sortedEntries = [...loadedEntries].sort((a, b) => {
+        const dateA = parseDateForSort(a.date);
+        const dateB = parseDateForSort(b.date);
+        return dateA - dateB;
+      });
+      
       setEntries(prev => ({
         ...prev,
-        [scanId]: loadedEntries
+        [scanId]: sortedEntries
       }));
-      // Initialize editable entries (copy)
+      // Initialize editable entries (copy, already sorted)
       setEditableEntries(prev => ({
         ...prev,
-        [scanId]: loadedEntries.map(e => ({ ...e }))
+        [scanId]: sortedEntries.map(e => ({ ...e }))
       }));
       
       // Auto-extract aircraft from entries and create profiles if they don't exist
@@ -310,28 +318,57 @@ const PermanentLogTab: React.FC = () => {
     }
   };
 
+  // Helper function to parse date for sorting
+  const parseDateForSort = (dateStr: string | null | undefined): number => {
+    if (!dateStr) return 0;
+    // Handle MM/DD/YYYY format
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+      const [month, day, year] = parts;
+      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      return date.getTime();
+    }
+    // Try ISO format (YYYY-MM-DD)
+    const isoDate = new Date(dateStr);
+    if (!isNaN(isoDate.getTime())) {
+      return isoDate.getTime();
+    }
+    return 0;
+  };
+
   const handleUpdateEntry = (scanId: string, entryId: string, field: keyof LogbookEntry, value: string) => {
     setEditableEntries(prev => {
       const scanEntries = prev[scanId] || [];
+      const updatedEntries = scanEntries.map(e => {
+        if (e.id === entryId) {
+          let updatedEntry: LogbookEntry = { ...e, [field]: value };
+          
+          // Apply reconciliation logic
+          if (['totalTime', 'night', 'day'].includes(field)) {
+            updatedEntry = { ...updatedEntry, ...reconcileFlightTimes(updatedEntry) } as LogbookEntry;
+          }
+          
+          if (['totalTime', 'instrument', 'simulatedInstrument', 'approaches', 'comments'].includes(field)) {
+            updatedEntry = { ...updatedEntry, ...reconcileIFRData(updatedEntry) } as LogbookEntry;
+          }
+          
+          return updatedEntry;
+        }
+        return e;
+      });
+      
+      // Sort by date if date field was updated
+      if (field === 'date') {
+        updatedEntries.sort((a, b) => {
+          const dateA = parseDateForSort(a.date);
+          const dateB = parseDateForSort(b.date);
+          return dateA - dateB;
+        });
+      }
+      
       return {
         ...prev,
-        [scanId]: scanEntries.map(e => {
-          if (e.id === entryId) {
-            let updatedEntry: LogbookEntry = { ...e, [field]: value };
-            
-            // Apply reconciliation logic
-            if (['totalTime', 'night', 'day'].includes(field)) {
-              updatedEntry = { ...updatedEntry, ...reconcileFlightTimes(updatedEntry) } as LogbookEntry;
-            }
-            
-            if (['totalTime', 'instrument', 'simulatedInstrument', 'approaches', 'comments'].includes(field)) {
-              updatedEntry = { ...updatedEntry, ...reconcileIFRData(updatedEntry) } as LogbookEntry;
-            }
-            
-            return updatedEntry;
-          }
-          return e;
-        })
+        [scanId]: updatedEntries
       };
     });
   };
