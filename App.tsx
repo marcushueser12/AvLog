@@ -1051,33 +1051,27 @@ const App: React.FC = () => {
             
             {user ? (
               <>
-                <button
-                  onClick={() => userCredits === 0 ? setShowPaymentModal(true) : null}
-                  className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-lg border transition-all text-xs sm:text-sm font-semibold min-h-[44px] sm:min-h-0 ${
-                    userCredits === 0 
-                      ? 'bg-red-100 border-red-300 text-red-600 hover:bg-red-200 cursor-pointer' 
-                      : 'bg-[#007BFF]/10 border-[#007BFF]/30 text-[#007BFF] cursor-default'
-                  }`}
-                  title={userCredits === 0 ? 'Click to buy credits' : `${userCredits} credit${userCredits !== 1 ? 's' : ''} available`}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
-                  </svg>
-                  <span>{loadingCredits ? '...' : `${userCredits || 0}`}</span>
-                  {userCredits === 0 && (
-                    <span className="text-[10px] ml-0.5 opacity-75 hidden sm:inline">• Buy</span>
-                  )}
-                </button>
-                {userCredits !== 0 && (
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <button
+                    onClick={() => userCredits === 0 ? setShowPaymentModal(true) : null}
+                    className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-lg border transition-all text-xs sm:text-sm font-semibold min-h-[44px] sm:min-h-0 ${
+                      userCredits === 0 
+                        ? 'bg-red-100 border-red-300 text-red-600 hover:bg-red-200 cursor-pointer' 
+                        : 'bg-[#007BFF]/10 border-[#007BFF]/30 text-[#007BFF] cursor-default'
+                    }`}
+                    title={userCredits === 0 ? 'Click to buy credits' : `${userCredits} credit${userCredits !== 1 ? 's' : ''} available`}
+                  >
+                    <span>Credits</span>
+                    <span>{loadingCredits ? '...' : `${userCredits || 0}`}</span>
+                  </button>
                   <button
                     onClick={() => setShowPaymentModal(true)}
-                    className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-lg text-xs font-semibold transition-all"
+                    className="flex items-center justify-center p-1.5 sm:p-1.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-lg text-xs font-semibold transition-all min-h-[44px] sm:min-h-0"
                     title="Buy more credits"
                   >
-                    <Plus className="w-3 h-3" />
-                    <span>Add</span>
+                    <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </button>
-                )}
+                </div>
                 <div className="hidden md:flex items-center gap-2 px-2.5 py-1.5 bg-white/80 rounded-lg border border-[#E2E8F0] shadow-sm">
                   <span className="text-xs text-[#003366]/70 font-medium truncate max-w-[120px]">{user.email?.split('@')[0]}</span>
                 </div>
