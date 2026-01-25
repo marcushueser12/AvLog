@@ -219,6 +219,11 @@ const ReviewsTab: React.FC = () => {
               <MessageSquare className="w-5 h-5 inline mr-2" />
               Write a Review
             </button>
+            {!user && (
+              <p className="text-sm text-[#003366]/60 mt-2 italic">
+                No account needed to view or submit reviews
+              </p>
+            )}
           </div>
         )}
 
