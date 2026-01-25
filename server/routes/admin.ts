@@ -1,5 +1,5 @@
 import express from 'express';
-import { verifyAdmin } from '../middleware/auth.js';
+import { verifyAdmin, verifyAuth, AuthRequest } from '../middleware/auth.js';
 import { supabaseAdmin } from '../lib/supabase.js';
 
 const router = express.Router();
