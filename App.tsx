@@ -997,17 +997,27 @@ const App: React.FC = () => {
           <div className="flex items-center gap-2">
             {user ? (
               <>
-                <button
-                  onClick={() => setShowPaymentModal(true)}
-                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer transition-all hover:opacity-80 ${
-                    userCredits === 0 
-                      ? 'bg-red-100 border-red-300 text-red-600 hover:bg-red-200' 
-                      : 'bg-[#007BFF]/10 border-[#007BFF]/30 text-[#007BFF] hover:bg-[#007BFF]/20'
-                  }`}
-                  title="Buy credits"
-                >
-                  <span>{loadingCredits ? '...' : `${userCredits || 0}`}</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => userCredits === 0 ? setShowPaymentModal(true) : null}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-sm font-semibold ${
+                      userCredits === 0 
+                        ? 'bg-red-100 border-red-300 text-red-600 hover:bg-red-200' 
+                        : 'bg-[#007BFF]/10 border-[#007BFF]/30 text-[#007BFF] hover:bg-[#007BFF]/20'
+                    }`}
+                    title="Buy credits"
+                  >
+                    <span>Credits</span>
+                    <span>{loadingCredits ? '...' : `${userCredits || 0}`}</span>
+                  </button>
+                  <button
+                    onClick={() => setShowPaymentModal(true)}
+                    className="flex items-center justify-center p-1.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-lg transition-all"
+                    title="Buy more credits"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
                 <button
                   onClick={handleSignOut}
                   className="p-2 bg-[#F4F7FA] hover:bg-[#E2E8F0] text-[#003366]/70 rounded-lg"
