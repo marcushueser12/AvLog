@@ -118,6 +118,6 @@ export interface AircraftProfile {
   updatedAt?: string;
 }
 
-export type AppTab = 'dashboard' | 'tutorial' | 'permanent-log' | 'aircraft';
+export type AppTab = 'dashboard' | 'tutorial' | 'permanent-log' | 'aircraft' | 'reviews';
 
 export type AppStatus = 'idle' | 'dashboard' | 'reviewing';

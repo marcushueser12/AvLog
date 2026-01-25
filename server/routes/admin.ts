@@ -145,4 +145,52 @@ router.get('/user-credits/:email', verifyAdmin, async (req, res) => {
   }
 });
 
+/**
+ * GET /api/admin/check
+ * Check if user is admin
+ */
+router.get('/check', verifyAdmin, async (req, res) => {
+  res.json({ isAdmin: true });
+});
+
+/**
+ * POST /api/admin/approve-review
+ * Approve or reject a review (admin only)
+ * Body: { reviewId: string, approve: boolean }
+ */
+router.post('/approve-review', verifyAdmin, async (req, res) => {
+  try {
+    const { reviewId, approve } = req.body;
+
+    if (!reviewId || typeof approve !== 'boolean') {
+      return res.status(400).json({ 
+        error: 'Missing required fields: reviewId and approve' 
+      });
+    }
+
+    const { error } = await supabaseAdmin
+      .from('reviews')
+      .update({ 
+        approved: approve,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', reviewId);
+
+    if (error) {
+      console.error('Error updating review:', error);
+      return res.status(500).json({ error: 'Failed to update review' });
+    }
+
+    res.json({
+      success: true,
+      reviewId,
+      approved: approve,
+      message: `Review ${approve ? 'approved' : 'rejected'} successfully`
+    });
+  } catch (error: any) {
+    console.error('Admin approve review error:', error);
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
 export default router;

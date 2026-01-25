@@ -3,7 +3,7 @@ import { AppTab } from '../types';
 import AuthModal from './AuthModal';
 import SoftwareApplicationSchema from './SoftwareApplicationSchema';
 import { useAuth } from '../contexts/AuthContext';
-import { Plane, FileText, CloudUpload, Clock, Menu, X, ChevronRight, Shield, CheckCircle2, Grid3x3 } from 'lucide-react';
+import { Plane, FileText, CloudUpload, Clock, Menu, X, ChevronRight, Shield, CheckCircle2, Grid3x3, MessageSquare } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface LandingPageProps {
@@ -34,6 +34,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
     { id: 'permanent-log', label: 'Permanent Log', icon: FileText, desc: 'View and export saved entries' },
     { id: 'aircraft', label: 'Aircraft Profiles', icon: Plane, desc: 'Manage your fleet details' },
     { id: 'tutorial', label: 'App Tutorial', icon: FileText, desc: 'Learn how to use LogExtract' },
+    { id: 'reviews', label: 'Reviews', icon: MessageSquare, desc: 'See what pilots are saying' },
   ];
 
   const containerVariants = {
@@ -361,6 +362,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             <span className="font-bold text-[#003366]">LOGEXTRACT</span>
           </div>
           <div className="flex gap-8 flex-wrap justify-center">
+            <button 
+              onClick={() => onStart('reviews')} 
+              className="hover:text-[#007BFF] transition-colors min-h-[48px] min-w-[48px] px-2 font-semibold"
+              aria-label="View reviews"
+            >
+              Reviews
+            </button>
             <button 
               onClick={() => setShowPrivacyModal(true)} 
               className="hover:text-[#007BFF] transition-colors min-h-[48px] min-w-[48px] px-2"

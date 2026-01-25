@@ -45,6 +45,8 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   const [approachModalEntryId, setApproachModalEntryId] = useState<string | null>(null);
   const [editingDateEntryId, setEditingDateEntryId] = useState<string | null>(null);
   const [editingDateValue, setEditingDateValue] = useState<string>('');
+  const [cellMovementMode, setCellMovementMode] = useState(false);
+  const [selectedCell, setSelectedCell] = useState<{ entryId: string; field: keyof LogbookEntry } | null>(null);
 
   // Initialize editing date value when starting to edit
   const handleDateFocus = (entryId: string, currentDate: string) => {
@@ -127,7 +129,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
 
   return (
     <div className={`bg-white/80 backdrop-blur-sm rounded-xl border border-[#E2E8F0] shadow-lg flex flex-col ${useTableOnMobile || twoColumnCards ? 'overflow-visible' : 'overflow-hidden'}`}>
-      {/* Date Format Selector & Year Adjustment */}
+      {/* Date Format Selector & Year Adjustment & Cell Movement Mode */}
       <div className="px-3 sm:px-6 py-3 bg-[#F4F7FA]/50 border-b border-[#E2E8F0] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <label className="text-[10px] sm:text-xs text-[#003366]/70 font-semibold uppercase tracking-wide whitespace-nowrap">
@@ -171,6 +173,35 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
             </span>
           </div>
         </div>
+        {/* Cell Movement Mode Toggle */}
+        {!readOnly && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setCellMovementMode(!cellMovementMode);
+                setSelectedCell(null); // Clear selection when toggling
+              }}
+              className={`px-3 py-2 sm:py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all min-h-[44px] sm:min-h-0 border ${
+                cellMovementMode
+                  ? 'bg-[#007BFF]/10 border-[#007BFF]/30 text-[#007BFF]'
+                  : 'bg-white hover:bg-[#F4F7FA] border-[#E2E8F0] text-[#003366]'
+              }`}
+              title="Enable cell movement mode: Click a cell to select, then click another to swap values"
+            >
+              <span className="flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                </svg>
+                {cellMovementMode ? 'Cell Move: ON' : 'Cell Move'}
+              </span>
+            </button>
+            {cellMovementMode && selectedCell && (
+              <span className="text-[10px] sm:text-xs text-[#007BFF] font-medium">
+                Selected: {selectedCell.field}
+              </span>
+            )}
+          </div>
+        )}
       </div>
       
       {/* Mobile Card View - Only if not forcing table view */}
@@ -659,8 +690,9 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     <input 
                       type="text" 
                       value={entry.from} 
-                      onChange={(e) => onUpdate(entry.id, 'from', e.target.value)} 
-                      readOnly={readOnly}
+                      onChange={(e) => !cellMovementMode && onUpdate(entry.id, 'from', e.target.value)} 
+                      onClick={() => cellMovementMode && handleCellClick(entry.id, 'from')}
+                      readOnly={readOnly || cellMovementMode}
                       className={getFieldClass(entry, 'from', "bg-white w-full outline-none text-xs uppercase text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
                     />
                   </td>
@@ -668,8 +700,9 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     <input 
                       type="text" 
                       value={entry.to} 
-                      onChange={(e) => onUpdate(entry.id, 'to', e.target.value)} 
-                      readOnly={readOnly}
+                      onChange={(e) => !cellMovementMode && onUpdate(entry.id, 'to', e.target.value)} 
+                      onClick={() => cellMovementMode && handleCellClick(entry.id, 'to')}
+                      readOnly={readOnly || cellMovementMode}
                       className={getFieldClass(entry, 'to', "bg-white w-full outline-none text-xs uppercase text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
                     />
                   </td>
@@ -677,8 +710,9 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     <input 
                       type="text"
                       value={entry.totalTime}
-                      onChange={(e) => onUpdate(entry.id, 'totalTime', e.target.value)}
-                      readOnly={readOnly}
+                      onChange={(e) => !cellMovementMode && onUpdate(entry.id, 'totalTime', e.target.value)}
+                      onClick={() => cellMovementMode && handleCellClick(entry.id, 'totalTime')}
+                      readOnly={readOnly || cellMovementMode}
                       className={getFieldClass(entry, 'totalTime', "bg-white hover:border-[#007BFF] focus:border-[#007BFF] rounded px-1 py-1.5 w-full outline-none text-xs font-mono text-center text-[#007BFF] font-bold border border-[#E2E8F0]")}
                     />
                   </td>
@@ -696,8 +730,9 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     <input 
                       type="text" 
                       value={entry.night} 
-                      onChange={(e) => onUpdate(entry.id, 'night', e.target.value)} 
-                      readOnly={readOnly}
+                      onChange={(e) => !cellMovementMode && onUpdate(entry.id, 'night', e.target.value)} 
+                      onClick={() => cellMovementMode && handleCellClick(entry.id, 'night')}
+                      readOnly={readOnly || cellMovementMode}
                       className={getFieldClass(entry, 'night', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
                     />
                   </td>
@@ -705,8 +740,9 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     <input 
                       type="text" 
                       value={entry.crossCountry} 
-                      onChange={(e) => onUpdate(entry.id, 'crossCountry', e.target.value)} 
-                      readOnly={readOnly}
+                      onChange={(e) => !cellMovementMode && onUpdate(entry.id, 'crossCountry', e.target.value)} 
+                      onClick={() => cellMovementMode && handleCellClick(entry.id, 'crossCountry')}
+                      readOnly={readOnly || cellMovementMode}
                       className={getFieldClass(entry, 'crossCountry', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
                     />
                   </td>
@@ -714,8 +750,9 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     <input 
                       type="text" 
                       value={entry.pic} 
-                      onChange={(e) => onUpdate(entry.id, 'pic', e.target.value)} 
-                      readOnly={readOnly}
+                      onChange={(e) => !cellMovementMode && onUpdate(entry.id, 'pic', e.target.value)} 
+                      onClick={() => cellMovementMode && handleCellClick(entry.id, 'pic')}
+                      readOnly={readOnly || cellMovementMode}
                       className={getFieldClass(entry, 'pic', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
                     />
                   </td>
@@ -723,8 +760,9 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     <input 
                       type="text" 
                       value={entry.solo || ''} 
-                      onChange={(e) => onUpdate(entry.id, 'solo', e.target.value)} 
-                      readOnly={readOnly}
+                      onChange={(e) => !cellMovementMode && onUpdate(entry.id, 'solo', e.target.value)} 
+                      onClick={() => cellMovementMode && handleCellClick(entry.id, 'solo')}
+                      readOnly={readOnly || cellMovementMode}
                       className={getFieldClass(entry, 'solo', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
                     />
                   </td>
@@ -732,8 +770,9 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     <input 
                       type="text" 
                       value={entry.sic} 
-                      onChange={(e) => onUpdate(entry.id, 'sic', e.target.value)} 
-                      readOnly={readOnly}
+                      onChange={(e) => !cellMovementMode && onUpdate(entry.id, 'sic', e.target.value)} 
+                      onClick={() => cellMovementMode && handleCellClick(entry.id, 'sic')}
+                      readOnly={readOnly || cellMovementMode}
                       className={getFieldClass(entry, 'sic', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
                     />
                   </td>
@@ -741,8 +780,9 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     <input 
                       type="text" 
                       value={entry.dualReceived} 
-                      onChange={(e) => onUpdate(entry.id, 'dualReceived', e.target.value)} 
-                      readOnly={readOnly}
+                      onChange={(e) => !cellMovementMode && onUpdate(entry.id, 'dualReceived', e.target.value)} 
+                      onClick={() => cellMovementMode && handleCellClick(entry.id, 'dualReceived')}
+                      readOnly={readOnly || cellMovementMode}
                       className={getFieldClass(entry, 'dualReceived', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
                     />
                   </td>
@@ -750,8 +790,9 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     <input 
                       type="text" 
                       value={entry.dualGiven} 
-                      onChange={(e) => onUpdate(entry.id, 'dualGiven', e.target.value)} 
-                      readOnly={readOnly}
+                      onChange={(e) => !cellMovementMode && onUpdate(entry.id, 'dualGiven', e.target.value)} 
+                      onClick={() => cellMovementMode && handleCellClick(entry.id, 'dualGiven')}
+                      readOnly={readOnly || cellMovementMode}
                       className={getFieldClass(entry, 'dualGiven', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
                     />
                   </td>
@@ -759,8 +800,9 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     <input 
                       type="text" 
                       value={entry.instrument} 
-                      onChange={(e) => onUpdate(entry.id, 'instrument', e.target.value)} 
-                      readOnly={readOnly}
+                      onChange={(e) => !cellMovementMode && onUpdate(entry.id, 'instrument', e.target.value)} 
+                      onClick={() => cellMovementMode && handleCellClick(entry.id, 'instrument')}
+                      readOnly={readOnly || cellMovementMode}
                       className={getFieldClass(entry, 'instrument', "bg-white w-full outline-none text-xs font-mono text-center text-black font-bold rounded py-1.5 border border-transparent hover:border-emerald-300")} 
                     />
                   </td>
@@ -768,8 +810,9 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     <input 
                       type="text" 
                       value={entry.simulatedInstrument} 
-                      onChange={(e) => onUpdate(entry.id, 'simulatedInstrument', e.target.value)} 
-                      readOnly={readOnly}
+                      onChange={(e) => !cellMovementMode && onUpdate(entry.id, 'simulatedInstrument', e.target.value)} 
+                      onClick={() => cellMovementMode && handleCellClick(entry.id, 'simulatedInstrument')}
+                      readOnly={readOnly || cellMovementMode}
                       className={getFieldClass(entry, 'simulatedInstrument', "bg-white w-full outline-none text-xs font-mono text-center text-black rounded py-1.5 border border-transparent hover:border-cyan-300")} 
                     />
                   </td>
@@ -778,8 +821,9 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       <input 
                         type="text" 
                         value={entry.approaches} 
-                        onChange={(e) => onUpdate(entry.id, 'approaches', e.target.value)} 
-                        readOnly={readOnly}
+                        onChange={(e) => !cellMovementMode && onUpdate(entry.id, 'approaches', e.target.value)} 
+                        onClick={() => cellMovementMode && handleCellClick(entry.id, 'approaches')}
+                        readOnly={readOnly || cellMovementMode}
                         className={getFieldClass(entry, 'approaches', "bg-white flex-1 outline-none text-xs font-mono text-center text-black font-bold rounded py-1.5 border border-transparent hover:border-amber-300")} 
                       />
                       {!readOnly && onUpdateApproaches && (
@@ -797,8 +841,9 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     <input 
                       type="text" 
                       value={entry.landingsDay} 
-                      onChange={(e) => onUpdate(entry.id, 'landingsDay', e.target.value)} 
-                      readOnly={readOnly}
+                      onChange={(e) => !cellMovementMode && onUpdate(entry.id, 'landingsDay', e.target.value)} 
+                      onClick={() => cellMovementMode && handleCellClick(entry.id, 'landingsDay')}
+                      readOnly={readOnly || cellMovementMode}
                       className={getFieldClass(entry, 'landingsDay', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
                     />
                   </td>
@@ -806,8 +851,9 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     <input 
                       type="text" 
                       value={entry.landingsNight} 
-                      onChange={(e) => onUpdate(entry.id, 'landingsNight', e.target.value)} 
-                      readOnly={readOnly}
+                      onChange={(e) => !cellMovementMode && onUpdate(entry.id, 'landingsNight', e.target.value)} 
+                      onClick={() => cellMovementMode && handleCellClick(entry.id, 'landingsNight')}
+                      readOnly={readOnly || cellMovementMode}
                       className={getFieldClass(entry, 'landingsNight', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
                     />
                   </td>
@@ -815,8 +861,9 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     <input 
                       type="text" 
                       value={entry.groundReceived || ''} 
-                      onChange={(e) => onUpdate(entry.id, 'groundReceived', e.target.value)} 
-                      readOnly={readOnly}
+                      onChange={(e) => !cellMovementMode && onUpdate(entry.id, 'groundReceived', e.target.value)} 
+                      onClick={() => cellMovementMode && handleCellClick(entry.id, 'groundReceived')}
+                      readOnly={readOnly || cellMovementMode}
                       className={getFieldClass(entry, 'groundReceived', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
                     />
                   </td>
@@ -824,8 +871,9 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     <input 
                       type="text" 
                       value={entry.groundGiven || ''} 
-                      onChange={(e) => onUpdate(entry.id, 'groundGiven', e.target.value)} 
-                      readOnly={readOnly}
+                      onChange={(e) => !cellMovementMode && onUpdate(entry.id, 'groundGiven', e.target.value)} 
+                      onClick={() => cellMovementMode && handleCellClick(entry.id, 'groundGiven')}
+                      readOnly={readOnly || cellMovementMode}
                       className={getFieldClass(entry, 'groundGiven', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
                     />
                   </td>
@@ -834,8 +882,9 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       type="text" 
                       value={entry.comments} 
                       placeholder="Remarks..."
-                      onChange={(e) => onUpdate(entry.id, 'comments', e.target.value)} 
-                      readOnly={readOnly}
+                      onChange={(e) => !cellMovementMode && onUpdate(entry.id, 'comments', e.target.value)} 
+                      onClick={() => cellMovementMode && handleCellClick(entry.id, 'comments')}
+                      readOnly={readOnly || cellMovementMode}
                       className={getFieldClass(entry, 'comments', "bg-white w-full outline-none text-xs px-2 py-2 sm:py-1.5 rounded truncate focus:bg-white min-h-[44px] sm:min-h-0 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
                     />
                   </td>

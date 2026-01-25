@@ -8,6 +8,7 @@ import LandingPage from './components/LandingPage';
 import TutorialTab from './components/TutorialTab';
 import PermanentLogTab from './components/PermanentLogTab';
 import AircraftProfilesTab from './components/AircraftProfilesTab';
+import ReviewsTab from './components/ReviewsTab';
 import AuthModal from './components/AuthModal';
 import PaymentModal from './components/PaymentModal';
 import NewAircraftModal from './components/NewAircraftModal';
@@ -18,7 +19,7 @@ import { reconcileFlightTimes, reconcileIFRData, normalizeDateSeparator, normali
 import { getExifOrientation } from './utils/exifUtils';
 import { useMobile } from './utils/useMobile';
 import { motion } from 'framer-motion';
-import { Plane, Grid3x3, FileText, Clock, Home, LogOut, Download, Plus, Trash2, Upload, X } from 'lucide-react';
+import { Plane, Grid3x3, FileText, Clock, Home, LogOut, Download, Plus, Trash2, Upload, X, MessageSquare } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -973,6 +974,7 @@ const App: React.FC = () => {
           <NavButton tab="aircraft" label="Aircraft Profiles" icon={ICONS.Aircraft} />
           <div className="my-4 border-t border-[#E2E8F0]"></div>
           <NavButton tab="tutorial" label="User Guide" icon={() => <FileText className="w-4 h-4" />} />
+          <NavButton tab="reviews" label="Reviews" icon={() => <MessageSquare className="w-4 h-4" />} />
           <motion.button 
             onClick={() => setView('landing')}
             className="flex items-center gap-3 px-4 py-3 text-[#003366]/70 hover:text-[#003366] hover:bg-[#F4F7FA] rounded-xl font-semibold text-sm transition-all border border-transparent"
@@ -1045,7 +1047,8 @@ const App: React.FC = () => {
               {activeTab === 'dashboard' ? 'Logbook Digitizer' : 
                activeTab === 'permanent-log' ? 'Permanent Log' :
                activeTab === 'tutorial' ? 'Tutorial' : 
-               activeTab === 'aircraft' ? 'Aircraft' : 'Dashboard'}
+               activeTab === 'aircraft' ? 'Aircraft' :
+               activeTab === 'reviews' ? 'Reviews' : 'Dashboard'}
             </h2>
             <div className="hidden md:flex items-center gap-2 px-2.5 py-1 bg-[#007BFF]/10 rounded-lg border border-[#007BFF]/20 text-[#007BFF] text-[10px] font-bold">
               <span className="w-1.5 h-1.5 bg-[#007BFF] rounded-full animate-pulse"></span>
@@ -1518,6 +1521,8 @@ const App: React.FC = () => {
             <TutorialTab />
           ) : activeTab === 'aircraft' ? (
             <AircraftProfilesTab />
+          ) : activeTab === 'reviews' ? (
+            <ReviewsTab />
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-center p-12 space-y-4">
                <div className="w-20 h-20 bg-slate-800 rounded-3xl flex items-center justify-center text-slate-600">
@@ -1572,6 +1577,14 @@ const App: React.FC = () => {
                 <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
               </svg>
               <span className="text-[10px] font-semibold">Help</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('reviews')}
+              className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg transition-all min-h-[48px] min-w-[48px] ${activeTab === 'reviews' ? 'text-[#007BFF] bg-[#007BFF]/10' : 'text-[#003366]/70'}`}
+              aria-label="Reviews"
+            >
+              <MessageSquare className="w-5 h-5" />
+              <span className="text-[10px] font-semibold">Reviews</span>
             </button>
             <button
               onClick={handleExportModalOpen}
