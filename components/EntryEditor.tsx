@@ -443,91 +443,29 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       <div className="flex items-center justify-between mb-2">
                         <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-[#003366]/70 uppercase tracking-wide font-semibold`}>Instrument Approaches</label>
                         <button
-                          onClick={() => handleAddIAP(entry.id)}
-                          disabled={getMaxApproaches(entry.id) >= 6}
-                          className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-[#007BFF] hover:text-[#007BFF]/80 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                          onClick={() => handleOpenApproachModal(entry.id)}
+                          disabled={(entry.approachDetails?.length || 0) >= 6}
+                          className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-[#007BFF] hover:text-[#007BFF]/80 disabled:opacity-30 disabled:cursor-not-allowed transition-colors min-h-[44px]"
                           title="Add Instrument Approach Procedure"
                         >
                           <ICONS.Plus className="w-3 h-3" />
                           Add IAP
                         </button>
                       </div>
-                      {/* Saved Approaches - Display in packed format */}
-                      {getSavedApproaches(entry.id).map((approach, i) => (
-                        <div key={`saved-${i}`} className="mb-2 p-2 bg-amber-50/50 rounded-lg border border-amber-200 flex items-center justify-between gap-2">
-                          <div className="text-xs text-black font-semibold flex-1">
-                            {formatApproachPacked(approach, i)}
-                          </div>
-                          {!readOnly && (
-                            <button
-                              onClick={() => handleDeleteApproach(entry.id, i)}
-                              className="p-1 text-red-600 hover:text-red-700 transition-colors flex-shrink-0"
-                              title="Delete approach"
-                            >
-                              <ICONS.Close className="w-4 h-4" />
-                            </button>
-                          )}
+                      {/* Display saved approaches */}
+                      {entry.approachDetails && entry.approachDetails.length > 0 && (
+                        <div className="space-y-1">
+                          {entry.approachDetails.map((approach, i) => (
+                            <div key={`approach-${i}`} className="text-xs text-black font-semibold p-2 bg-amber-50/50 rounded border border-amber-200">
+                              {approach.type && approach.runway && approach.airport ? (
+                                <span>{i + 1}. {approach.type}; {approach.runway}; {approach.airport}{approach.comments ? `; ${approach.comments}` : ''}</span>
+                              ) : (
+                                <span>IAP {i + 1}</span>
+                              )}
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                      {/* Editing Approaches - Show input fields with save/cancel */}
-                      {getEditingApproaches(entry.id).map((approach, i) => {
-                        const editingIndex = i;
-                        return (
-                          <div key={`editing-${i}`} className="mb-2 p-2 bg-amber-50 rounded-lg border border-amber-200">
-                            <div className="text-[9px] text-black font-bold mb-1">IAP {getSavedApproaches(entry.id).length + i + 1}</div>
-                            <div className="grid grid-cols-2 gap-2 mb-2">
-                              <input
-                                type="text"
-                                value={approach.type || ''}
-                                onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'type', e.target.value)}
-                                placeholder="Type"
-                                className="w-full bg-white border border-[#E2E8F0] rounded px-2 py-1 text-xs text-center text-black font-semibold"
-                              />
-                              <input
-                                type="text"
-                                value={approach.runway || ''}
-                                onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'runway', e.target.value)}
-                                placeholder="RWY"
-                                className="w-full bg-white border border-[#E2E8F0] rounded px-2 py-1 text-xs text-center text-black font-semibold"
-                              />
-                              <input
-                                type="text"
-                                value={approach.airport || ''}
-                                onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'airport', e.target.value)}
-                                placeholder="Airport Identifier"
-                                className="w-full bg-white border border-[#E2E8F0] rounded px-2 py-1 text-xs text-center text-black font-semibold"
-                              />
-                              <input
-                                type="text"
-                                value={approach.comments || ''}
-                                onChange={(e) => handleUpdateApproach(entry.id, editingIndex, 'comments', e.target.value)}
-                                placeholder="Notes"
-                                className="w-full bg-white border border-[#E2E8F0] rounded px-2 py-1 text-xs text-black font-semibold"
-                              />
-                            </div>
-                            <div className="flex items-center justify-center gap-2">
-                              <button
-                                onClick={() => handleSaveApproach(entry.id, editingIndex)}
-                                disabled={readOnly}
-                                className="flex items-center gap-1 px-3 py-1 text-xs font-bold text-emerald-600 hover:text-emerald-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                                title="Save approach"
-                              >
-                                <ICONS.Check className="w-4 h-4" />
-                                Save
-                              </button>
-                              <button
-                                onClick={() => handleCancelApproach(entry.id, editingIndex)}
-                                disabled={readOnly}
-                                className="flex items-center gap-1 px-3 py-1 text-xs font-bold text-red-600 hover:text-red-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                                title="Cancel"
-                              >
-                                <ICONS.Close className="w-4 h-4" />
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
+                      )}
                     </div>
                   )}
                   
