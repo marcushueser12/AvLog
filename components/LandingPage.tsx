@@ -183,7 +183,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
       </nav>
 
       {/* Hero Section */}
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-4 sm:px-6 max-w-5xl mx-auto py-20 overflow-x-hidden">
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-4 sm:px-6 max-w-5xl mx-auto py-20">
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -287,7 +287,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
       </main>
 
       {/* Meet the Founder Section */}
-      <section className="relative z-10 py-20 px-4 sm:px-6 bg-white/80 backdrop-blur-sm border-t border-[#E2E8F0] overflow-x-hidden">
+      <section className="relative z-10 py-20 px-4 sm:px-6 bg-white/80 backdrop-blur-sm border-t border-[#E2E8F0]">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -300,7 +300,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
               Built by a Pilot, for Pilots
             </h2>
             <p className="text-[#003366]/70 text-lg max-w-2xl mx-auto">
-              LogExtract was created by an Instrument Rated (IR) Pilot who understands the critical importance of accurate logbook entries for checkrides, insurance, and career advancement.
+              LogExtract was created by an Instrument Rated Pilot who understands the critical importance of accurate logbook entries for checkrides, insurance, and career advancement.
             </p>
           </motion.div>
 
@@ -315,19 +315,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
               <Plane className="w-16 h-16 text-white" aria-hidden="true" />
             </div>
             <div className="flex-1 text-center md:text-left">
-              <h3 className="text-xl font-bold text-[#003366] mb-2">Instrument Rated Pilot</h3>
+              <h3 className="text-xl font-bold text-[#003366] mb-2">Marcus - Instrument Rated Pilot</h3>
               <p className="text-[#003366]/70 text-sm leading-relaxed mb-4">
-                As an IR-rated pilot, I've experienced firsthand the frustration of manually transcribing logbook entries. The risk of errors, the time wasted, and the stress of ensuring accuracy for checkrides and insurance applications drove me to build LogExtract.
+                As an Instrument Rated Pilot, I've experienced firsthand the frustration of manually transcribing logbook entries. It took me hours to convert my own logbook, dealing with messy handwriting, inconsistent formatting, and the constant worry about making errors that could affect checkrides or insurance applications.
               </p>
               <p className="text-[#003366]/70 text-sm leading-relaxed">
-                This tool solves the specific pain points pilots face: messy handwriting, inconsistent formatting, and the need for perfect accuracy. Every feature is designed with the pilot's workflow in mind, from IFR cross-check validation to ForeFlight-compatible exports.
+                That experience drove me to create LogExtract—a tool designed to help other pilots digitize their logbooks much faster and easier. This software solves the specific pain points pilots face: messy handwriting, inconsistent formatting, and the need for perfect accuracy. Every feature is designed with the pilot's workflow in mind, from IFR cross-check validation to ForeFlight-compatible exports.
               </p>
             </div>
           </motion.div>
         </div>
       </section>
 
-      <footer className="relative z-10 p-6 sm:p-12 text-center text-[#003366]/60 text-xs border-t border-[#E2E8F0] bg-white/50 backdrop-blur-sm overflow-x-hidden">
+      <footer className="relative z-10 p-6 sm:p-12 text-center text-[#003366]/60 text-xs border-t border-[#E2E8F0] bg-white/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 px-4 sm:px-0">
           <div className="flex items-center gap-2">
             <div className="bg-[#003366] p-1.5 rounded-md">
