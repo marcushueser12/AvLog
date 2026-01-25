@@ -120,23 +120,6 @@ const TutorialTab: React.FC = () => {
         </div>
       </section>
 
-      {/* Visual Examples Placeholder */}
-      <section className="space-y-6">
-          <h2 className="text-xl font-bold text-[#003366]">Visual Examples</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="aspect-video bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-3xl flex flex-col items-center justify-center text-slate-700 border-dashed">
-                <ICONS.Camera />
-                <span className="text-xs font-bold mt-2 uppercase tracking-widest">Good Capture Example</span>
-                <span className="text-[10px] text-slate-800 mt-1">(Future Reference Photo)</span>
-            </div>
-            <div className="aspect-video bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-3xl flex flex-col items-center justify-center text-slate-700 border-dashed">
-                <ICONS.Check />
-                <span className="text-xs font-bold mt-2 uppercase tracking-widest">Correct Spread Alignment</span>
-                <span className="text-[10px] text-slate-800 mt-1">(Future Reference Photo)</span>
-            </div>
-          </div>
-      </section>
-
       <footer className="pt-10 border-t border-[#E2E8F0] text-center">
         <p className="text-[#003366]/70 text-sm italic">"A logbook is more than a record; it's the story of your life in the air."</p>
       </footer>
