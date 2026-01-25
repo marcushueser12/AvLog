@@ -183,10 +183,24 @@ router.get('/check', verifyAuth, async (req: any, res) => {
 /**
  * POST /api/admin/approve-review
  * Approve or reject a review (admin only)
+ * Requires: authenticated user + admin email OR admin token
  * Body: { reviewId: string, approve: boolean }
  */
-router.post('/approve-review', verifyAdmin, async (req, res) => {
+router.post('/approve-review', verifyAuth, async (req: any, res) => {
   try {
+    // Verify admin access
+    const adminEmails = process.env.ADMIN_EMAILS?.split(',') || [];
+    const adminToken = req.headers['x-admin-token'] as string;
+    const secretToken = process.env.ADMIN_SECRET_TOKEN;
+    
+    // Check if user is admin by email OR has valid admin token
+    const isAdminByEmail = adminEmails.includes(req.userEmail || '');
+    const isAdminByToken = secretToken && adminToken === secretToken;
+    
+    if (!isAdminByEmail && !isAdminByToken) {
+      return res.status(403).json({ error: 'Unauthorized - Admin access required' });
+    }
+    
     const { reviewId, approve } = req.body;
 
     if (!reviewId || typeof approve !== 'boolean') {
