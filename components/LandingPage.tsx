@@ -300,7 +300,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
               Founder's Note
             </h2>
             <p className="text-[#003366]/70 text-lg max-w-2xl mx-auto">
-              From one Instrument Rated Pilot to another
+              From one pilot to another
             </p>
           </motion.div>
 
@@ -319,7 +319,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                 <h3 className="text-2xl font-bold text-[#003366] mb-2">Marcus</h3>
                 <p className="text-[#003366]/70 font-semibold mb-4">Instrument Rated Pilot</p>
                 <p className="text-[#003366]/70 text-sm leading-relaxed">
-                  As an Instrument Rated Pilot, I understand the stakes of accurate record-keeping. Your logbook isn't just paperwork—it's your professional record, your proof of currency, and your ticket to advancement. I've sat across from examiners, submitted entries to insurance companies, and felt that weight of responsibility that comes with PIC authority.
+                  As an Instrument Rated Pilot, I understand the stakes of accurate record-keeping. Your logbook isn't just paperwork,it's your professional record, your proof of currency, and your ticket to advancement. I've sat across from examiners, submitted entries to insurance companies, and felt that weight of responsibility that comes with PIC authority.
                 </p>
               </div>
             </div>
