@@ -286,7 +286,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
         </div>
       </main>
 
-      {/* Meet the Founder Section */}
+      {/* Founder's Note Section */}
       <section className="relative z-10 py-20 px-4 sm:px-6 bg-white/80 backdrop-blur-sm border-t border-[#E2E8F0]">
         <div className="max-w-4xl mx-auto">
           <motion.div
@@ -297,10 +297,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-black text-[#003366] mb-4 tracking-tight">
-              Built by a Pilot, for Pilots
+              Founder's Note
             </h2>
             <p className="text-[#003366]/70 text-lg max-w-2xl mx-auto">
-              LogExtract was created by an Instrument Rated Pilot who understands the critical importance of accurate logbook entries for checkrides, insurance, and career advancement.
+              From one Instrument Rated Pilot to another
             </p>
           </motion.div>
 
@@ -309,18 +309,36 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="flex flex-col md:flex-row items-center gap-8 p-8 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl shadow-sm"
+            className="bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl shadow-sm p-8 md:p-12"
           >
-            <div className="w-32 h-32 bg-[#003366] rounded-2xl flex items-center justify-center flex-shrink-0">
-              <Plane className="w-16 h-16 text-white" aria-hidden="true" />
+            <div className="flex flex-col md:flex-row items-start gap-6 mb-8 pb-8 border-b border-[#E2E8F0]">
+              <div className="w-24 h-24 bg-[#003366] rounded-2xl flex items-center justify-center flex-shrink-0">
+                <Plane className="w-12 h-12 text-white" aria-hidden="true" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold text-[#003366] mb-2">Marcus</h3>
+                <p className="text-[#003366]/70 font-semibold mb-4">Instrument Rated Pilot</p>
+                <p className="text-[#003366]/70 text-sm leading-relaxed">
+                  As an Instrument Rated Pilot, I understand the stakes of accurate record-keeping. Your logbook isn't just paperwork—it's your professional record, your proof of currency, and your ticket to advancement. I've sat across from examiners, submitted entries to insurance companies, and felt that weight of responsibility that comes with PIC authority.
+                </p>
+              </div>
             </div>
-            <div className="flex-1 text-center md:text-left">
-              <h3 className="text-xl font-bold text-[#003366] mb-2">Marcus - Instrument Rated Pilot</h3>
-              <p className="text-[#003366]/70 text-sm leading-relaxed mb-4">
-                As an Instrument Rated Pilot, I've experienced firsthand the frustration of manually transcribing logbook entries. It took me hours to convert my own logbook, dealing with messy handwriting, inconsistent formatting, and the constant worry about making errors that could affect checkrides or insurance applications.
+
+            <div className="space-y-6 text-[#003366]/80 leading-relaxed">
+              <p className="text-base">
+                LogExtract uses <strong className="text-[#003366] font-semibold">AI-Assisted Digitization</strong> to eliminate the manual data-entry fatigue that comes with converting paper logbooks. But make no mistake: <strong className="text-[#003366] font-semibold">you remain the Pilot-in-Command of your data</strong>. The AI extracts the information; you verify, validate, and maintain logbook integrity.
               </p>
-              <p className="text-[#003366]/70 text-sm leading-relaxed">
-                That experience drove me to create LogExtract—a tool designed to help other pilots digitize their logbooks much faster and easier. This software solves the specific pain points pilots face: messy handwriting, inconsistent formatting, and the need for perfect accuracy. Every feature is designed with the pilot's workflow in mind, from IFR cross-check validation to ForeFlight-compatible exports.
+
+              <p className="text-base">
+                This tool is designed for checkride-ready accuracy. Every entry you review and approve maintains your PIC authority over your records. We provide <strong className="text-[#003366] font-semibold">high-precision extraction</strong>, but the final authority—the signature, the verification, the responsibility—remains yours.
+              </p>
+
+              <p className="text-base">
+                I built LogExtract because I spent hours converting my own logbook, wrestling with messy handwriting and the constant worry about transcription errors. This software is designed to <strong className="text-[#003366] font-semibold">reduce data-entry fatigue</strong> while keeping you in control. Your logbook integrity matters. Your checkride readiness matters. Your PIC authority matters.
+              </p>
+
+              <p className="text-base font-semibold text-[#003366] pt-4 border-t border-[#E2E8F0]">
+                Fly safe. Verify your data. Maintain your standards.
               </p>
             </div>
           </motion.div>
