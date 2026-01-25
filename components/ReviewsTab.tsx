@@ -110,7 +110,7 @@ const ReviewsTab: React.FC = () => {
         .from('reviews')
         .insert([
           {
-            user_id: user?.id || null,
+            user_id: user?.id || null, // Allow anonymous reviews
             reviewer_name: formData.reviewer_name.trim(),
             reviewer_email: formData.reviewer_email.trim() || null,
             rating: formData.rating,
