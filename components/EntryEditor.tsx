@@ -43,6 +43,14 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   const [dateFormat, setDateFormat] = useState<'MM/DD' | 'DD/MM'>('MM/DD');
   const [yearAdjustment, setYearAdjustment] = useState<string>('');
   const [approachModalEntryId, setApproachModalEntryId] = useState<string | null>(null);
+  const [editingDateEntryId, setEditingDateEntryId] = useState<string | null>(null);
+  const [editingDateValue, setEditingDateValue] = useState<string>('');
+
+  // Initialize editing date value when starting to edit
+  const handleDateFocus = (entryId: string, currentDate: string) => {
+    setEditingDateEntryId(entryId);
+    setEditingDateValue(formatDateForDisplay(currentDate));
+  };
 
   const sumTotal = entries.reduce((acc, e) => acc + (parseFloat(e.totalTime) || 0), 0);
   const sumPIC = entries.reduce((acc, e) => acc + (parseFloat(e.pic) || 0), 0);
@@ -215,8 +223,29 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-[#003366]/70 uppercase tracking-wide font-semibold block mb-1`}>Date</label>
                     <input
                       type="text"
-                      value={formatDateForDisplay(entry.date)}
-                      onChange={(e) => onUpdate(entry.id, 'date', e.target.value)}
+                      value={editingDateEntryId === entry.id ? editingDateValue : formatDateForDisplay(entry.date)}
+                      onFocus={() => handleDateFocus(entry.id, entry.date || '')}
+                      onChange={(e) => {
+                        setEditingDateEntryId(entry.id);
+                        setEditingDateValue(e.target.value);
+                      }}
+                      onBlur={() => {
+                        if (editingDateEntryId === entry.id && editingDateValue !== formatDateForDisplay(entry.date)) {
+                          onUpdate(entry.id, 'date', editingDateValue);
+                        }
+                        setEditingDateEntryId(null);
+                        setEditingDateValue('');
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && editingDateEntryId === entry.id) {
+                          if (editingDateValue !== formatDateForDisplay(entry.date)) {
+                            onUpdate(entry.id, 'date', editingDateValue);
+                          }
+                          setEditingDateEntryId(null);
+                          setEditingDateValue('');
+                          (e.target as HTMLInputElement).blur();
+                        }
+                      }}
                       placeholder="MM/DD/YYYY"
                       inputMode="numeric"
                       readOnly={readOnly}
@@ -572,8 +601,29 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                   <td className="p-1 sticky bg-white group-hover:bg-white/90 z-20 border-r border-[#E2E8F0] whitespace-nowrap" style={{ left: '80px', width: 'auto', minWidth: '100px' }}>
                     <input 
                       type="text"
-                      value={formatDateForDisplay(entry.date)}
-                      onChange={(e) => onUpdate(entry.id, 'date', e.target.value)}
+                      value={editingDateEntryId === entry.id ? editingDateValue : formatDateForDisplay(entry.date)}
+                      onFocus={() => handleDateFocus(entry.id, entry.date || '')}
+                      onChange={(e) => {
+                        setEditingDateEntryId(entry.id);
+                        setEditingDateValue(e.target.value);
+                      }}
+                      onBlur={() => {
+                        if (editingDateEntryId === entry.id && editingDateValue !== formatDateForDisplay(entry.date)) {
+                          onUpdate(entry.id, 'date', editingDateValue);
+                        }
+                        setEditingDateEntryId(null);
+                        setEditingDateValue('');
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && editingDateEntryId === entry.id) {
+                          if (editingDateValue !== formatDateForDisplay(entry.date)) {
+                            onUpdate(entry.id, 'date', editingDateValue);
+                          }
+                          setEditingDateEntryId(null);
+                          setEditingDateValue('');
+                          (e.target as HTMLInputElement).blur();
+                        }
+                      }}
                       placeholder="MM/DD/YYYY"
                       inputMode="numeric"
                       readOnly={readOnly}

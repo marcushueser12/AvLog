@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { AircraftProfile } from '../types';
 import { ICONS } from '../constants';
+import AuthModal from './AuthModal';
 import { normalizeAircraftId } from '../utils/logbookUtils';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -76,6 +77,7 @@ const AircraftProfilesTab: React.FC = () => {
   const [editedAircraft, setEditedAircraft] = useState<Partial<AircraftProfile>>({});
   const [saving, setSaving] = useState<Set<string>>(new Set());
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [newAircraft, setNewAircraft] = useState<Partial<AircraftProfile>>({
     aircraftId: '',
     equipmentType: '',
@@ -296,10 +298,16 @@ const AircraftProfilesTab: React.FC = () => {
             <div className="w-16 h-16 bg-[#003366]/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <ICONS.Aircraft />
             </div>
-            <h3 className="text-xl font-bold text-[#003366] mb-2">Sign In Required</h3>
-            <p className="text-[#003366]/70 text-sm">
-              Please sign in to manage your aircraft profiles.
+            <h3 className="text-xl font-bold text-[#003366] mb-2">Create a free account to start</h3>
+            <p className="text-[#003366]/70 text-sm mb-6">
+              Sign up to manage your aircraft profiles and streamline your logbook entries.
             </p>
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className="px-6 py-3 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-xl font-bold transition-all shadow-lg shadow-[#003366]/20 shiny-button"
+            >
+              Sign Up Free
+            </button>
           </div>
         </div>
       </div>

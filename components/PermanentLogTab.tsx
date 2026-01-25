@@ -555,15 +555,15 @@ const PermanentLogTab: React.FC = () => {
                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-[#003366] mb-2">Sign In Required</h3>
+            <h3 className="text-xl font-bold text-[#003366] mb-2">Create a free account to start</h3>
             <p className="text-[#003366]/70 text-sm mb-6">
-              Please sign in to view your verified logbook entries that have been saved to your account.
+              Sign up to access your verified logbook entries that have been saved to your account.
             </p>
             <button
               onClick={() => setShowAuthModal(true)}
               className="px-6 py-3 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-xl font-bold transition-all shadow-lg shadow-[#003366]/20 shiny-button"
             >
-              Sign In
+              Sign Up Free
             </button>
           </div>
         </div>
