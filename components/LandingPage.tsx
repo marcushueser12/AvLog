@@ -63,6 +63,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
       {/* Background decoration - subtle blue gradient */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-gradient-to-b from-[#007BFF]/10 to-transparent blur-[120px] pointer-events-none rounded-full"></div>
       
+      {/* Mobile Notice Banner */}
+      <div className="relative z-50 bg-[#007BFF]/10 border-b border-[#007BFF]/20 px-4 py-2 text-center">
+        <p className="text-xs sm:text-sm text-[#003366]/80 font-medium">
+          💻 <span className="hidden sm:inline">Works best on a computer.</span><span className="sm:hidden">Best on desktop</span>
+        </p>
+      </div>
+      
       {/* Navigation Bar with Glassmorphism */}
       <nav className="relative z-50 px-4 sm:px-6 py-6 md:px-12 backdrop-blur-md bg-white/70 border-b border-[#E2E8F0] shadow-sm">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
