@@ -146,22 +146,31 @@ const ReviewsTab: React.FC = () => {
   const handleApproveReview = async (reviewId: string, approve: boolean) => {
     try {
       const token = getAccessToken();
+      if (!token) {
+        alert('Please sign in to approve reviews');
+        return;
+      }
+      
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/admin/approve-review`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'x-admin-token': import.meta.env.VITE_ADMIN_TOKEN || '' // Admin token for backend verification
         },
         body: JSON.stringify({ reviewId, approve })
       });
 
-      if (!response.ok) throw new Error('Failed to update review');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to update review' }));
+        throw new Error(errorData.error || 'Failed to update review');
+      }
 
       await loadPendingReviews();
       await loadReviews();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error approving review:', error);
-      alert('Error updating review. Please try again.');
+      alert(error.message || 'Error updating review. Please try again.');
     }
   };
 

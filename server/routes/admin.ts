@@ -147,10 +147,37 @@ router.get('/user-credits/:email', verifyAdmin, async (req, res) => {
 
 /**
  * GET /api/admin/check
- * Check if user is admin
+ * Check if authenticated user is admin
+ * Uses admin email list (can be moved to env var or database)
  */
-router.get('/check', verifyAdmin, async (req, res) => {
-  res.json({ isAdmin: true });
+router.get('/check', verifyAuth, async (req: any, res) => {
+  try {
+    // Option 1: Check against admin email list
+    // TODO: Move this to environment variable or database for better security
+    const adminEmails = process.env.ADMIN_EMAILS?.split(',') || [
+      // Add your admin email(s) here, or set ADMIN_EMAILS env var (comma-separated)
+      // Example: 'admin@logextract.co'
+    ];
+    
+    const isAdmin = adminEmails.includes(req.userEmail || '');
+    
+    // Option 2: Check user_profiles.is_admin field (if you add it)
+    // Uncomment this if you add is_admin column to user_profiles:
+    /*
+    const { data: profile } = await supabaseAdmin
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('user_id', req.userId)
+      .single();
+    
+    const isAdmin = profile?.is_admin || false;
+    */
+    
+    res.json({ isAdmin });
+  } catch (error: any) {
+    console.error('Admin check error:', error);
+    res.status(500).json({ error: 'Failed to check admin status' });
+  }
 });
 
 /**
