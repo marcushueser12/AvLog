@@ -97,6 +97,24 @@ const PermanentLogTab: React.FC = () => {
     loadExistingAircraft();
   };
 
+  // Helper function to parse date for sorting
+  const parseDateForSort = (dateStr: string | null | undefined): number => {
+    if (!dateStr) return 0;
+    // Handle MM/DD/YYYY format
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+      const [month, day, year] = parts;
+      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      return date.getTime();
+    }
+    // Try ISO format (YYYY-MM-DD)
+    const isoDate = new Date(dateStr);
+    if (!isNaN(isoDate.getTime())) {
+      return isoDate.getTime();
+    }
+    return 0;
+  };
+
   // Auto-extract aircraft from entries and create profiles
   const autoExtractAircraft = async (entriesList: LogbookEntry[]) => {
     if (!user) return;
@@ -316,24 +334,6 @@ const PermanentLogTab: React.FC = () => {
         [scanId]: entries[scanId].map(e => ({ ...e }))
       }));
     }
-  };
-
-  // Helper function to parse date for sorting
-  const parseDateForSort = (dateStr: string | null | undefined): number => {
-    if (!dateStr) return 0;
-    // Handle MM/DD/YYYY format
-    const parts = dateStr.split('/');
-    if (parts.length === 3) {
-      const [month, day, year] = parts;
-      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-      return date.getTime();
-    }
-    // Try ISO format (YYYY-MM-DD)
-    const isoDate = new Date(dateStr);
-    if (!isNaN(isoDate.getTime())) {
-      return isoDate.getTime();
-    }
-    return 0;
   };
 
   const handleUpdateEntry = (scanId: string, entryId: string, field: keyof LogbookEntry, value: string) => {
