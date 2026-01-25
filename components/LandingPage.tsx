@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { AppTab } from '../types';
 import AuthModal from './AuthModal';
+import SoftwareApplicationSchema from './SoftwareApplicationSchema';
 import { useAuth } from '../contexts/AuthContext';
 import { Plane, FileText, CloudUpload, Clock, Menu, X, ChevronRight, Shield, CheckCircle2, Grid3x3 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -57,21 +58,30 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F4F7FA]">
+    <div className="min-h-screen flex flex-col bg-[#F4F7FA] overflow-x-hidden">
+      <SoftwareApplicationSchema />
       {/* Background decoration - subtle blue gradient */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-gradient-to-b from-[#007BFF]/10 to-transparent blur-[120px] pointer-events-none rounded-full"></div>
       
       {/* Navigation Bar with Glassmorphism */}
-      <nav className="relative z-50 px-6 py-6 md:px-12 backdrop-blur-md bg-white/70 border-b border-[#E2E8F0] shadow-sm">
+      <nav className="relative z-50 px-4 sm:px-6 py-6 md:px-12 backdrop-blur-md bg-white/70 border-b border-[#E2E8F0] shadow-sm">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <motion.div 
             className="flex items-center gap-3 cursor-pointer group"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             whileHover={{ scale: 1.02 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            role="button"
+            aria-label="Go to top of page"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
           >
             <div className="bg-[#003366] p-2.5 rounded-xl shadow-lg shadow-[#003366]/20 group-hover:shadow-[#003366]/30 transition-all">
-              <Plane className="w-5 h-5 text-white" />
+              <Plane className="w-5 h-5 text-white" aria-hidden="true" />
             </div>
             <span className="text-2xl font-black text-[#003366] tracking-tight">LogExtract</span>
           </motion.div>
@@ -80,15 +90,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             {user ? (
               <button
                 onClick={() => onStart('permanent-log')}
-                className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-xl font-semibold transition-all text-sm"
+                className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-xl font-semibold transition-all text-sm min-h-[48px] min-w-[48px]"
+                aria-label="View permanent log"
               >
-                <FileText className="w-4 h-4" />
+                <FileText className="w-4 h-4" aria-hidden="true" />
                 My Log
               </button>
             ) : (
               <button
                 onClick={() => setShowAuthModal(true)}
-                className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-xl font-semibold transition-all text-sm"
+                className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-xl font-semibold transition-all text-sm min-h-[48px] min-w-[48px]"
+                aria-label="Sign in to your account"
               >
                 Sign In
               </button>
@@ -97,9 +109,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             <div className="relative" ref={menuRef}>
               <button 
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="flex items-center gap-2 px-5 py-2.5 bg-white/80 hover:bg-white border border-[#E2E8F0] text-[#003366] rounded-xl font-semibold transition-all text-sm shadow-sm"
+                className="flex items-center gap-2 px-5 py-2.5 bg-white/80 hover:bg-white border border-[#E2E8F0] text-[#003366] rounded-xl font-semibold transition-all text-sm shadow-sm min-h-[48px] min-w-[48px]"
+                aria-label="Open navigation menu"
+                aria-expanded={isMenuOpen}
+                aria-haspopup="true"
               >
-                <Menu className="w-4 h-4" />
+                <Menu className="w-4 h-4" aria-hidden="true" />
                 Navigation
               </button>
 
@@ -116,10 +131,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                   <div className="p-2 space-y-1">
                     <button 
                       onClick={() => { setIsMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                      className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#F4F7FA] transition-colors text-left group"
+                      className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#F4F7FA] transition-colors text-left group min-h-[48px]"
+                      aria-label="Go to home page"
                     >
-                      <div className="w-10 h-10 bg-[#F4F7FA] rounded-xl flex items-center justify-center text-[#003366]/60 group-hover:bg-[#007BFF] group-hover:text-white transition-all">
-                        <Plane className="w-5 h-5" />
+                      <div className="w-10 h-10 bg-[#F4F7FA] rounded-xl flex items-center justify-center text-[#003366]/60 group-hover:bg-[#007BFF] group-hover:text-white transition-all min-w-[48px] min-h-[48px]">
+                        <Plane className="w-5 h-5" aria-hidden="true" />
                       </div>
                       <div>
                         <div className="text-sm font-semibold text-[#003366]">Home Page</div>
@@ -133,12 +149,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                         <motion.button
                           key={item.id}
                           onClick={() => { setIsMenuOpen(false); onStart(item.id as AppTab); }}
-                          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#F4F7FA] transition-colors text-left group"
+                          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#F4F7FA] transition-colors text-left group min-h-[48px]"
                           whileHover={{ x: 4 }}
                           transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                          aria-label={`Navigate to ${item.label}`}
                         >
-                          <div className="w-10 h-10 bg-[#F4F7FA] rounded-xl flex items-center justify-center text-[#003366]/60 group-hover:bg-[#007BFF] group-hover:text-white transition-all">
-                            <ItemIcon className="w-5 h-5" />
+                          <div className="w-10 h-10 bg-[#F4F7FA] rounded-xl flex items-center justify-center text-[#003366]/60 group-hover:bg-[#007BFF] group-hover:text-white transition-all min-w-[48px] min-h-[48px]">
+                            <ItemIcon className="w-5 h-5" aria-hidden="true" />
                           </div>
                           <div>
                             <div className="text-sm font-semibold text-[#003366]">{item.label}</div>
@@ -154,9 +171,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
 
             <motion.button
               onClick={() => onStart('dashboard')}
-              className="hidden sm:block px-6 py-2.5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-xl font-semibold transition-all text-sm shadow-lg shadow-[#003366]/20 shiny-button"
+              className="hidden sm:block px-6 py-2.5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-xl font-semibold transition-all text-sm shadow-lg shadow-[#003366]/20 shiny-button min-h-[48px] min-w-[48px]"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              aria-label="Start scanning logbook pages"
             >
               Start Scanning
             </motion.button>
@@ -165,7 +183,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
       </nav>
 
       {/* Hero Section */}
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 max-w-5xl mx-auto py-20">
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-4 sm:px-6 max-w-5xl mx-auto py-20 overflow-x-hidden">
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -195,20 +213,22 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
         >
           <motion.button
             onClick={() => onStart('dashboard')}
-            className="px-10 py-5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-2xl font-black text-lg transition-all shadow-2xl shadow-[#003366]/30 flex items-center gap-3 group shiny-button"
+            className="px-10 py-5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-2xl font-black text-lg transition-all shadow-2xl shadow-[#003366]/30 flex items-center gap-3 group shiny-button min-h-[48px]"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            aria-label="Start digitizing your logbook"
           >
             Start Digitizing Now
-            <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
           </motion.button>
           <motion.button
             onClick={() => onStart('tutorial')}
-            className="px-10 py-5 bg-white border-2 border-[#E2E8F0] text-[#003366] hover:border-[#007BFF] rounded-2xl font-semibold text-lg transition-all shadow-sm flex items-center gap-3"
+            className="px-10 py-5 bg-white border-2 border-[#E2E8F0] text-[#003366] hover:border-[#007BFF] rounded-2xl font-semibold text-lg transition-all shadow-sm flex items-center gap-3 min-h-[48px]"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            aria-label="View app tutorial"
           >
-            <FileText className="w-5 h-5" />
+            <FileText className="w-5 h-5" aria-hidden="true" />
             View App Tutorial
           </motion.button>
         </motion.div>
@@ -218,7 +238,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-32 text-left"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-32 text-left px-4 sm:px-0"
         >
           <motion.div
             variants={itemVariants}
@@ -262,21 +282,74 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
 
         {/* Floating background airplane icon */}
         <div className="absolute -bottom-20 -right-20 text-[#007BFF]/5 rotate-[-15deg] pointer-events-none hidden md:block">
-          <Plane className="w-[600px] h-[600px]" />
+          <Plane className="w-[600px] h-[600px]" aria-hidden="true" />
         </div>
       </main>
 
-      <footer className="relative z-10 p-12 text-center text-[#003366]/60 text-xs border-t border-[#E2E8F0] bg-white/50 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+      {/* Meet the Founder Section */}
+      <section className="relative z-10 py-20 px-4 sm:px-6 bg-white/80 backdrop-blur-sm border-t border-[#E2E8F0] overflow-x-hidden">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-black text-[#003366] mb-4 tracking-tight">
+              Built by a Pilot, for Pilots
+            </h2>
+            <p className="text-[#003366]/70 text-lg max-w-2xl mx-auto">
+              LogExtract was created by an Instrument Rated (IR) Pilot who understands the critical importance of accurate logbook entries for checkrides, insurance, and career advancement.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="flex flex-col md:flex-row items-center gap-8 p-8 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl shadow-sm"
+          >
+            <div className="w-32 h-32 bg-[#003366] rounded-2xl flex items-center justify-center flex-shrink-0">
+              <Plane className="w-16 h-16 text-white" aria-hidden="true" />
+            </div>
+            <div className="flex-1 text-center md:text-left">
+              <h3 className="text-xl font-bold text-[#003366] mb-2">Instrument Rated Pilot</h3>
+              <p className="text-[#003366]/70 text-sm leading-relaxed mb-4">
+                As an IR-rated pilot, I've experienced firsthand the frustration of manually transcribing logbook entries. The risk of errors, the time wasted, and the stress of ensuring accuracy for checkrides and insurance applications drove me to build LogExtract.
+              </p>
+              <p className="text-[#003366]/70 text-sm leading-relaxed">
+                This tool solves the specific pain points pilots face: messy handwriting, inconsistent formatting, and the need for perfect accuracy. Every feature is designed with the pilot's workflow in mind, from IFR cross-check validation to ForeFlight-compatible exports.
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      <footer className="relative z-10 p-6 sm:p-12 text-center text-[#003366]/60 text-xs border-t border-[#E2E8F0] bg-white/50 backdrop-blur-sm overflow-x-hidden">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 px-4 sm:px-0">
           <div className="flex items-center gap-2">
             <div className="bg-[#003366] p-1.5 rounded-md">
               <Plane className="w-4 h-4 text-white" />
             </div>
             <span className="font-bold text-[#003366]">LOGEXTRACT</span>
           </div>
-          <div className="flex gap-8">
-            <button onClick={() => setShowPrivacyModal(true)} className="hover:text-[#007BFF] transition-colors">Privacy Policy</button>
-            <button onClick={() => setShowTermsModal(true)} className="hover:text-[#007BFF] transition-colors">Terms of Service</button>
+          <div className="flex gap-8 flex-wrap justify-center">
+            <button 
+              onClick={() => setShowPrivacyModal(true)} 
+              className="hover:text-[#007BFF] transition-colors min-h-[48px] min-w-[48px] px-2"
+              aria-label="View privacy policy"
+            >
+              Privacy Policy
+            </button>
+            <button 
+              onClick={() => setShowTermsModal(true)} 
+              className="hover:text-[#007BFF] transition-colors min-h-[48px] min-w-[48px] px-2"
+              aria-label="View terms of service"
+            >
+              Terms of Service
+            </button>
           </div>
           <p>© {new Date().getFullYear()} LogExtract Technologies. All rights reserved.</p>
         </div>

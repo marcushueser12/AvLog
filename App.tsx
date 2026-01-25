@@ -1517,43 +1517,48 @@ const App: React.FC = () => {
           <div className="grid grid-cols-5 gap-1 px-1 py-2">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all ${activeTab === 'dashboard' ? 'text-[#007BFF] bg-[#007BFF]/10' : 'text-[#003366]/70'}`}
+              className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg transition-all min-h-[48px] min-w-[48px] ${activeTab === 'dashboard' ? 'text-[#007BFF] bg-[#007BFF]/10' : 'text-[#003366]/70'}`}
+              aria-label="Scanner Dashboard"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
               </svg>
               <span className="text-[10px] font-semibold">Scan</span>
             </button>
             <button
               onClick={() => setActiveTab('permanent-log')}
-              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all ${activeTab === 'permanent-log' ? 'text-[#007BFF] bg-[#007BFF]/10' : 'text-[#003366]/70'}`}
+              className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg transition-all min-h-[48px] min-w-[48px] ${activeTab === 'permanent-log' ? 'text-[#007BFF] bg-[#007BFF]/10' : 'text-[#003366]/70'}`}
+              aria-label="Permanent Log"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
               </svg>
               <span className="text-[10px] font-semibold">Log</span>
             </button>
             <button
               onClick={() => setActiveTab('aircraft')}
-              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all ${activeTab === 'aircraft' ? 'text-[#007BFF] bg-[#007BFF]/10' : 'text-[#003366]/70'}`}
+              className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg transition-all min-h-[48px] min-w-[48px] ${activeTab === 'aircraft' ? 'text-[#007BFF] bg-[#007BFF]/10' : 'text-[#003366]/70'}`}
+              aria-label="Aircraft Profiles"
             >
               <ICONS.Aircraft />
               <span className="text-[10px] font-semibold">Aircraft</span>
             </button>
             <button
               onClick={() => setActiveTab('tutorial')}
-              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all ${activeTab === 'tutorial' ? 'text-[#007BFF] bg-[#007BFF]/10' : 'text-[#003366]/70'}`}
+              className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg transition-all min-h-[48px] min-w-[48px] ${activeTab === 'tutorial' ? 'text-[#007BFF] bg-[#007BFF]/10' : 'text-[#003366]/70'}`}
+              aria-label="App Tutorial"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
               </svg>
               <span className="text-[10px] font-semibold">Help</span>
             </button>
             <button
               onClick={handleExportModalOpen}
-              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all relative ${exportableEntries.length > 0 ? 'text-emerald-600' : 'text-[#003366]/70'}`}
+              className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg transition-all relative min-h-[48px] min-w-[48px] ${exportableEntries.length > 0 ? 'text-emerald-600' : 'text-[#003366]/70'}`}
+              aria-label="Export logbook entries"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
               </svg>
               <span className="text-[10px] font-semibold">Export</span>
