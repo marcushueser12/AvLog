@@ -124,7 +124,43 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   const getFieldClass = (entry: LogbookEntry, field: string, base: string = "") => {
     const uncertain = entry.uncertainFields?.includes(field);
     const readOnlyClass = readOnly ? 'cursor-not-allowed opacity-60 pointer-events-none' : '';
-    return `${base} transition-all duration-300 ${uncertain ? 'bg-amber-50 border-amber-300 ring-1 ring-amber-200' : 'border-transparent'} ${readOnlyClass}`;
+    const isSelected = cellMovementMode && selectedCell?.entryId === entry.id && selectedCell?.field === field;
+    const isMovable = cellMovementMode && !readOnly && field !== 'day' && field !== 'id' && field !== 'rowAnchor' && field !== 'isVerified' && field !== 'aiConfidence' && field !== 'reconciliationConfidence' && field !== 'uncertainFields' && field !== 'validationError' && field !== 'fieldBoundingBoxes' && field !== 'approachDetails' && field !== 'scanId';
+    return `${base} transition-all duration-300 ${uncertain ? 'bg-amber-50 border-amber-300 ring-1 ring-amber-200' : 'border-transparent'} ${readOnlyClass} ${isSelected ? 'ring-2 ring-[#007BFF] bg-[#007BFF]/10' : ''} ${isMovable && !isSelected ? 'hover:ring-1 hover:ring-[#007BFF]/50 cursor-pointer' : ''}`;
+  };
+
+  // Handle cell movement mode
+  const handleCellClick = (entryId: string, field: keyof LogbookEntry) => {
+    if (!cellMovementMode || readOnly) return;
+    
+    // Skip non-movable fields
+    if (field === 'day' || field === 'id' || field === 'rowAnchor' || field === 'isVerified' || field === 'aiConfidence' || field === 'reconciliationConfidence' || field === 'uncertainFields' || field === 'validationError' || field === 'fieldBoundingBoxes' || field === 'approachDetails' || field === 'scanId') {
+      return;
+    }
+
+    if (selectedCell === null) {
+      // First click: select the cell
+      setSelectedCell({ entryId, field });
+    } else if (selectedCell.entryId === entryId && selectedCell.field === field) {
+      // Clicking the same cell: deselect
+      setSelectedCell(null);
+    } else {
+      // Second click on different cell: move the value
+      const sourceEntry = entries.find(e => e.id === selectedCell.entryId);
+      const targetEntry = entries.find(e => e.id === entryId);
+      
+      if (sourceEntry && targetEntry) {
+        const sourceValue = sourceEntry[selectedCell.field] || '';
+        const targetValue = targetEntry[field] || '';
+        
+        // Swap values
+        onUpdate(selectedCell.entryId, selectedCell.field, targetValue);
+        onUpdate(entryId, field, sourceValue);
+        
+        // Clear selection
+        setSelectedCell(null);
+      }
+    }
   };
 
   return (
