@@ -63,10 +63,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
       {/* Background decoration - subtle blue gradient */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-gradient-to-b from-[#007BFF]/10 to-transparent blur-[120px] pointer-events-none rounded-full"></div>
       
-      {/* Mobile Notice Banner */}
-      <div className="relative z-50 bg-[#007BFF]/10 border-b border-[#007BFF]/20 px-4 py-2 text-center">
-        <p className="text-xs sm:text-sm text-[#003366]/80 font-medium">
-          💻 <span className="hidden sm:inline">Works best on a computer.</span><span className="sm:hidden">Best on desktop</span>
+      {/* Mobile Notice Banner - Only visible on mobile */}
+      <div className="relative z-50 bg-[#007BFF]/10 border-b border-[#007BFF]/20 px-4 py-2 text-center md:hidden">
+        <p className="text-xs text-[#003366]/80 font-medium">
+          💻 Best on desktop
         </p>
       </div>
       
