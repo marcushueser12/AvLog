@@ -765,6 +765,11 @@ const AircraftProfilesTab: React.FC = () => {
           </div>
         )}
       </div>
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
     </div>
   );
 };
