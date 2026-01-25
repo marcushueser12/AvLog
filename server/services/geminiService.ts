@@ -123,6 +123,12 @@ const SYSTEM_INSTRUCTION = `
      - REASONING FROM REMARKS MUST NEVER REDUCE THE TRANSCRIPTION OF DEDICATED IFR COLUMNS. 
      - Columns always represent the "Minimum Found".
   
+  4. FLIGHT INSTRUCTOR TIME (DUAL GIVEN):
+     - If any column, time entry, or remark mentions "as flight instructor", "flight instructor", "CFI", "instructor", or similar instructor-related terminology, that time should be recorded in the "Dual Given" field.
+     - Time logged "as flight instructor" or with instructor notation is dual instruction given to a student, not dual instruction received.
+     - Extract the time value and place it in the "dualGiven" field, not "dualReceived".
+     - This applies to any time column (Total Time, PIC, etc.) that has instructor notation or mentions.
+  
   STRICT RECONCILIATION PROTOCOL:
   1. ANCHORING: Use printed line numbers (1, 2, 3...) at margins.
   2. ZERO-INFERENCE: Blank paper = "". 
