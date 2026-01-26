@@ -226,11 +226,27 @@ router.post(
   }),
   async (req: any, res) => {
   try {
-    // Verify admin access - only check email (admin token should never be client-side)
-    const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()).filter(e => e) || [];
-    const isAdminByEmail = adminEmails.includes(req.userEmail || '');
+    const userId = req.userId!;
     
-    if (!isAdminByEmail) {
+    // Check database for is_admin flag first
+    const { data: profile } = await supabaseAdmin
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('user_id', userId)
+      .single();
+    
+    let isAdmin = false;
+    
+    if (profile) {
+      isAdmin = profile.is_admin || false;
+    } else {
+      // Fallback to email list check
+      const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()).filter(e => e) || [];
+      const userEmail = (req.userEmail || '').toLowerCase().trim();
+      isAdmin = adminEmails.includes(userEmail);
+    }
+    
+    if (!isAdmin) {
       return res.status(403).json({ error: 'Unauthorized - Admin access required' });
     }
     
