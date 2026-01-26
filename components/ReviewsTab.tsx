@@ -26,6 +26,8 @@ const ReviewsTab: React.FC = () => {
   const [showSubmitForm, setShowSubmitForm] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [pendingReviews, setPendingReviews] = useState<Review[]>([]);
+  const [featuredReviews, setFeaturedReviews] = useState<Review[]>([]);
+  const [loadingFeatured, setLoadingFeatured] = useState(true);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -38,6 +40,7 @@ const ReviewsTab: React.FC = () => {
 
   useEffect(() => {
     loadReviews();
+    loadFeaturedReviews();
     if (user) {
       checkAdminStatus();
     } else {
@@ -119,6 +122,26 @@ const ReviewsTab: React.FC = () => {
       console.error('Error loading reviews:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadFeaturedReviews = async () => {
+    try {
+      setLoadingFeatured(true);
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('*')
+        .eq('approved', true)
+        .order('rating', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      if (error) throw error;
+      setFeaturedReviews(data || []);
+    } catch (error) {
+      console.error('Error loading featured reviews:', error);
+    } finally {
+      setLoadingFeatured(false);
     }
   };
 
@@ -258,6 +281,52 @@ const ReviewsTab: React.FC = () => {
             Real feedback from pilots using LogExtract to digitize their logbooks
           </p>
         </div>
+
+        {/* Featured Reviews Section */}
+        {!loadingFeatured && featuredReviews.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl sm:text-2xl font-black text-[#003366] mb-4 tracking-tight">
+              Featured Reviews
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {featuredReviews.map((review, index) => (
+                <motion.div
+                  key={review.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  className="bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-xl p-5 shadow-sm hover:shadow-md transition-all"
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="flex gap-0.5">
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-4 h-4 ${
+                            i < review.rating
+                              ? 'text-amber-400 fill-amber-400'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-sm font-semibold text-[#003366] mb-2">
+                    {review.reviewer_name}
+                    {review.pilot_ratings && (
+                      <span className="text-[#003366]/60 font-normal">
+                        {' • '}{review.pilot_ratings}
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-xs text-[#003366]/70 leading-relaxed line-clamp-4">
+                    {review.review_text}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Submit Review Button */}
         {!showSubmitForm && (
