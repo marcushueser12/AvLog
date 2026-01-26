@@ -23,19 +23,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Get initial session
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
-        console.error('Error getting session:', error);
+        // Handle invalid refresh token error gracefully
+        if (error.message?.includes('Refresh Token') || error.message?.includes('refresh_token')) {
+          console.warn('Invalid refresh token, clearing session');
+          // Clear invalid session
+          setSession(null);
+          setUser(null);
+          // Clear any stored session data
+          supabase.auth.signOut().catch(() => {
+            // Ignore errors during sign out
+          });
+        } else {
+          console.error('Error getting session:', error);
+        }
+      } else {
+        setSession(session);
+        setUser(session?.user ?? null);
       }
-      setSession(session);
-      setUser(session?.user ?? null);
       setLoading(false);
     });
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // Handle token refresh errors
+      if (event === 'TOKEN_REFRESHED') {
+        setSession(session);
+        setUser(session?.user ?? null);
+      } else if (event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+        setSession(session);
+        setUser(session?.user ?? null);
+      } else {
+        setSession(session);
+        setUser(session?.user ?? null);
+      }
       setLoading(false);
     });
 
@@ -71,7 +93,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const getAccessToken = () => {
-    return session?.access_token ?? null;
+    // Check if session is still valid
+    if (session?.access_token) {
+      // Check if token is expired (with 5 minute buffer)
+      const expiresAt = session.expires_at;
+      if (expiresAt) {
+        const expiresIn = expiresAt - Math.floor(Date.now() / 1000);
+        if (expiresIn < 300) { // Less than 5 minutes
+          // Token is about to expire, try to refresh
+          supabase.auth.refreshSession().catch((error) => {
+            console.warn('Failed to refresh session:', error);
+            // Clear invalid session
+            setSession(null);
+            setUser(null);
+          });
+        }
+      }
+      return session.access_token;
+    }
+    return null;
   };
 
   const value = {

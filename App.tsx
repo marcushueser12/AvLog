@@ -164,6 +164,7 @@ const App: React.FC = () => {
   }, [exportAircraftProfiles]);
 
   // Save scans and entries to localStorage whenever they change
+  // Note: We don't save images to localStorage to avoid quota issues
   useEffect(() => {
     try {
       // Only save non-verified scans and entries
@@ -171,15 +172,67 @@ const App: React.FC = () => {
       const unverifiedEntries = entries.filter(e => !e.isVerified);
       
       if (unverifiedScans.length > 0 || unverifiedEntries.length > 0) {
-        localStorage.setItem('logextract_scans', JSON.stringify(unverifiedScans));
-        localStorage.setItem('logextract_entries', JSON.stringify(unverifiedEntries));
+        // Remove images from scans before saving to localStorage (they're too large)
+        const scansWithoutImages = unverifiedScans.map(scan => ({
+          ...scan,
+          images: [] // Don't save images to localStorage
+        }));
+        
+        const scansJson = JSON.stringify(scansWithoutImages);
+        const entriesJson = JSON.stringify(unverifiedEntries);
+        
+        // Check size before saving (localStorage limit is ~5-10MB)
+        const totalSize = scansJson.length + entriesJson.length;
+        const maxSize = 4 * 1024 * 1024; // 4MB limit (conservative)
+        
+        if (totalSize > maxSize) {
+          console.warn('Data too large for localStorage, keeping only recent data');
+          // Keep only the most recent scans/entries
+          const maxScans = Math.max(1, Math.floor(unverifiedScans.length * 0.5)); // Keep 50%
+          const maxEntries = Math.max(10, Math.floor(unverifiedEntries.length * 0.5));
+          
+          const trimmedScans = scansWithoutImages.slice(0, maxScans);
+          const trimmedEntries = unverifiedEntries.slice(0, maxEntries);
+          
+          localStorage.setItem('logextract_scans', JSON.stringify(trimmedScans));
+          localStorage.setItem('logextract_entries', JSON.stringify(trimmedEntries));
+        } else {
+          localStorage.setItem('logextract_scans', scansJson);
+          localStorage.setItem('logextract_entries', entriesJson);
+        }
       } else {
         // Clear localStorage if all scans are verified
         localStorage.removeItem('logextract_scans');
         localStorage.removeItem('logextract_entries');
       }
-    } catch (error) {
-      console.error('Error saving to localStorage:', error);
+    } catch (error: any) {
+      // Handle quota exceeded error gracefully
+      if (error.name === 'QuotaExceededError' || error.message?.includes('quota')) {
+        console.warn('localStorage quota exceeded, clearing old data');
+        try {
+          // Clear old data and try again with reduced data
+          localStorage.removeItem('logextract_scans');
+          localStorage.removeItem('logextract_entries');
+          
+          // Save only the most recent 5 scans
+          const recentScans = scans
+            .filter(s => s.status !== 'verified')
+            .slice(0, 5)
+            .map(scan => ({ ...scan, images: [] }));
+          const recentEntries = entries
+            .filter(e => !e.isVerified)
+            .slice(0, 50);
+          
+          if (recentScans.length > 0 || recentEntries.length > 0) {
+            localStorage.setItem('logextract_scans', JSON.stringify(recentScans));
+            localStorage.setItem('logextract_entries', JSON.stringify(recentEntries));
+          }
+        } catch (retryError) {
+          console.error('Failed to save even after clearing:', retryError);
+        }
+      } else {
+        console.error('Error saving to localStorage:', error);
+      }
     }
   }, [scans, entries]);
 
