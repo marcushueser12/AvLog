@@ -3,8 +3,17 @@ import { AppTab } from '../types';
 import AuthModal from './AuthModal';
 import SoftwareApplicationSchema from './SoftwareApplicationSchema';
 import { useAuth } from '../contexts/AuthContext';
-import { Plane, FileText, CloudUpload, Clock, Menu, X, ChevronRight, Shield, CheckCircle2, Grid3x3, MessageSquare } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { Plane, FileText, CloudUpload, Clock, Menu, X, ChevronRight, Shield, CheckCircle2, Grid3x3, MessageSquare, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
+
+interface Review {
+  id: string;
+  reviewer_name: string;
+  rating: number;
+  review_text: string;
+  created_at: string;
+}
 
 interface LandingPageProps {
   onStart: (tab?: AppTab) => void;
@@ -16,7 +25,34 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [featuredReviews, setFeaturedReviews] = useState<Review[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(true);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Load featured reviews (top 3 highest rated, most recent)
+  useEffect(() => {
+    const loadFeaturedReviews = async () => {
+      try {
+        setLoadingReviews(true);
+        const { data, error } = await supabase
+          .from('reviews')
+          .select('id, reviewer_name, rating, review_text, created_at')
+          .eq('approved', true)
+          .order('rating', { ascending: false })
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        if (error) throw error;
+        setFeaturedReviews(data || []);
+      } catch (error) {
+        console.error('Error loading featured reviews:', error);
+      } finally {
+        setLoadingReviews(false);
+      }
+    };
+
+    loadFeaturedReviews();
+  }, []);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -293,6 +329,79 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
           <Plane className="w-[600px] h-[600px]" aria-hidden="true" />
         </div>
       </main>
+
+      {/* Featured Reviews Section */}
+      {!loadingReviews && featuredReviews.length > 0 && (
+        <section className="relative z-10 py-12 md:py-16 px-4 sm:px-6 bg-white border-t border-[#E2E8F0]">
+          <div className="max-w-6xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="text-center mb-8"
+            >
+              <h2 className="text-2xl md:text-3xl font-black text-[#003366] mb-2 tracking-tight">
+                What Pilots Say
+              </h2>
+              <p className="text-[#003366]/70 text-sm md:text-base">
+                Real feedback from pilots using LogExtract
+              </p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+              {featuredReviews.map((review, index) => (
+                <motion.div
+                  key={review.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  className="bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-xl p-5 shadow-sm hover:shadow-md transition-all"
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="flex gap-0.5">
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-4 h-4 ${
+                            i < review.rating
+                              ? 'text-amber-400 fill-amber-400'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-sm font-semibold text-[#003366] mb-2">
+                    {review.reviewer_name}
+                  </p>
+                  <p className="text-xs text-[#003366]/70 leading-relaxed line-clamp-4">
+                    {review.review_text}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="text-center mt-8"
+            >
+              <button
+                onClick={() => onStart('reviews')}
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-xl font-semibold transition-all shadow-lg shadow-[#003366]/20 text-sm min-h-[48px]"
+                aria-label="View all reviews"
+              >
+                <MessageSquare className="w-4 h-4" />
+                View All Reviews
+              </button>
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       {/* Founder's Note Section */}
       <section className="relative z-10 py-20 px-4 sm:px-6 bg-white/80 backdrop-blur-sm border-t border-[#E2E8F0]">
