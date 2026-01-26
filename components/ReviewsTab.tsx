@@ -36,8 +36,22 @@ const ReviewsTab: React.FC = () => {
 
   useEffect(() => {
     loadReviews();
-    checkAdminStatus();
+    if (user) {
+      checkAdminStatus();
+    } else {
+      setIsAdmin(false);
+      setPendingReviews([]);
+    }
   }, [user]);
+  
+  // Reload pending reviews when isAdmin changes
+  useEffect(() => {
+    if (isAdmin) {
+      loadPendingReviews(true);
+    } else {
+      setPendingReviews([]);
+    }
+  }, [isAdmin]);
 
   const checkAdminStatus = async () => {
     if (user) {
@@ -68,8 +82,11 @@ const ReviewsTab: React.FC = () => {
             });
           }
           
+          // Force load pending reviews if admin (bypass isAdmin check since state update is async)
           if (adminStatus) {
-            loadPendingReviews();
+            loadPendingReviews(true);
+          } else {
+            setPendingReviews([]);
           }
         } else {
           const errorData = await response.json().catch(() => ({}));
@@ -103,8 +120,9 @@ const ReviewsTab: React.FC = () => {
     }
   };
 
-  const loadPendingReviews = async () => {
-    if (!isAdmin) return;
+  const loadPendingReviews = async (forceLoad = false) => {
+    // Allow force loading even if isAdmin isn't set yet (for async state updates)
+    if (!isAdmin && !forceLoad) return;
     try {
       const { data, error } = await supabase
         .from('reviews')
@@ -114,6 +132,11 @@ const ReviewsTab: React.FC = () => {
 
       if (error) throw error;
       setPendingReviews(data || []);
+      
+      // Log for debugging
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Loaded pending reviews:', data?.length || 0);
+      }
     } catch (error) {
       console.error('Error loading pending reviews:', error);
     }
@@ -155,7 +178,7 @@ const ReviewsTab: React.FC = () => {
       });
       
       if (isAdmin) {
-        loadPendingReviews();
+        loadPendingReviews(true);
       }
     } catch (error) {
       console.error('Error submitting review:', error);
@@ -189,7 +212,7 @@ const ReviewsTab: React.FC = () => {
         throw new Error(errorData.error || 'Failed to update review');
       }
 
-      await loadPendingReviews();
+      await loadPendingReviews(true);
       await loadReviews();
     } catch (error: any) {
       console.error('Error approving review:', error);
