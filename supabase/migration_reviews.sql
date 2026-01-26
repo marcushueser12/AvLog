@@ -47,6 +47,7 @@ CREATE OR REPLACE FUNCTION approve_review(review_id UUID, approve_status BOOLEAN
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_catalog
 AS $$
 BEGIN
   UPDATE reviews
@@ -71,6 +72,7 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_catalog
 AS $$
 BEGIN
   RETURN QUERY
