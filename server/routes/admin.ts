@@ -167,23 +167,40 @@ router.get(
  */
 router.get('/check', verifyAuth, async (req: any, res) => {
   try {
-    // Check against admin email list from environment variable
-    const adminEmailsRaw = process.env.ADMIN_EMAILS || '';
-    const adminEmails = adminEmailsRaw
-      .split(',')
-      .map(e => e.trim().toLowerCase())
-      .filter(e => e.length > 0);
+    const userId = req.userId!;
     
-    const userEmail = (req.userEmail || '').toLowerCase().trim();
-    const isAdmin = adminEmails.includes(userEmail);
+    // First, check database for is_admin flag (preferred method)
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('user_id', userId)
+      .single();
+    
+    let isAdmin = false;
+    
+    if (!profileError && profile) {
+      // Use database is_admin flag if profile exists
+      isAdmin = profile.is_admin || false;
+    } else {
+      // Fallback to email list check if profile doesn't exist or doesn't have is_admin set
+      const adminEmailsRaw = process.env.ADMIN_EMAILS || '';
+      const adminEmails = adminEmailsRaw
+        .split(',')
+        .map(e => e.trim().toLowerCase())
+        .filter(e => e.length > 0);
+      
+      const userEmail = (req.userEmail || '').toLowerCase().trim();
+      isAdmin = adminEmails.includes(userEmail);
+    }
     
     // Log for debugging (only in development)
     if (process.env.NODE_ENV === 'development') {
       console.log('Admin check:', {
-        userEmail,
-        adminEmails,
+        userId,
+        userEmail: req.userEmail,
         isAdmin,
-        hasAdminEmails: adminEmails.length > 0
+        fromDatabase: !profileError && profile ? profile.is_admin : null,
+        fromEmailList: profileError ? 'checked' : 'not checked'
       });
     }
     
