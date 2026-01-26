@@ -1,6 +1,7 @@
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { Request, Response, NextFunction } from 'express';
+import { sanitizeForLogging } from '../utils/sanitize.js';
 
 /**
  * General API rate limiter - applies to all API routes
@@ -49,6 +50,52 @@ export const extractionLimiter = rateLimit({
   legacyHeaders: false,
   skipSuccessfulRequests: false,
   skip: (req) => req.method === 'OPTIONS', // Skip rate limiting for preflight requests
+});
+
+/**
+ * Rate limiter for admin endpoints
+ * Stricter limits for admin operations
+ */
+export const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 50, // Limit each IP to 50 admin requests per windowMs
+  message: {
+    error: 'Too many admin requests. Please wait before trying again.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => req.method === 'OPTIONS',
+});
+
+/**
+ * Rate limiter for webhook endpoints
+ * Webhooks should be called by Stripe, not users
+ * Very strict limits
+ */
+export const webhookLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Allow more webhook requests (Stripe may retry)
+  message: {
+    error: 'Too many webhook requests.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => req.method === 'OPTIONS',
+});
+
+/**
+ * Rate limiter for authenticated API endpoints
+ * Applied to routes that require authentication
+ */
+export const authenticatedLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // Limit each IP to 200 authenticated requests per windowMs
+  message: {
+    error: 'Too many requests. Please wait before trying again.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => req.method === 'OPTIONS',
 });
 
 /**
@@ -212,6 +259,7 @@ export const validateExpectedCount = (req: Request, res: Response, next: NextFun
 
 /**
  * Request logging middleware for security monitoring
+ * Sanitizes sensitive data before logging
  */
 export const securityLogger = (req: Request, res: Response, next: NextFunction) => {
   const startTime = Date.now();
@@ -226,15 +274,18 @@ export const securityLogger = (req: Request, res: Response, next: NextFunction) 
       statusCode: res.statusCode,
       duration: `${duration}ms`,
       timestamp: new Date().toISOString(),
+      // Sanitize body and headers to prevent logging sensitive data
+      body: req.body ? sanitizeForLogging(req.body) : undefined,
+      headers: req.headers ? sanitizeForLogging(req.headers) : undefined,
     };
 
     // Only log errors and slow requests in production
     if (process.env.NODE_ENV === 'production') {
       if (res.statusCode >= 400 || duration > 5000) {
-        console.warn('Security/Performance Alert:', logData);
+        console.warn('Security/Performance Alert:', sanitizeForLogging(logData));
       }
     } else {
-      console.log('Request:', logData);
+      console.log('Request:', sanitizeForLogging(logData));
     }
   });
 

@@ -1,6 +1,7 @@
 import express from 'express';
 import { verifyAdmin, verifyAuth, AuthRequest } from '../middleware/auth.js';
 import { supabaseAdmin } from '../lib/supabase.js';
+import { validateAndSanitizeBody, validateParams } from '../middleware/validation.js';
 
 const router = express.Router();
 
@@ -10,21 +11,17 @@ const router = express.Router();
  * Requires: x-admin-token header
  * Body: { userEmail: string, amount: number, reason?: string }
  */
-router.post('/grant-credits', verifyAdmin, async (req, res) => {
+router.post(
+  '/grant-credits',
+  verifyAdmin,
+  validateAndSanitizeBody({
+    userEmail: { type: 'email', required: true },
+    amount: { type: 'number', required: true, min: 0.01, max: 1000000 },
+    reason: { type: 'text', required: false, maxLength: 500 },
+  }),
+  async (req, res) => {
   try {
     const { userEmail, amount, reason } = req.body;
-
-    if (!userEmail || typeof amount !== 'number') {
-      return res.status(400).json({ 
-        error: 'Missing required fields: userEmail and amount' 
-      });
-    }
-
-    if (amount <= 0) {
-      return res.status(400).json({ 
-        error: 'Amount must be a positive number' 
-      });
-    }
 
     // Find user by email using admin API - list users and filter by email
     const { data: users, error: userError } = await supabaseAdmin.auth.admin.listUsers();
@@ -98,17 +95,31 @@ router.post('/grant-credits', verifyAdmin, async (req, res) => {
     });
   } catch (error: any) {
     console.error('Admin grant credits error:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
+    });
   }
-});
+  }
+);
 
 /**
  * GET /api/admin/user-credits/:email
  * Get credits for a user (admin only)
  */
-router.get('/user-credits/:email', verifyAdmin, async (req, res) => {
+router.get(
+  '/user-credits/:email',
+  verifyAdmin,
+  validateParams({ email: 'string' }),
+  async (req, res) => {
   try {
     const { email } = req.params;
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
 
     // Find user by email - list users and filter by email
     const { data: users, error: userError } = await supabaseAdmin.auth.admin.listUsers();
@@ -141,9 +152,13 @@ router.get('/user-credits/:email', verifyAdmin, async (req, res) => {
     });
   } catch (error: any) {
     console.error('Admin get credits error:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
+    });
   }
-});
+  }
+);
 
 /**
  * GET /api/admin/check
@@ -186,28 +201,24 @@ router.get('/check', verifyAuth, async (req: any, res) => {
  * Requires: authenticated user + admin email OR admin token
  * Body: { reviewId: string, approve: boolean }
  */
-router.post('/approve-review', verifyAuth, async (req: any, res) => {
+router.post(
+  '/approve-review',
+  verifyAuth,
+  validateAndSanitizeBody({
+    reviewId: { type: 'id', required: true },
+    approve: { type: 'boolean', required: true },
+  }),
+  async (req: any, res) => {
   try {
-    // Verify admin access
-    const adminEmails = process.env.ADMIN_EMAILS?.split(',') || [];
-    const adminToken = req.headers['x-admin-token'] as string;
-    const secretToken = process.env.ADMIN_SECRET_TOKEN;
-    
-    // Check if user is admin by email OR has valid admin token
+    // Verify admin access - only check email (admin token should never be client-side)
+    const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()).filter(e => e) || [];
     const isAdminByEmail = adminEmails.includes(req.userEmail || '');
-    const isAdminByToken = secretToken && adminToken === secretToken;
     
-    if (!isAdminByEmail && !isAdminByToken) {
+    if (!isAdminByEmail) {
       return res.status(403).json({ error: 'Unauthorized - Admin access required' });
     }
     
     const { reviewId, approve } = req.body;
-
-    if (!reviewId || typeof approve !== 'boolean') {
-      return res.status(400).json({ 
-        error: 'Missing required fields: reviewId and approve' 
-      });
-    }
 
     const { error } = await supabaseAdmin
       .from('reviews')
@@ -230,8 +241,12 @@ router.post('/approve-review', verifyAuth, async (req: any, res) => {
     });
   } catch (error: any) {
     console.error('Admin approve review error:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
+    });
   }
-});
+  }
+);
 
 export default router;

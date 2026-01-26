@@ -216,18 +216,19 @@ import adminRoutes from './routes/admin.js';
 import verifiedRoutes from './routes/verified.js';
 import paymentRoutes from './routes/payments.js';
 import aircraftRoutes from './routes/aircraft.js';
+import { adminLimiter, webhookLimiter, authenticatedLimiter } from './middleware/security.js';
 
-// Admin routes (protected by secret token)
-app.use('/api/admin', adminRoutes);
+// Admin routes (protected by secret token + rate limiting)
+app.use('/api/admin', adminLimiter, adminRoutes);
 
-// Verified entries routes (protected by auth token)
-app.use('/api/verified', verifiedRoutes);
+// Verified entries routes (protected by auth token + rate limiting)
+app.use('/api/verified', authenticatedLimiter, verifiedRoutes);
 
-// Payment routes (checkout session requires auth, webhook is public)
+// Payment routes (checkout session requires auth, webhook is public with rate limiting)
 app.use('/api/payments', paymentRoutes);
 
-// Aircraft profiles routes (protected by auth token)
-app.use('/api', aircraftRoutes);
+// Aircraft profiles routes (protected by auth token + rate limiting)
+app.use('/api', authenticatedLimiter, aircraftRoutes);
 
 // Serve frontend for all non-API routes (SPA routing)
 if (process.env.NODE_ENV === 'production') {
@@ -247,12 +248,25 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-// Error handling middleware
+// Error handling middleware - sanitize error messages to prevent information disclosure
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Unhandled error:', err);
+  // Log full error details server-side (sanitized)
+  const sanitizedError = {
+    message: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+    path: req.path,
+    method: req.method,
+  };
+  console.error('Unhandled error:', sanitizedError);
+  
+  // Don't expose internal error details to clients
   res.status(500).json({ 
     error: 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && { details: err.message })
+    // Only include error details in development
+    ...(process.env.NODE_ENV === 'development' && { 
+      details: err.message,
+      path: req.path 
+    })
   });
 });
 

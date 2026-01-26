@@ -1,6 +1,7 @@
 import express from 'express';
 import { supabaseAdmin } from '../lib/supabase.js';
 import { verifyAuth, AuthRequest } from '../middleware/auth.js';
+import { validateAndSanitizeBody, validateParams } from '../middleware/validation.js';
 
 const router = express.Router();
 
@@ -46,12 +47,33 @@ router.get('/aircraft', verifyAuth, async (req: AuthRequest, res) => {
     res.json({ aircraft: transformedAircraft });
   } catch (error: any) {
     console.error('Error fetching aircraft profiles:', error);
-    res.status(500).json({ error: error.message || 'Failed to fetch aircraft profiles' });
+    res.status(500).json({ 
+      error: 'Failed to fetch aircraft profiles',
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
+    });
   }
 });
 
 // Create or update an aircraft profile
-router.post('/aircraft', verifyAuth, async (req: AuthRequest, res) => {
+router.post(
+  '/aircraft',
+  verifyAuth,
+  validateAndSanitizeBody({
+    aircraftId: { type: 'string', required: true, maxLength: 50 },
+    equipmentType: { type: 'string', required: false, maxLength: 100 },
+    typeCode: { type: 'string', required: false, maxLength: 50 },
+    year: { type: 'string', required: false, maxLength: 10 },
+    make: { type: 'string', required: false, maxLength: 100 },
+    model: { type: 'string', required: false, maxLength: 100 },
+    gearType: { type: 'string', required: false, maxLength: 50 },
+    engineType: { type: 'string', required: false, maxLength: 50 },
+    categoryClass: { type: 'string', required: false, maxLength: 50 },
+    complex: { type: 'boolean', required: false },
+    highPerformance: { type: 'boolean', required: false },
+    pressurized: { type: 'boolean', required: false },
+    taa: { type: 'boolean', required: false },
+  }),
+  async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
     const {
@@ -69,10 +91,6 @@ router.post('/aircraft', verifyAuth, async (req: AuthRequest, res) => {
       pressurized = false,
       taa = false
     } = req.body;
-
-    if (!aircraftId || !aircraftId.trim()) {
-      return res.status(400).json({ error: 'Aircraft ID is required' });
-    }
 
     // Normalize aircraft ID: add "N" prefix if not present and convert to uppercase
     let normalizedAircraftId = aircraftId.trim().toUpperCase();
@@ -146,13 +164,21 @@ router.post('/aircraft', verifyAuth, async (req: AuthRequest, res) => {
       // Unique constraint violation
       res.status(409).json({ error: 'An aircraft profile with this ID already exists' });
     } else {
-      res.status(500).json({ error: error.message || 'Failed to save aircraft profile' });
+      res.status(500).json({ 
+        error: 'Failed to save aircraft profile',
+        ...(process.env.NODE_ENV === 'development' && { details: error.message })
+      });
     }
   }
-});
+  }
+);
 
 // Delete an aircraft profile
-router.delete('/aircraft/:id', verifyAuth, async (req: AuthRequest, res) => {
+router.delete(
+  '/aircraft/:id',
+  verifyAuth,
+  validateParams({ id: 'id' }),
+  async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
     const { id } = req.params;
@@ -168,8 +194,12 @@ router.delete('/aircraft/:id', verifyAuth, async (req: AuthRequest, res) => {
     res.json({ success: true });
   } catch (error: any) {
     console.error('Error deleting aircraft profile:', error);
-    res.status(500).json({ error: error.message || 'Failed to delete aircraft profile' });
+    res.status(500).json({ 
+      error: 'Failed to delete aircraft profile',
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
+    });
   }
-});
+  }
+);
 
 export default router;

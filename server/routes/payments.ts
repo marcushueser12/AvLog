@@ -2,6 +2,8 @@ import express from 'express';
 import Stripe from 'stripe';
 import { verifyAuth, AuthRequest } from '../middleware/auth.js';
 import { supabaseAdmin } from '../lib/supabase.js';
+import { webhookLimiter, authenticatedLimiter } from '../middleware/security.js';
+import { validateAndSanitizeBody } from '../middleware/validation.js';
 
 const router = express.Router();
 
@@ -38,7 +40,21 @@ const PRICING_TIERS = {
  * Requires: Authorization Bearer token
  * Body: { packageType: 'private' | 'commercial' | 'atp' }
  */
-router.post('/create-checkout-session', verifyAuth, async (req: AuthRequest, res) => {
+router.post(
+  '/create-checkout-session',
+  authenticatedLimiter,
+  verifyAuth,
+  validateAndSanitizeBody({
+    packageType: {
+      type: 'string',
+      required: true,
+      validate: (value: string) => {
+        const validTypes = ['private', 'commercial', 'atp'];
+        return validTypes.includes(value) || 'packageType must be one of: private, commercial, atp';
+      },
+    },
+  }),
+  async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
     const userEmail = req.userEmail!;
@@ -109,18 +125,21 @@ router.post('/create-checkout-session', verifyAuth, async (req: AuthRequest, res
     });
   } catch (error: any) {
     console.error('Create checkout session error:', error);
+    // Don't expose internal error details
     res.status(500).json({ 
-      error: error.message || 'Failed to create checkout session' 
+      error: 'Failed to create checkout session',
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
     });
   }
-});
+  }
+);
 
 /**
  * POST /api/payments/webhook
  * Stripe webhook endpoint to handle payment events
  * This endpoint is called by Stripe, not your frontend
  */
-router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+router.post('/webhook', webhookLimiter, express.raw({ type: 'application/json' }), async (req, res) => {
   const sig = req.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 

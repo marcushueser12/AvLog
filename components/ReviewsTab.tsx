@@ -156,7 +156,8 @@ const ReviewsTab: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
-          'x-admin-token': import.meta.env.VITE_ADMIN_TOKEN || '' // Admin token for backend verification
+          // Admin token should NOT be client-side - removed for security
+          // Admin access is verified server-side via ADMIN_EMAILS or ADMIN_SECRET_TOKEN
         },
         body: JSON.stringify({ reviewId, approve })
       });

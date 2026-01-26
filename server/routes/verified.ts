@@ -2,6 +2,8 @@ import express from 'express';
 import { verifyAuth, AuthRequest } from '../middleware/auth.js';
 import { supabaseAdmin } from '../lib/supabase.js';
 import type { LogbookEntry } from '../../types.js';
+import { validateParams } from '../middleware/validation.js';
+import { sanitizeString, sanitizeText, sanitizeStringArray } from '../utils/sanitize.js';
 
 const router = express.Router();
 
@@ -176,7 +178,10 @@ router.post('/save-scan', verifyAuth, async (req: AuthRequest, res) => {
     });
   } catch (error: any) {
     console.error('Save verified scan error:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
+    });
   }
 });
 
@@ -276,11 +281,11 @@ router.put('/update-scan', verifyAuth, async (req: AuthRequest, res) => {
       user_id: userId,
       scan_id: scanId,
       date: parseDate(entry.date),
-      aircraft_id: entry.aircraftId?.trim() || null,
-      aircraft_type: entry.aircraftType?.trim() || null,
-      from_location: entry.from?.trim() || null,
-      to_location: entry.to?.trim() || null,
-      route: entry.route?.trim() || null,
+      aircraft_id: sanitizeString(entry.aircraftId, 50) || null,
+      aircraft_type: sanitizeString(entry.aircraftType, 100) || null,
+      from_location: sanitizeString(entry.from, 10) || null,
+      to_location: sanitizeString(entry.to, 10) || null,
+      route: sanitizeString(entry.route, 200) || null,
       total_time: parseFloatOrNull(entry.totalTime),
       day: parseFloatOrNull(entry.day),
       night: parseFloatOrNull(entry.night),
@@ -295,14 +300,14 @@ router.put('/update-scan', verifyAuth, async (req: AuthRequest, res) => {
       approaches: parseIntOrNull(entry.approaches),
       landings_day: parseIntOrNull(entry.landingsDay),
       landings_night: parseIntOrNull(entry.landingsNight),
-      ground_received: entry.groundReceived?.trim() || null,
-      ground_given: entry.groundGiven?.trim() || null,
-      comments: entry.comments?.trim() || null,
+      ground_received: sanitizeString(entry.groundReceived, 50) || null,
+      ground_given: sanitizeString(entry.groundGiven, 50) || null,
+      comments: sanitizeText(entry.comments, 1000) || null,
       is_verified: entry.isVerified ?? true,
       ai_confidence: entry.aiConfidence || null,
       reconciliation_confidence: entry.reconciliationConfidence || null,
-      uncertain_fields: entry.uncertainFields && entry.uncertainFields.length > 0 ? entry.uncertainFields : null,
-      row_anchor: entry.rowAnchor?.trim() || null
+      uncertain_fields: entry.uncertainFields && entry.uncertainFields.length > 0 ? sanitizeStringArray(entry.uncertainFields, 100, 50) : null,
+      row_anchor: sanitizeString(entry.rowAnchor, 50) || null
     }));
 
     // If we have entries to insert, do so
@@ -330,9 +335,13 @@ router.put('/update-scan', verifyAuth, async (req: AuthRequest, res) => {
     });
   } catch (error: any) {
     console.error('Update verified scan error:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
+    });
   }
-});
+  }
+);
 
 /**
  * GET /api/verified/scans
@@ -356,7 +365,10 @@ router.get('/scans', verifyAuth, async (req: AuthRequest, res) => {
     res.json({ scans: scans || [] });
   } catch (error: any) {
     console.error('Get scans error:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
+    });
   }
 });
 
@@ -364,7 +376,11 @@ router.get('/scans', verifyAuth, async (req: AuthRequest, res) => {
  * GET /api/verified/entries/:scanId
  * Get entries for a specific verified scan
  */
-router.get('/entries/:scanId', verifyAuth, async (req: AuthRequest, res) => {
+router.get(
+  '/entries/:scanId',
+  verifyAuth,
+  validateParams({ scanId: 'id' }),
+  async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
     const { scanId } = req.params;
@@ -443,9 +459,13 @@ router.get('/entries/:scanId', verifyAuth, async (req: AuthRequest, res) => {
     res.json({ entries: transformedEntries });
   } catch (error: any) {
     console.error('Get entries error:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
+    });
   }
-});
+  }
+);
 
 /**
  * GET /api/verified/credits
@@ -474,7 +494,10 @@ router.get('/credits', verifyAuth, async (req: AuthRequest, res) => {
     res.json({ credits: profile?.credits || 0 });
   } catch (error: any) {
     console.error('Get credits error:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
+    });
   }
 });
 
@@ -558,7 +581,10 @@ router.post('/deduct-credits', verifyAuth, async (req: AuthRequest, res) => {
     });
   } catch (error: any) {
     console.error('Deduct credits error:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
+    });
   }
 });
 
@@ -632,7 +658,10 @@ router.post('/refund-credits', verifyAuth, async (req: AuthRequest, res) => {
     });
   } catch (error: any) {
     console.error('Refund credits error:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
+    });
   }
 });
 
@@ -641,7 +670,11 @@ router.post('/refund-credits', verifyAuth, async (req: AuthRequest, res) => {
  * Delete a verified scan and all its entries
  * Requires: Authorization Bearer token
  */
-router.delete('/scan/:scanId', verifyAuth, async (req: AuthRequest, res) => {
+router.delete(
+  '/scan/:scanId',
+  verifyAuth,
+  validateParams({ scanId: 'id' }),
+  async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
     const { scanId } = req.params;
@@ -688,8 +721,12 @@ router.delete('/scan/:scanId', verifyAuth, async (req: AuthRequest, res) => {
     });
   } catch (error: any) {
     console.error('Delete scan error:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
+    });
   }
-});
+  }
+);
 
 export default router;
