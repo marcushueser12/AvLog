@@ -12,6 +12,7 @@ interface Review {
   reviewer_email: string | null;
   rating: number;
   review_text: string;
+  pilot_ratings: string | null;
   approved: boolean;
   created_at: string;
   updated_at: string;
@@ -31,7 +32,8 @@ const ReviewsTab: React.FC = () => {
     reviewer_name: user?.user_metadata?.full_name || '',
     reviewer_email: user?.email || '',
     rating: 5,
-    review_text: ''
+    review_text: '',
+    pilot_ratings: ''
   });
 
   useEffect(() => {
@@ -160,6 +162,7 @@ const ReviewsTab: React.FC = () => {
             reviewer_email: formData.reviewer_email.trim() || null,
             rating: formData.rating,
             review_text: formData.review_text.trim(),
+            pilot_ratings: formData.pilot_ratings.trim() || null,
             approved: false // Requires admin approval
           }
         ])
@@ -174,7 +177,8 @@ const ReviewsTab: React.FC = () => {
         reviewer_name: user?.user_metadata?.full_name || '',
         reviewer_email: user?.email || '',
         rating: 5,
-        review_text: ''
+        review_text: '',
+        pilot_ratings: ''
       });
       
       if (isAdmin) {
@@ -317,6 +321,21 @@ const ReviewsTab: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-[#003366] mb-2">
+                  Your Ratings (optional)
+                </label>
+                <input
+                  type="text"
+                  value={formData.pilot_ratings}
+                  onChange={(e) => setFormData({ ...formData, pilot_ratings: e.target.value })}
+                  className="w-full px-4 py-2 border border-[#E2E8F0] rounded-lg focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF] outline-none"
+                  placeholder="e.g., Instrument Pilot, Commercial Pilot, CFI"
+                />
+                <p className="text-xs text-[#003366]/60 mt-1">
+                  Include your certifications or ratings to add credibility (e.g., "Instrument Pilot", "Commercial Pilot", "CFI", "ATP")
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-[#003366] mb-2">
                   Rating *
                 </label>
                 <div className="flex gap-2">
@@ -386,7 +405,14 @@ const ReviewsTab: React.FC = () => {
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <p className="font-semibold text-[#003366]">{review.reviewer_name}</p>
+                      <p className="font-semibold text-[#003366]">
+                        {review.reviewer_name}
+                        {review.pilot_ratings && (
+                          <span className="text-[#003366]/60 font-normal">
+                            {' • '}{review.pilot_ratings}
+                          </span>
+                        )}
+                      </p>
                       <div className="flex items-center gap-2 mt-1">
                         {renderStars(review.rating)}
                       </div>
@@ -439,7 +465,14 @@ const ReviewsTab: React.FC = () => {
                       <User className="w-5 h-5 text-[#007BFF]" />
                     </div>
                     <div>
-                      <p className="font-bold text-[#003366]">{review.reviewer_name}</p>
+                      <p className="font-bold text-[#003366]">
+                        {review.reviewer_name}
+                        {review.pilot_ratings && (
+                          <span className="text-[#003366]/60 font-normal">
+                            {' • '}{review.pilot_ratings}
+                          </span>
+                        )}
+                      </p>
                       <div className="flex items-center gap-1 mt-1">
                         {renderStars(review.rating)}
                       </div>

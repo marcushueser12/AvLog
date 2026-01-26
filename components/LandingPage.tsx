@@ -12,6 +12,7 @@ interface Review {
   reviewer_name: string;
   rating: number;
   review_text: string;
+  pilot_ratings?: string | null;
   created_at: string;
 }
 
@@ -36,7 +37,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
         setLoadingReviews(true);
         const { data, error } = await supabase
           .from('reviews')
-          .select('id, reviewer_name, rating, review_text, created_at')
+          .select('id, reviewer_name, rating, review_text, pilot_ratings, created_at')
           .eq('approved', true)
           .order('rating', { ascending: false })
           .order('created_at', { ascending: false })
@@ -293,7 +294,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             </div>
             <h3 className="text-xl font-bold text-[#003366] mb-3 tracking-tight">AI Handwriting Engine</h3>
             <p className="text-[#003366]/70 text-sm leading-relaxed">
-              Built on Gemini 3 Pro, LogExtract understands messy handwriting, ink smears, and pilot shorthand with superhuman accuracy.
+              Built on our software, LogExtract understands messy handwriting, ink smears, and pilot shorthand with superhuman accuracy.
             </p>
           </motion.div>
 
@@ -375,6 +376,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                   </div>
                   <p className="text-sm font-semibold text-[#003366] mb-2">
                     {review.reviewer_name}
+                    {review.pilot_ratings && (
+                      <span className="text-[#003366]/60 font-normal">
+                        {' • '}{review.pilot_ratings}
+                      </span>
+                    )}
                   </p>
                   <p className="text-xs text-[#003366]/70 leading-relaxed line-clamp-4">
                     {review.review_text}
