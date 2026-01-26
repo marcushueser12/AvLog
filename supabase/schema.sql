@@ -197,13 +197,17 @@ CREATE POLICY "Users can delete own aircraft profiles"
 
 -- Function to automatically create user profile on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER 
+LANGUAGE plpgsql 
+SECURITY DEFINER
+SET search_path = public, pg_catalog
+AS $$
 BEGIN
   INSERT INTO public.user_profiles (user_id, credits, plan_type)
   VALUES (NEW.id, 3, 'free'); -- Default: 3 credits for new users
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- Trigger to create profile when user signs up
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
@@ -213,12 +217,15 @@ CREATE TRIGGER on_auth_user_created
 
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER 
+LANGUAGE plpgsql
+SET search_path = public, pg_catalog
+AS $$
 BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 -- Triggers to auto-update updated_at
 DROP TRIGGER IF EXISTS update_user_profiles_updated_at ON user_profiles;
