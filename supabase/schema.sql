@@ -126,54 +126,54 @@ ALTER TABLE aircraft_profiles ENABLE ROW LEVEL SECURITY;
 -- User profiles policies
 CREATE POLICY "Users can view own profile"
   ON user_profiles FOR SELECT
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 CREATE POLICY "Users can update own profile"
   ON user_profiles FOR UPDATE
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 CREATE POLICY "Users can insert own profile"
   ON user_profiles FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK ((select auth.uid()) = user_id);
 
 -- Verified scans policies
 CREATE POLICY "Users can view own scans"
   ON verified_scans FOR SELECT
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 CREATE POLICY "Users can insert own scans"
   ON verified_scans FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK ((select auth.uid()) = user_id);
 
 CREATE POLICY "Users can update own scans"
   ON verified_scans FOR UPDATE
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 CREATE POLICY "Users can delete own scans"
   ON verified_scans FOR DELETE
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 -- Verified entries policies
 CREATE POLICY "Users can view own entries"
   ON verified_entries FOR SELECT
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 CREATE POLICY "Users can insert own entries"
   ON verified_entries FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK ((select auth.uid()) = user_id);
 
 CREATE POLICY "Users can update own entries"
   ON verified_entries FOR UPDATE
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 CREATE POLICY "Users can delete own entries"
   ON verified_entries FOR DELETE
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 -- Credit transactions policies (users can view their own transactions)
 CREATE POLICY "Users can view own transactions"
   ON credit_transactions FOR SELECT
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 -- Note: Credit transactions are INSERTED by the backend (not by users directly)
 -- The backend uses service role key, which bypasses RLS
@@ -181,19 +181,19 @@ CREATE POLICY "Users can view own transactions"
 -- Aircraft profiles policies
 CREATE POLICY "Users can view own aircraft profiles"
   ON aircraft_profiles FOR SELECT
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 CREATE POLICY "Users can insert own aircraft profiles"
   ON aircraft_profiles FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK ((select auth.uid()) = user_id);
 
 CREATE POLICY "Users can update own aircraft profiles"
   ON aircraft_profiles FOR UPDATE
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 CREATE POLICY "Users can delete own aircraft profiles"
   ON aircraft_profiles FOR DELETE
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 -- Function to automatically create user profile on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()

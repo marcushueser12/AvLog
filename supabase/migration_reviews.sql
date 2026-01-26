@@ -23,20 +23,19 @@ CREATE INDEX IF NOT EXISTS idx_reviews_rating ON reviews(rating);
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
--- Anyone can view approved reviews
-CREATE POLICY "Anyone can view approved reviews"
+-- Combined SELECT policy: Anyone can view approved reviews, OR users can view their own unapproved reviews
+-- This combines two policies into one for better performance
+CREATE POLICY "View approved or own reviews"
   ON reviews FOR SELECT
-  USING (approved = true);
+  USING (
+    approved = true 
+    OR (select auth.uid()) = user_id
+  );
 
 -- Authenticated users can insert their own reviews
 CREATE POLICY "Authenticated users can submit reviews"
   ON reviews FOR INSERT
-  WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
-
--- Users can view their own unapproved reviews
-CREATE POLICY "Users can view own reviews"
-  ON reviews FOR SELECT
-  USING (auth.uid() = user_id);
+  WITH CHECK ((select auth.uid()) = user_id OR user_id IS NULL);
 
 -- Admin can view and update all reviews (using service role key)
 -- Note: Admin operations should use service role key which bypasses RLS
