@@ -1173,7 +1173,10 @@ const App: React.FC = () => {
         </header>
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-8">
-          {!user ? (
+          {/* Reviews tab is accessible without authentication */}
+          {activeTab === 'reviews' ? (
+            <ReviewsTab />
+          ) : !user ? (
             <div className="flex flex-col items-center justify-center min-h-[400px] text-center px-4">
               <div className="bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl p-8 max-w-md w-full shadow-lg">
                 <div className="w-16 h-16 bg-[#007BFF]/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -1574,8 +1577,6 @@ const App: React.FC = () => {
             <TutorialTab />
           ) : activeTab === 'aircraft' ? (
             <AircraftProfilesTab />
-          ) : activeTab === 'reviews' ? (
-            <ReviewsTab />
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-center p-12 space-y-4">
                <div className="w-20 h-20 bg-slate-800 rounded-3xl flex items-center justify-center text-slate-600">
