@@ -40,26 +40,48 @@ const ReviewsTab: React.FC = () => {
   }, [user]);
 
   const checkAdminStatus = async () => {
-    // Check if user is admin (you can customize this logic)
-    // For now, we'll use a simple check - you might want to add an admin field to user_profiles
     if (user) {
       try {
         const token = getAccessToken();
+        if (!token) {
+          setIsAdmin(false);
+          return;
+        }
+        
         const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/admin/check`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
+        
         if (response.ok) {
           const data = await response.json();
-          setIsAdmin(data.isAdmin || false);
-          if (data.isAdmin) {
+          const adminStatus = data.isAdmin || false;
+          setIsAdmin(adminStatus);
+          
+          // Log for debugging
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Admin status check result:', {
+              userEmail: user.email,
+              isAdmin: adminStatus,
+              response: data
+            });
+          }
+          
+          if (adminStatus) {
             loadPendingReviews();
           }
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Admin check failed:', response.status, errorData);
+          setIsAdmin(false);
         }
       } catch (error) {
         console.error('Error checking admin status:', error);
+        setIsAdmin(false);
       }
+    } else {
+      setIsAdmin(false);
     }
   };
 

@@ -167,26 +167,25 @@ router.get(
  */
 router.get('/check', verifyAuth, async (req: any, res) => {
   try {
-    // Option 1: Check against admin email list
-    // TODO: Move this to environment variable or database for better security
-    const adminEmails = process.env.ADMIN_EMAILS?.split(',') || [
-      // Add your admin email(s) here, or set ADMIN_EMAILS env var (comma-separated)
-      // Example: 'admin@logextract.co'
-    ];
+    // Check against admin email list from environment variable
+    const adminEmailsRaw = process.env.ADMIN_EMAILS || '';
+    const adminEmails = adminEmailsRaw
+      .split(',')
+      .map(e => e.trim().toLowerCase())
+      .filter(e => e.length > 0);
     
-    const isAdmin = adminEmails.includes(req.userEmail || '');
+    const userEmail = (req.userEmail || '').toLowerCase().trim();
+    const isAdmin = adminEmails.includes(userEmail);
     
-    // Option 2: Check user_profiles.is_admin field (if you add it)
-    // Uncomment this if you add is_admin column to user_profiles:
-    /*
-    const { data: profile } = await supabaseAdmin
-      .from('user_profiles')
-      .select('is_admin')
-      .eq('user_id', req.userId)
-      .single();
-    
-    const isAdmin = profile?.is_admin || false;
-    */
+    // Log for debugging (only in development)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Admin check:', {
+        userEmail,
+        adminEmails,
+        isAdmin,
+        hasAdminEmails: adminEmails.length > 0
+      });
+    }
     
     res.json({ isAdmin });
   } catch (error: any) {
