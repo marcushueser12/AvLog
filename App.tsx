@@ -318,7 +318,7 @@ const App: React.FC = () => {
 
   const loadUserCredits = async () => {
     if (!user) {
-      setUserCredits(null);
+      setUserCredits(0); // Show 0 credits for non-authenticated users
       return;
     }
 
@@ -347,8 +347,15 @@ const App: React.FC = () => {
   const processPendingScans = async () => {
     // Check if user is signed in
     if (!user) {
-      alert('You must be signed in to use the extraction feature. Please sign in to continue.');
-      setShowAuthModal(true);
+      // Show a more user-friendly modal instead of alert
+      const shouldSignUp = window.confirm(
+        'Create a free account to start extracting your logbook entries.\n\n' +
+        'You\'ll get 3 free credits to get started. No credit card required.\n\n' +
+        'Click OK to create your account, or Cancel to continue browsing.'
+      );
+      if (shouldSignUp) {
+        setShowAuthModal(true);
+      }
       return;
     }
 
@@ -1173,29 +1180,11 @@ const App: React.FC = () => {
         </header>
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-8">
-          {/* Reviews tab is accessible without authentication */}
+          {/* All tabs are now accessible without authentication */}
           {activeTab === 'reviews' ? (
             <ReviewsTab />
-          ) : !user ? (
-            <div className="flex flex-col items-center justify-center min-h-[400px] text-center px-4">
-              <div className="bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl p-8 max-w-md w-full shadow-lg">
-                <div className="w-16 h-16 bg-[#007BFF]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Plane className="w-8 h-8 text-[#007BFF]" />
-                </div>
-                <h2 className="text-2xl font-bold text-[#003366] mb-3">Create a free account to start</h2>
-                <p className="text-[#003366]/70 mb-6">
-                  Sign up to access the logbook digitization features and start converting your paper logbooks.
-                </p>
-                <motion.button
-                  onClick={() => setShowAuthModal(true)}
-                  className="w-full px-6 py-3 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-xl font-semibold transition-all shadow-lg shadow-[#003366]/20 shiny-button"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Sign Up Free
-                </motion.button>
-              </div>
-            </div>
+          ) : activeTab === 'tutorial' ? (
+            <TutorialTab />
           ) : activeTab === 'permanent-log' ? (
             <PermanentLogTab />
           ) : activeTab === 'dashboard' ? (
