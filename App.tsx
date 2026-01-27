@@ -637,29 +637,30 @@ const App: React.FC = () => {
                   'Authorization': `Bearer ${token}`,
                   'Content-Type': 'application/json'
                 },
-              body: JSON.stringify({
-                aircraftId: aircraftData.aircraftId,
-                typeCode: aircraftData.aircraftType,
-                equipmentType: '',
-                year: '',
-                make: '',
-                model: '',
-                gearType: '',
-                engineType: '',
-                categoryClass: '',
-                complex: false,
-                highPerformance: false,
-                pressurized: false,
-                taa: false
-              })
-            });
-            // Don't throw on error - profile might already exist
-            if (aircraftResponse.ok) {
-              console.log(`Auto-created aircraft profile for ${aircraftId}`);
+                body: JSON.stringify({
+                  aircraftId: aircraftData.aircraftId,
+                  typeCode: aircraftData.aircraftType,
+                  equipmentType: '',
+                  year: '',
+                  make: '',
+                  model: '',
+                  gearType: '',
+                  engineType: '',
+                  categoryClass: '',
+                  complex: false,
+                  highPerformance: false,
+                  pressurized: false,
+                  taa: false
+                })
+              });
+              // Don't throw on error - profile might already exist
+              if (aircraftResponse.ok) {
+                console.log(`Auto-created aircraft profile for ${aircraftId}`);
+              }
+            } catch (aircraftError) {
+              // Silently continue - aircraft profile might already exist
+              console.log(`Aircraft profile for ${aircraftId} may already exist`);
             }
-          } catch (aircraftError) {
-            // Silently continue - aircraft profile might already exist
-            console.log(`Aircraft profile for ${aircraftId} may already exist`);
           }
         }
       } catch (error: any) {

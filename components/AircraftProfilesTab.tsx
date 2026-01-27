@@ -282,6 +282,10 @@ const AircraftProfilesTab: React.FC = () => {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          alert('Your session has expired. Please sign in again to delete aircraft profiles.');
+          return;
+        }
         throw new Error('Failed to delete aircraft profile');
       }
 
