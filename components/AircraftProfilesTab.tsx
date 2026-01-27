@@ -115,6 +115,12 @@ const AircraftProfilesTab: React.FC = () => {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          // Token expired or invalid - don't throw, just return empty array
+          console.warn('Authentication required to load aircraft profiles');
+          setAircraft([]);
+          return;
+        }
         throw new Error('Failed to load aircraft profiles');
       }
 
@@ -169,6 +175,10 @@ const AircraftProfilesTab: React.FC = () => {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          alert('Your session has expired. Please sign in again to save aircraft profiles.');
+          return;
+        }
         const error = await response.json();
         throw new Error(error.error || 'Failed to save aircraft profile');
       }

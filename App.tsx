@@ -627,15 +627,16 @@ const App: React.FC = () => {
           }
         });
 
-        // Create aircraft profiles for any new aircraft
-        for (const [aircraftId, aircraftData] of uniqueAircraft.entries()) {
-          try {
-            const aircraftResponse = await fetch(`${API_URL}/api/aircraft`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              },
+        // Create aircraft profiles for any new aircraft (only if user is authenticated)
+        if (user && token) {
+          for (const [aircraftId, aircraftData] of uniqueAircraft.entries()) {
+            try {
+              const aircraftResponse = await fetch(`${API_URL}/api/aircraft`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                },
               body: JSON.stringify({
                 aircraftId: aircraftData.aircraftId,
                 typeCode: aircraftData.aircraftType,
@@ -748,8 +749,10 @@ const App: React.FC = () => {
   };
 
   const handleAircraftCreated = (createdProfile?: { aircraftId: string; typeCode: string }) => {
-    // Reload existing aircraft IDs after creation
-    loadExistingAircraft();
+    // Reload existing aircraft IDs after creation (only if user is authenticated)
+    if (user) {
+      loadExistingAircraft();
+    }
     
     // Update the entry's aircraftType and ensure aircraftId is normalized if we have the entryId and created profile
     if (createdProfile && newAircraftData?.entryId) {
