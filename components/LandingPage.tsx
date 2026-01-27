@@ -254,29 +254,67 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.3 }}
-          className="flex flex-col sm:flex-row gap-4"
+          className="flex flex-col sm:flex-row gap-4 items-center justify-center"
         >
-          <motion.button
-            onClick={() => onStart('dashboard')}
-            className="px-10 py-5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-2xl font-black text-lg transition-all shadow-2xl shadow-[#003366]/30 flex items-center gap-3 group shiny-button min-h-[48px]"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            aria-label="Start digitizing your logbook"
-          >
-            Start Digitizing Now
-            <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
-          </motion.button>
-          <motion.button
-            onClick={() => onStart('tutorial')}
-            className="px-10 py-5 bg-white border-2 border-[#E2E8F0] text-[#003366] hover:border-[#007BFF] rounded-2xl font-semibold text-lg transition-all shadow-sm flex items-center gap-3 min-h-[48px]"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            aria-label="View app tutorial"
-          >
-            <FileText className="w-5 h-5" aria-hidden="true" />
-            View App Tutorial
-          </motion.button>
+          {!user ? (
+            <>
+              <motion.button
+                onClick={() => setShowAuthModal(true)}
+                className="px-10 py-5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-2xl font-black text-lg transition-all shadow-2xl shadow-[#003366]/30 flex items-center gap-3 group shiny-button min-h-[48px]"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                aria-label="Create a free account"
+              >
+                Create Account - Start Free
+                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
+              </motion.button>
+              <motion.button
+                onClick={() => onStart('tutorial')}
+                className="px-10 py-5 bg-white border-2 border-[#E2E8F0] text-[#003366] hover:border-[#007BFF] rounded-2xl font-semibold text-lg transition-all shadow-sm flex items-center gap-3 min-h-[48px]"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                aria-label="View app tutorial"
+              >
+                <FileText className="w-5 h-5" aria-hidden="true" />
+                View App Tutorial
+              </motion.button>
+            </>
+          ) : (
+            <>
+              <motion.button
+                onClick={() => onStart('dashboard')}
+                className="px-10 py-5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-2xl font-black text-lg transition-all shadow-2xl shadow-[#003366]/30 flex items-center gap-3 group shiny-button min-h-[48px]"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                aria-label="Start digitizing your logbook"
+              >
+                Start Digitizing Now
+                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
+              </motion.button>
+              <motion.button
+                onClick={() => onStart('tutorial')}
+                className="px-10 py-5 bg-white border-2 border-[#E2E8F0] text-[#003366] hover:border-[#007BFF] rounded-2xl font-semibold text-lg transition-all shadow-sm flex items-center gap-3 min-h-[48px]"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                aria-label="View app tutorial"
+              >
+                <FileText className="w-5 h-5" aria-hidden="true" />
+                View App Tutorial
+              </motion.button>
+            </>
+          )}
         </motion.div>
+        
+        {!user && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.7, delay: 0.5 }}
+            className="text-[#003366]/60 text-sm mt-4"
+          >
+            No credit card required • 3 free credits to start
+          </motion.p>
+        )}
 
         {/* Feature Grid */}
         <motion.div
