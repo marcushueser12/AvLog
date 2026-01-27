@@ -13,9 +13,9 @@ const SoftwareApplicationSchema: React.FC = () => {
         "price": "0",
         "priceCurrency": "USD"
       },
-      "description": "AI-powered logbook digitization tool for pilots. Convert paper logbooks to digital format using Gemini AI technology.",
+      "description": "AI-powered logbook digitization tool for pilots. Convert paper logbooks to digital format using advanced AI technology.",
       "featureList": [
-        "Gemini-powered logbook scanning",
+        "AI-powered logbook scanning",
         "Handwriting recognition for messy logbook entries",
         "Automatic data extraction from paper logbooks",
         "ForeFlight-compatible CSV export",
@@ -31,7 +31,7 @@ const SoftwareApplicationSchema: React.FC = () => {
       },
       "screenshot": "https://logextract.co/screenshot.png",
       "softwareVersion": "1.0",
-      "releaseNotes": "Initial release with Gemini 3 Pro integration",
+      "releaseNotes": "Initial release with advanced AI integration",
       "author": {
         "@type": "Person",
         "name": "LogExtract Team",

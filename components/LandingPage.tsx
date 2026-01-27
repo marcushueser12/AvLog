@@ -247,7 +247,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
           transition={{ duration: 0.7, delay: 0.2 }}
           className="text-[#003366]/70 text-lg md:text-xl max-w-2xl mb-12 leading-relaxed"
         >
-          The most advanced AI pilot logbook converter. Scan your handwritten pages and export perfectly formatted CSVs for ForeFlight, Logbook Pro, and more.
+          The most advanced pilot paper logbook converter. Scan your handwritten pages and export perfectly formatted CSVs for ForeFlight, Logbook Pro, and more.
         </motion.p>
 
         <motion.div
@@ -627,14 +627,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
 
               <h3 className="text-lg font-bold text-[#003366] mt-6 mb-3">How We Use Your Data</h3>
               <ul className="list-disc list-inside space-y-2 text-[#003366]/70 mb-6">
-                <li><strong>AI Processing</strong>: We use the Gemini API (Google) to interpret and extract data from your logbook images.</li>
+                <li><strong>AI Processing</strong>: We use AI technology to interpret and extract data from your logbook images.</li>
                 <li><strong>Service Delivery</strong>: To provide you with a structured digital file (CSV/Excel) compatible with major digital logbooks.</li>
                 <li><strong>Payment</strong>: We use Stripe to process payments. We do not store your credit card details on our servers.</li>
               </ul>
 
               <h3 className="text-lg font-bold text-[#003366] mt-6 mb-3">Data Sharing & AI Disclosure</h3>
               <p className="text-[#003366]/70 mb-3">
-                We do not sell your flight data. However, images are processed via Google's Gemini API.
+                We do not sell your flight data. However, images are processed via AI technology.
               </p>
               <p className="text-[#003366]/70 mb-6">
                 <strong>Note</strong>: Your data is used only for the purpose of extraction and is not used to train global AI models without your explicit consent.

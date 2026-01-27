@@ -15,13 +15,13 @@ This policy explains how LogExtract ("we," "us") handles your flight data when y
 
 ## How We Use Your Data
 
-- **AI Processing**: We use the Gemini API (Google) to interpret and extract data from your logbook images.
+- **AI Processing**: We use AI technology to interpret and extract data from your logbook images.
 - **Service Delivery**: To provide you with a structured digital file (CSV/Excel) compatible with major digital logbooks.
 - **Payment**: We use Stripe to process payments. We do not store your credit card details on our servers.
 
 ## Data Sharing & AI Disclosure
 
-We do not sell your flight data. However, images are processed via Google's Gemini API.
+We do not sell your flight data. However, images are processed via AI technology.
 
 **Note**: Your data is used only for the purpose of extraction and is not used to train global AI models without your explicit consent.
 
