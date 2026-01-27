@@ -369,6 +369,52 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
         </div>
       </main>
 
+      {/* CTA Section */}
+      {!user && (
+        <section className="relative z-10 py-16 md:py-20 px-4 sm:px-6 bg-gradient-to-br from-[#003366] to-[#007BFF]">
+          <div className="max-w-4xl mx-auto text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <h2 className="text-3xl md:text-4xl font-black text-white mb-4 tracking-tight">
+                Ready to Digitize Your Logbook?
+              </h2>
+              <p className="text-white/90 text-lg md:text-xl mb-8 max-w-2xl mx-auto">
+                Join pilots who are saving hours of manual data entry. Create your free account and get started in seconds.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <motion.button
+                  onClick={() => setShowAuthModal(true)}
+                  className="px-10 py-5 bg-white hover:bg-white/90 text-[#003366] rounded-2xl font-black text-lg transition-all shadow-2xl shadow-black/20 flex items-center gap-3 group min-h-[48px]"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  aria-label="Create a free account"
+                >
+                  Create Account - Start Free
+                  <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
+                </motion.button>
+                <motion.button
+                  onClick={() => onStart('tutorial')}
+                  className="px-10 py-5 bg-transparent border-2 border-white/30 text-white hover:border-white rounded-2xl font-semibold text-lg transition-all flex items-center gap-3 min-h-[48px]"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  aria-label="Learn more about the app"
+                >
+                  <FileText className="w-5 h-5" aria-hidden="true" />
+                  Learn How It Works
+                </motion.button>
+              </div>
+              <p className="text-white/70 text-sm mt-6">
+                No credit card required • 3 free credits included • Cancel anytime
+              </p>
+            </motion.div>
+          </div>
+        </section>
+      )}
+
       {/* Featured Reviews Section */}
       {!loadingReviews && featuredReviews.length > 0 && (
         <section className="relative z-10 py-12 md:py-16 px-4 sm:px-6 bg-white border-t border-[#E2E8F0]">
