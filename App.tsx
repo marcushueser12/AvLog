@@ -1056,8 +1056,8 @@ const App: React.FC = () => {
       {isMobile && (
         <header className="md:hidden bg-white/90 backdrop-blur-md border-b border-[#E2E8F0] px-4 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
           <div className="flex items-center gap-2">
-            <div className="bg-[#003366] p-1.5 rounded-lg">
-              <Plane className="w-4 h-4 text-white" />
+            <div className="p-0.5 rounded-lg">
+              <Logo size={24} />
             </div>
             <span className="text-lg font-black text-[#003366]">LogExtract</span>
           </div>
