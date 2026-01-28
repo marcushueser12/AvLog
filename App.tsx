@@ -11,7 +11,6 @@ import AircraftProfilesTab from './components/AircraftProfilesTab';
 import ReviewsTab from './components/ReviewsTab';
 import AuthModal from './components/AuthModal';
 import PaymentModal from './components/PaymentModal';
-import NewAircraftModal from './components/NewAircraftModal';
 import Logo from './components/Logo';
 import { useAuth } from './contexts/AuthContext';
 import { extractLogbookEntriesFromPair, extractLogbookEntriesSingle } from './services/geminiService';
@@ -70,8 +69,6 @@ const App: React.FC = () => {
   const [userCredits, setUserCredits] = useState<number | null>(null);
   const [loadingCredits, setLoadingCredits] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [showNewAircraftModal, setShowNewAircraftModal] = useState(false);
-  const [newAircraftData, setNewAircraftData] = useState<{ aircraftId: string; aircraftType?: string; entryId?: string } | null>(null);
   const [existingAircraftIds, setExistingAircraftIds] = useState<Set<string>>(new Set());
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -478,12 +475,8 @@ const App: React.FC = () => {
                   const normalized = normalizeAircraftId(entry.aircraftId);
                   setExistingAircraftIds(prev => {
                     if (!prev.has(normalized)) {
-                      // New aircraft detected - prompt to create profile
-                      setNewAircraftData({
-                        aircraftId: normalized,
-                        aircraftType: entry.aircraftType || ''
-                      });
-                      setShowNewAircraftModal(true);
+                      // Track aircraft IDs but don't prompt for profile creation
+                      // Users will create profiles in Aircraft Profiles tab after verification
                       return new Set(prev).add(normalized);
                     }
                     return prev;
@@ -492,18 +485,13 @@ const App: React.FC = () => {
               });
             });
           } else {
-            // Existing aircraft already loaded, check immediately
+            // Existing aircraft already loaded, track IDs but don't prompt for profile creation
             entriesWithScanRef.forEach((entry: LogbookEntry) => {
               if (entry.aircraftId && entry.aircraftId.trim()) {
                 const normalized = normalizeAircraftId(entry.aircraftId);
                 if (!existingAircraftIds.has(normalized)) {
-                  // New aircraft detected - prompt to create profile
-                  setNewAircraftData({
-                    aircraftId: normalized,
-                    aircraftType: entry.aircraftType || ''
-                  });
-                  setShowNewAircraftModal(true);
-                  // Add to existing set to prevent duplicate prompts
+                  // Track aircraft IDs but don't prompt for profile creation
+                  // Users will create profiles in Aircraft Profiles tab after verification
                   setExistingAircraftIds(prev => new Set(prev).add(normalized));
                 }
               }
@@ -595,79 +583,7 @@ const App: React.FC = () => {
         const result = await response.json();
         console.log('Verified scan saved:', result);
         
-        // Auto-extract aircraft from saved entries and create profiles if they don't exist
-        // First, get existing aircraft profiles to check for duplicates
-        let existingAircraft: string[] = [];
-        try {
-          const existingResponse = await fetch(`${API_URL}/api/aircraft`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          if (existingResponse.ok) {
-            const existingData = await existingResponse.json();
-            // Normalize all existing aircraft IDs to ensure consistent comparison
-            existingAircraft = (existingData.aircraft || []).map((a: any) => {
-              const aircraftId = a.aircraftId || a.aircraft_id || '';
-              return normalizeAircraftId(aircraftId);
-            });
-          }
-        } catch (err) {
-          console.error('Error loading existing aircraft:', err);
-        }
-
-        const uniqueAircraft = new Map<string, { aircraftId: string; aircraftType: string }>();
-        scanEntries.forEach(entry => {
-          if (entry.aircraftId && entry.aircraftId.trim()) {
-            const id = normalizeAircraftId(entry.aircraftId);
-            // Only add if not already in existing profiles
-            if (!existingAircraft.includes(id)) {
-              if (!uniqueAircraft.has(id)) {
-                uniqueAircraft.set(id, {
-                  aircraftId: id,
-                  aircraftType: entry.aircraftType?.trim() || ''
-                });
-              }
-            }
-          }
-        });
-
-        // Create aircraft profiles for any new aircraft (only if user is authenticated)
-        if (user && token) {
-          for (const [aircraftId, aircraftData] of uniqueAircraft.entries()) {
-            try {
-              const aircraftResponse = await fetch(`${API_URL}/api/aircraft`, {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${token}`,
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                  aircraftId: aircraftData.aircraftId,
-                  typeCode: aircraftData.aircraftType,
-                  equipmentType: '',
-                  year: '',
-                  make: '',
-                  model: '',
-                  gearType: '',
-                  engineType: '',
-                  categoryClass: '',
-                  complex: false,
-                  highPerformance: false,
-                  pressurized: false,
-                  taa: false
-                })
-              });
-              // Don't throw on error - profile might already exist
-              if (aircraftResponse.ok) {
-                console.log(`Auto-created aircraft profile for ${aircraftId}`);
-              }
-            } catch (aircraftError) {
-              // Silently continue - aircraft profile might already exist
-              console.log(`Aircraft profile for ${aircraftId} may already exist`);
-            }
-          }
-        }
+        // Aircraft profiles will be created by users in the Aircraft Profiles tab after verification
       } catch (error: any) {
         console.error('Error saving verified scan:', error);
         // Don't un-verify on error, just log it
@@ -735,7 +651,7 @@ const App: React.FC = () => {
   };
 
   const handleAircraftIdChange = (entryId: string, newAircraftId: string, oldAircraftId?: string) => {
-    if (!user || !newAircraftId || !newAircraftId.trim()) return;
+    if (!newAircraftId || !newAircraftId.trim()) return;
 
     const normalized = normalizeAircraftId(newAircraftId);
     const oldNormalized = oldAircraftId ? normalizeAircraftId(oldAircraftId) : null;
@@ -764,46 +680,9 @@ const App: React.FC = () => {
         }
       }
     }
-    
-    // Check if this aircraft already exists
-    if (!existingAircraftIds.has(normalized)) {
-      // New aircraft - prompt to create profile
-      const entry = entries.find(e => e.id === entryId);
-      setNewAircraftData({
-        aircraftId: normalized,
-        aircraftType: entry?.aircraftType || '',
-        entryId: entryId
-      });
-      setShowNewAircraftModal(true);
-      // Add to existing set to prevent duplicate prompts
-      setExistingAircraftIds(prev => new Set(prev).add(normalized));
-    }
+    // No longer creating aircraft profiles here - users will do that in Aircraft Profiles tab after verification
   };
 
-  const handleAircraftCreated = (createdProfile?: { aircraftId: string; typeCode: string }) => {
-    // Reload existing aircraft IDs after creation (only if user is authenticated)
-    if (user) {
-      loadExistingAircraft();
-    }
-    
-    // Update the entry's aircraftType and ensure aircraftId is normalized if we have the entryId and created profile
-    if (createdProfile && newAircraftData?.entryId) {
-      setEntries(prev => prev.map(entry => {
-        if (entry.id === newAircraftData.entryId) {
-          // Update aircraftId to ensure it's normalized and update aircraftType with typeCode
-          return { 
-            ...entry, 
-            aircraftId: createdProfile.aircraftId,
-            aircraftType: createdProfile.typeCode || entry.aircraftType 
-          };
-        }
-        return entry;
-      }));
-    }
-    
-    // Clear the new aircraft data
-    setNewAircraftData(null);
-  };
 
   const handleDeleteEntry = (id: string) => {
     setEntries(prev => prev.filter(e => e.id !== id));
@@ -1887,19 +1766,6 @@ const App: React.FC = () => {
         }}
       />
 
-      {/* New Aircraft Modal */}
-      {newAircraftData && (
-        <NewAircraftModal
-          isOpen={showNewAircraftModal}
-          aircraftId={newAircraftData.aircraftId}
-          aircraftType={newAircraftData.aircraftType}
-          onClose={() => {
-            setShowNewAircraftModal(false);
-            setNewAircraftData(null);
-          }}
-          onCreated={handleAircraftCreated}
-        />
-      )}
 
       {/* Terms of Service Modal */}
       {showTermsModal && (
