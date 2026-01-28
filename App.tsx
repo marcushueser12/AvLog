@@ -12,6 +12,7 @@ import ReviewsTab from './components/ReviewsTab';
 import AuthModal from './components/AuthModal';
 import PaymentModal from './components/PaymentModal';
 import NewAircraftModal from './components/NewAircraftModal';
+import Logo from './components/Logo';
 import { useAuth } from './contexts/AuthContext';
 import { extractLogbookEntriesFromPair, extractLogbookEntriesSingle } from './services/geminiService';
 import { generateForeFlightCSV, downloadCSV } from './utils/csvUtils';
@@ -1026,8 +1027,8 @@ const App: React.FC = () => {
           whileHover={{ scale: 1.02 }}
           transition={{ type: "spring", stiffness: 400, damping: 17 }}
         >
-          <div className="bg-[#003366] p-2 rounded-xl shadow-lg shadow-[#003366]/20 group-hover:shadow-[#003366]/30 transition-all">
-            <Plane className="w-5 h-5 text-white" />
+          <div className="p-1 rounded-xl shadow-lg shadow-[#003366]/20 group-hover:shadow-[#003366]/30 transition-all">
+            <Logo size={32} />
           </div>
           <span className="text-xl font-black text-[#003366] tracking-tight">LogExtract</span>
         </motion.div>

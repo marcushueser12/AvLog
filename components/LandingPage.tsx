@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { AppTab } from '../types';
 import AuthModal from './AuthModal';
 import SoftwareApplicationSchema from './SoftwareApplicationSchema';
+import Logo from './Logo';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Plane, FileText, CloudUpload, Clock, Menu, X, ChevronRight, Shield, CheckCircle2, Grid3x3, MessageSquare, Star } from 'lucide-react';
@@ -125,8 +126,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
               }
             }}
           >
-            <div className="bg-[#003366] p-2.5 rounded-xl shadow-lg shadow-[#003366]/20 group-hover:shadow-[#003366]/30 transition-all">
-              <Plane className="w-5 h-5 text-white" aria-hidden="true" />
+            <div className="p-1 rounded-xl shadow-lg shadow-[#003366]/20 group-hover:shadow-[#003366]/30 transition-all">
+              <Logo size={32} />
             </div>
             <span className="text-2xl font-black text-[#003366] tracking-tight">LogExtract</span>
           </motion.div>
