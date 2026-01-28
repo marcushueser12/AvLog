@@ -331,11 +331,12 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                         // Don't trigger aircraft profile pop-up on onChange, only on blur
                       }}
                       onBlur={(e) => {
-                        const oldAircraftId = entry.aircraftId;
+                        const oldAircraftId = entry.aircraftId || '';
                         const normalized = normalizeAircraftId(e.target.value);
-                        if (normalized && normalized !== oldAircraftId) {
+                        // Always update if value changed, then check for other instances
+                        if (normalized !== oldAircraftId) {
                           onUpdate(entry.id, 'aircraftId', normalized);
-                          // Only trigger aircraft profile check on blur after value has changed
+                          // Trigger handler to check for other instances with the old tail number
                           if (onAircraftIdChange) {
                             onAircraftIdChange(entry.id, normalized, oldAircraftId);
                           }
@@ -707,11 +708,12 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                         // Don't trigger aircraft profile pop-up on onChange, only on blur
                       }}
                       onBlur={(e) => {
-                        const oldAircraftId = entry.aircraftId;
+                        const oldAircraftId = entry.aircraftId || '';
                         const normalized = normalizeAircraftId(e.target.value);
-                        if (normalized && normalized !== oldAircraftId) {
+                        // Always update if value changed, then check for other instances
+                        if (normalized !== oldAircraftId) {
                           onUpdate(entry.id, 'aircraftId', normalized);
-                          // Only trigger aircraft profile check on blur after value has changed
+                          // Trigger handler to check for other instances with the old tail number
                           if (onAircraftIdChange) {
                             onAircraftIdChange(entry.id, normalized, oldAircraftId);
                           }

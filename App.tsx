@@ -651,13 +651,12 @@ const App: React.FC = () => {
   };
 
   const handleAircraftIdChange = (entryId: string, newAircraftId: string, oldAircraftId?: string) => {
-    if (!newAircraftId || !newAircraftId.trim()) return;
-
-    const normalized = normalizeAircraftId(newAircraftId);
+    // Normalize both values for comparison
+    const normalized = normalizeAircraftId(newAircraftId || '');
     const oldNormalized = oldAircraftId ? normalizeAircraftId(oldAircraftId) : null;
     
-    // If tail number changed, check if user wants to update all instances
-    if (oldNormalized && oldNormalized !== normalized) {
+    // If tail number changed and we have an old value, check if user wants to update all instances
+    if (oldNormalized && oldNormalized !== normalized && oldNormalized.trim() !== '') {
       const matchingEntries = entries.filter(e => {
         const eAircraftId = normalizeAircraftId(e.aircraftId || '');
         return eAircraftId === oldNormalized && e.id !== entryId;
@@ -665,7 +664,7 @@ const App: React.FC = () => {
 
       if (matchingEntries.length > 0) {
         const shouldUpdateAll = confirm(
-          `Found ${matchingEntries.length} other entr${matchingEntries.length === 1 ? 'y' : 'ies'} with tail number ${oldNormalized}.\n\nWould you like to update all of them to ${normalized}?`
+          `Found ${matchingEntries.length} other entr${matchingEntries.length === 1 ? 'y' : 'ies'} with tail number ${oldNormalized}.\n\nWould you like to update all of them to ${normalized || '(empty)'}?`
         );
 
         if (shouldUpdateAll) {
@@ -880,24 +879,27 @@ const App: React.FC = () => {
     return map;
   }, [entries]);
 
-  // Calculate stats for Bento Grid - MUST be before early returns
+  // Calculate stats for Bento Grid from permanent log (verified entries) - MUST be before early returns
   const stats = useMemo(() => {
-    const totalTime = entries.reduce((acc, curr) => acc + (parseFloat(curr.totalTime) || 0), 0);
-    const pic = entries.reduce((acc, curr) => acc + (parseFloat(curr.pic) || 0), 0);
-    const multiEngine = entries.filter(e => {
+    // Use exportableEntries (verified entries from permanent log) instead of all entries
+    const verifiedEntries = exportableEntries;
+    const totalTime = verifiedEntries.reduce((acc, curr) => acc + (parseFloat(curr.totalTime) || 0), 0);
+    const pic = verifiedEntries.reduce((acc, curr) => acc + (parseFloat(curr.pic) || 0), 0);
+    const multiEngine = verifiedEntries.filter(e => {
       const type = e.aircraftType?.toLowerCase() || '';
       return type.includes('multi') || type.includes('twin');
     }).length;
-    const night = entries.reduce((acc, curr) => acc + (parseFloat(curr.night) || 0), 0);
-    const instrument = entries.reduce((acc, curr) => acc + (parseFloat(curr.instrument) || 0), 0);
-    const crossCountry = entries.reduce((acc, curr) => acc + (parseFloat(curr.crossCountry) || 0), 0);
+    const night = verifiedEntries.reduce((acc, curr) => acc + (parseFloat(curr.night) || 0), 0);
+    const instrument = verifiedEntries.reduce((acc, curr) => acc + (parseFloat(curr.instrument) || 0), 0);
+    const crossCountry = verifiedEntries.reduce((acc, curr) => acc + (parseFloat(curr.crossCountry) || 0), 0);
     
     return { totalTime, pic, multiEngine, night, instrument, crossCountry };
-  }, [entries]);
+  }, [exportableEntries]);
 
   const currentTotalTime = useMemo(() => {
-    return entries.reduce((acc, curr) => acc + (parseFloat(curr.totalTime) || 0), 0);
-  }, [entries]);
+    // Use exportableEntries (verified entries from permanent log) instead of all entries
+    return exportableEntries.reduce((acc, curr) => acc + (parseFloat(curr.totalTime) || 0), 0);
+  }, [exportableEntries]);
 
   // Show loading state while auth is loading
   if (authLoading) {
