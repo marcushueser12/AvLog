@@ -904,9 +904,10 @@ const App: React.FC = () => {
   }, [permanentLogEntries]);
 
   const currentTotalTime = useMemo(() => {
-    // Use exportableEntries (verified entries from permanent log) instead of all entries
-    return exportableEntries.reduce((acc, curr) => acc + (parseFloat(curr.totalTime) || 0), 0);
-  }, [exportableEntries]);
+    // Sum total time from permanent log entries
+    const allPermanentLogEntries = Object.values(permanentLogEntries).flat();
+    return allPermanentLogEntries.reduce((acc, curr) => acc + (parseFloat(curr.totalTime) || 0), 0);
+  }, [permanentLogEntries]);
 
   // Show loading state while auth is loading
   if (authLoading) {
