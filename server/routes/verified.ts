@@ -193,11 +193,11 @@ router.post('/save-scan', verifyAuth, async (req: AuthRequest, res) => {
 router.put('/update-scan', verifyAuth, async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
-    const { scanId, entries } = req.body;
+    const { scanId, entries, pageNumber } = req.body;
 
-    if (!scanId || !entries || !Array.isArray(entries)) {
+    if (!scanId) {
       return res.status(400).json({ 
-        error: 'Missing required fields: scanId and entries array' 
+        error: 'Missing required field: scanId' 
       });
     }
 
@@ -211,6 +211,34 @@ router.put('/update-scan', verifyAuth, async (req: AuthRequest, res) => {
 
     if (scanError || !scan) {
       return res.status(404).json({ error: 'Scan not found or access denied' });
+    }
+
+    // Update page number if provided
+    if (pageNumber !== undefined) {
+      const pageNum = pageNumber === null || pageNumber === '' ? null : parseInt(String(pageNumber), 10);
+      if (isNaN(pageNum as any) && pageNumber !== null && pageNumber !== '') {
+        return res.status(400).json({ error: 'Invalid page number' });
+      }
+      
+      const { error: updatePageError } = await supabaseAdmin
+        .from('verified_scans')
+        .update({ page_number: pageNum })
+        .eq('id', scanId)
+        .eq('user_id', userId);
+
+      if (updatePageError) {
+        console.error('Error updating page number:', updatePageError);
+        return res.status(500).json({ error: 'Failed to update page number' });
+      }
+    }
+
+    // If no entries provided, just return success (page number was updated)
+    if (!entries || !Array.isArray(entries)) {
+      return res.json({
+        success: true,
+        scanId,
+        message: 'Successfully updated page number'
+      });
     }
 
     // Helper functions (same as save-scan)

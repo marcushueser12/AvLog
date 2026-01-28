@@ -32,6 +32,7 @@ const PermanentLogTab: React.FC = () => {
   const [showNewAircraftModal, setShowNewAircraftModal] = useState(false);
   const [newAircraftData, setNewAircraftData] = useState<{ aircraftId: string; aircraftType?: string; entryId?: string } | null>(null);
   const [existingAircraftIds, setExistingAircraftIds] = useState<Set<string>>(new Set());
+  const [editingPageNumber, setEditingPageNumber] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (user) {
@@ -670,12 +671,109 @@ const PermanentLogTab: React.FC = () => {
                           </svg>
                         </div>
                         <div>
-                          <h3 className="font-bold text-[#003366]">
-                            Page #{scan.page_number || 'N/A'}
+                          <div className="flex items-center gap-2">
+                            {editingPageNumber[scan.id] !== undefined ? (
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-[#003366]">Page #</span>
+                                <input
+                                  type="number"
+                                  value={editingPageNumber[scan.id]}
+                                  onChange={(e) => {
+                                    setEditingPageNumber(prev => ({
+                                      ...prev,
+                                      [scan.id]: e.target.value
+                                    }));
+                                  }}
+                                  onBlur={async () => {
+                                    const newPageNumber = editingPageNumber[scan.id];
+                                    const pageNum = newPageNumber === '' ? null : parseInt(newPageNumber, 10);
+                                    
+                                    // Validate page number
+                                    if (newPageNumber !== '' && (isNaN(pageNum) || pageNum < 1)) {
+                                      alert('Page number must be a positive integer');
+                                      setEditingPageNumber(prev => {
+                                        const newState = { ...prev };
+                                        delete newState[scan.id];
+                                        return newState;
+                                      });
+                                      return;
+                                    }
+
+                                    // Save page number
+                                    try {
+                                      const token = getAccessToken();
+                                      if (!token) {
+                                        setShowAuthModal(true);
+                                        return;
+                                      }
+
+                                      const response = await fetch(`${API_URL}/api/verified/update-scan`, {
+                                        method: 'PUT',
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                          'Authorization': `Bearer ${token}`
+                                        },
+                                        body: JSON.stringify({
+                                          scanId: scan.id,
+                                          pageNumber: pageNum
+                                        })
+                                      });
+
+                                      if (!response.ok) {
+                                        const error = await response.json();
+                                        throw new Error(error.message || error.error || 'Failed to update page number');
+                                      }
+
+                                      // Update local state
+                                      setScans(prev => prev.map(s => 
+                                        s.id === scan.id ? { ...s, page_number: pageNum } : s
+                                      ));
+                                    } catch (error: any) {
+                                      console.error('Error updating page number:', error);
+                                      alert(`Failed to update page number: ${error.message}`);
+                                    } finally {
+                                      setEditingPageNumber(prev => {
+                                        const newState = { ...prev };
+                                        delete newState[scan.id];
+                                        return newState;
+                                      });
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.currentTarget.blur();
+                                    } else if (e.key === 'Escape') {
+                                      setEditingPageNumber(prev => {
+                                        const newState = { ...prev };
+                                        delete newState[scan.id];
+                                        return newState;
+                                      });
+                                    }
+                                  }}
+                                  autoFocus
+                                  className="w-20 px-2 py-1 border border-[#007BFF] rounded-lg text-[#003366] font-bold outline-none focus:ring-2 focus:ring-[#007BFF]"
+                                  min="1"
+                                  placeholder="N/A"
+                                />
+                              </div>
+                            ) : (
+                              <h3 
+                                className="font-bold text-[#003366] cursor-pointer hover:text-[#007BFF] transition-colors"
+                                onClick={() => {
+                                  setEditingPageNumber(prev => ({
+                                    ...prev,
+                                    [scan.id]: scan.page_number?.toString() || ''
+                                  }));
+                                }}
+                                title="Click to edit page number"
+                              >
+                                Page #{scan.page_number || 'N/A'}
+                              </h3>
+                            )}
                             <span className="ml-2 text-[#003366]/70 font-normal text-sm">
                               ({scan.mode === 'single' ? 'Single Page' : 'Spread Pair'})
                             </span>
-                          </h3>
+                          </div>
                           <p className="text-xs text-[#003366]/70 mt-1">
                             {entriesCount > 0 ? `${entriesCount} entries` : 'Loading...'} • {formatDate(scan.created_at)}
                           </p>
