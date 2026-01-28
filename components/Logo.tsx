@@ -10,7 +10,7 @@ const Logo: React.FC<LogoProps> = ({ className = '', size = 40 }) => {
     <svg
       xmlns="http://www.w3.org/2000/svg"
       xmlnsXlink="http://www.w3.org/1999/xlink"
-      viewBox="0 0 1784.88 1784.99993"
+      viewBox="0 0 1333.1875 1333.328125"
       width={size}
       height={size}
       className={className}
@@ -34,8 +34,7 @@ const Logo: React.FC<LogoProps> = ({ className = '', size = 40 }) => {
           <rect x="0" width="1334" y="0" height="1334"/>
         </clipPath>
       </defs>
-      <g transform="matrix(1, 0, 0, 1, 226, 226)">
-        <g clipPath="url(#7e8fc95a17)">
+      <g clipPath="url(#7e8fc95a17)">
           <g clipPath="url(#2b1d7be8e2)">
             <path fill="#0b3166" d="M 1154.679688 1333.167969 L 178.507812 1333.167969 C 79.953125 1333.167969 0.078125 1253.292969 0.078125 1154.738281 L 0.078125 178.566406 C 0.078125 80.015625 79.953125 0.140625 178.507812 0.140625 L 1154.679688 0.140625 C 1253.234375 0.140625 1333.109375 80.015625 1333.109375 178.566406 L 1333.109375 1154.738281 C 1333.109375 1253.292969 1253.234375 1333.167969 1154.679688 1333.167969 Z M 1154.679688 1333.167969 " fillOpacity="1" fillRule="nonzero"/>
           </g>
