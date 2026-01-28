@@ -17,18 +17,18 @@ const PRICING_TIERS = {
   private: {
     name: 'Private Pack',
     price: 800, // $8.00 in cents
-    credits: 10,
+    credits: 12,
     description: 'Perfect for personal logbook digitization'
   },
   commercial: {
     name: 'Commercial Pack',
-    price: 1625, // $16.25 in cents ($0.65 per credit)
+    price: 1200, // $12.00 in cents ($0.48 per credit)
     credits: 25,
     description: 'Ideal for commercial pilots and flight schools'
   },
   atp: {
     name: 'ATP Pack',
-    price: 5000, // $50.00 in cents ($0.50 per credit)
+    price: 3000, // $30.00 in cents ($0.30 per credit)
     credits: 100,
     description: 'Best value for ATP and professional pilots'
   }

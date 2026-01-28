@@ -14,20 +14,20 @@ const PRICING_TIERS = {
   private: {
     name: 'Private Pack',
     price: 8,
-    credits: 10,
+    credits: 12,
     description: 'Perfect for personal logbook digitization',
     popular: false
   },
   commercial: {
     name: 'Commercial Pack',
-    price: 16.25,
+    price: 12,
     credits: 25,
     description: 'Ideal for commercial pilots and flight schools',
     popular: true
   },
   atp: {
     name: 'ATP Pack',
-    price: 50,
+    price: 30,
     credits: 100,
     description: 'Best value for ATP and professional pilots',
     popular: false
