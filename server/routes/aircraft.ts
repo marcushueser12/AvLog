@@ -106,20 +106,27 @@ router.post(
       .eq('aircraft_id', normalizedAircraftId)
       .single();
 
+    // Helper function to safely trim or return null
+    const safeTrim = (value: string | null | undefined): string | null => {
+      if (value === null || value === undefined) return null;
+      const trimmed = String(value).trim();
+      return trimmed === '' ? null : trimmed;
+    };
+
     if (existing) {
       // Update existing
       const { data, error } = await supabaseAdmin
         .from('aircraft_profiles')
         .update({
           aircraft_id: normalizedAircraftId, // Ensure it's normalized
-          equipment_type: equipmentType.trim() || null,
-          type_code: typeCode.trim() || null,
-          year: year.trim() || null,
-          make: make.trim() || null,
-          model: model.trim() || null,
-          gear_type: gearType.trim() || null,
-          engine_type: engineType.trim() || null,
-          category_class: categoryClass.trim() || null,
+          equipment_type: safeTrim(equipmentType),
+          type_code: safeTrim(typeCode),
+          year: safeTrim(year),
+          make: safeTrim(make),
+          model: safeTrim(model),
+          gear_type: safeTrim(gearType),
+          engine_type: safeTrim(engineType),
+          category_class: safeTrim(categoryClass),
           complex: Boolean(complex),
           high_performance: Boolean(highPerformance),
           pressurized: Boolean(pressurized),
@@ -139,14 +146,14 @@ router.post(
         .insert({
           user_id: userId,
           aircraft_id: normalizedAircraftId,
-          equipment_type: equipmentType.trim() || null,
-          type_code: typeCode.trim() || null,
-          year: year.trim() || null,
-          make: make.trim() || null,
-          model: model.trim() || null,
-          gear_type: gearType.trim() || null,
-          engine_type: engineType.trim() || null,
-          category_class: categoryClass.trim() || null,
+          equipment_type: safeTrim(equipmentType),
+          type_code: safeTrim(typeCode),
+          year: safeTrim(year),
+          make: safeTrim(make),
+          model: safeTrim(model),
+          gear_type: safeTrim(gearType),
+          engine_type: safeTrim(engineType),
+          category_class: safeTrim(categoryClass),
           complex: Boolean(complex),
           high_performance: Boolean(highPerformance),
           pressurized: Boolean(pressurized),
