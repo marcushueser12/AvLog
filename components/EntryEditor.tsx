@@ -47,6 +47,8 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   const [editingDateValue, setEditingDateValue] = useState<string>('');
   const [cellMovementMode, setCellMovementMode] = useState(false);
   const [selectedCell, setSelectedCell] = useState<{ entryId: string; field: keyof LogbookEntry } | null>(null);
+  // Store original aircraft ID when user starts editing (for tail number change confirmation)
+  const aircraftIdBeforeEdit = useRef<Record<string, string>>({});
 
   // Initialize editing date value when starting to edit
   const handleDateFocus = (entryId: string, currentDate: string) => {
@@ -325,14 +327,22 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     <input
                       type="text"
                       value={entry.aircraftId}
+                      onFocus={(e) => {
+                        // Capture the original value when user starts editing
+                        aircraftIdBeforeEdit.current[entry.id] = entry.aircraftId || '';
+                      }}
                       onChange={(e) => {
                         const normalized = normalizeAircraftId(e.target.value);
                         onUpdate(entry.id, 'aircraftId', normalized);
                         // Don't trigger aircraft profile pop-up on onChange, only on blur
                       }}
                       onBlur={(e) => {
-                        const oldAircraftId = entry.aircraftId || '';
+                        // Get the original value from before editing started
+                        const oldAircraftId = aircraftIdBeforeEdit.current[entry.id] || entry.aircraftId || '';
                         const normalized = normalizeAircraftId(e.target.value);
+                        // Clean up the stored value
+                        delete aircraftIdBeforeEdit.current[entry.id];
+                        
                         // Always update if value changed, then check for other instances
                         if (normalized !== oldAircraftId) {
                           onUpdate(entry.id, 'aircraftId', normalized);
@@ -340,6 +350,12 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                           if (onAircraftIdChange) {
                             onAircraftIdChange(entry.id, normalized, oldAircraftId);
                           }
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        // Handle Enter key to trigger blur behavior
+                        if (e.key === 'Enter') {
+                          e.currentTarget.blur();
                         }
                       }}
                       readOnly={readOnly}
@@ -702,14 +718,22 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     <input 
                       type="text"
                       value={entry.aircraftId}
+                      onFocus={(e) => {
+                        // Capture the original value when user starts editing
+                        aircraftIdBeforeEdit.current[entry.id] = entry.aircraftId || '';
+                      }}
                       onChange={(e) => {
                         const normalized = normalizeAircraftId(e.target.value);
                         onUpdate(entry.id, 'aircraftId', normalized);
                         // Don't trigger aircraft profile pop-up on onChange, only on blur
                       }}
                       onBlur={(e) => {
-                        const oldAircraftId = entry.aircraftId || '';
+                        // Get the original value from before editing started
+                        const oldAircraftId = aircraftIdBeforeEdit.current[entry.id] || entry.aircraftId || '';
                         const normalized = normalizeAircraftId(e.target.value);
+                        // Clean up the stored value
+                        delete aircraftIdBeforeEdit.current[entry.id];
+                        
                         // Always update if value changed, then check for other instances
                         if (normalized !== oldAircraftId) {
                           onUpdate(entry.id, 'aircraftId', normalized);
@@ -717,6 +741,12 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                           if (onAircraftIdChange) {
                             onAircraftIdChange(entry.id, normalized, oldAircraftId);
                           }
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        // Handle Enter key to trigger blur behavior
+                        if (e.key === 'Enter') {
+                          e.currentTarget.blur();
                         }
                       }}
                       readOnly={readOnly}

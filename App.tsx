@@ -653,17 +653,20 @@ const App: React.FC = () => {
   const handleAircraftIdChange = (entryId: string, newAircraftId: string, oldAircraftId?: string) => {
     // Normalize both values for comparison
     const normalized = normalizeAircraftId(newAircraftId || '');
-    const oldNormalized = oldAircraftId ? normalizeAircraftId(oldAircraftId) : null;
+    const oldNormalized = oldAircraftId ? normalizeAircraftId(oldAircraftId) : '';
     
     // If tail number changed and we have an old value, check if user wants to update all instances
-    if (oldNormalized && oldNormalized !== normalized && oldNormalized.trim() !== '') {
+    // Only show popup if old value exists and is different from new value
+    if (oldNormalized && oldNormalized !== normalized) {
+      // Find all other entries with the old tail number (excluding the current entry)
       const matchingEntries = entries.filter(e => {
+        if (e.id === entryId) return false; // Exclude the entry being edited
         const eAircraftId = normalizeAircraftId(e.aircraftId || '');
-        return eAircraftId === oldNormalized && e.id !== entryId;
+        return eAircraftId === oldNormalized;
       });
 
       if (matchingEntries.length > 0) {
-        const shouldUpdateAll = confirm(
+        const shouldUpdateAll = window.confirm(
           `Found ${matchingEntries.length} other entr${matchingEntries.length === 1 ? 'y' : 'ies'} with tail number ${oldNormalized}.\n\nWould you like to update all of them to ${normalized || '(empty)'}?`
         );
 
