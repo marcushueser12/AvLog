@@ -606,7 +606,11 @@ const App: React.FC = () => {
           });
           if (existingResponse.ok) {
             const existingData = await existingResponse.json();
-            existingAircraft = (existingData.aircraft || []).map((a: any) => (a.aircraftId || a.aircraft_id || '').toUpperCase());
+            // Normalize all existing aircraft IDs to ensure consistent comparison
+            existingAircraft = (existingData.aircraft || []).map((a: any) => {
+              const aircraftId = a.aircraftId || a.aircraft_id || '';
+              return normalizeAircraftId(aircraftId);
+            });
           }
         } catch (err) {
           console.error('Error loading existing aircraft:', err);
