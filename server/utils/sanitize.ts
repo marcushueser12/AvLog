@@ -188,11 +188,18 @@ export const sanitizeStringArray = (input: any, maxLength: number = 100, maxItem
 
 /**
  * Remove sensitive data from objects for logging
+ * Also truncates large base64 image strings to prevent log bloat
  */
 export const sanitizeForLogging = (obj: any, sensitiveKeys: string[] = ['password', 'token', 'secret', 'key', 'apiKey', 'authorization']): any => {
   if (obj === null || obj === undefined) return obj;
   
-  if (typeof obj !== 'object') return obj;
+  if (typeof obj !== 'object') {
+    // Truncate large strings (likely base64 images)
+    if (typeof obj === 'string' && obj.length > 200) {
+      return `[TRUNCATED: ${obj.length} chars]`;
+    }
+    return obj;
+  }
   
   if (Array.isArray(obj)) {
     return obj.map(item => sanitizeForLogging(item, sensitiveKeys));
@@ -204,8 +211,17 @@ export const sanitizeForLogging = (obj: any, sensitiveKeys: string[] = ['passwor
     const lowerKey = key.toLowerCase();
     const isSensitive = sensitiveKeys.some(sk => lowerKey.includes(sk.toLowerCase()));
     
+    // Check if this is an image field (base64 data)
+    const isImageField = lowerKey.includes('image') || lowerKey.includes('base64');
+    
     if (isSensitive) {
       sanitized[key] = '[REDACTED]';
+    } else if (isImageField && typeof value === 'string' && value.length > 100) {
+      // Truncate large image data (base64 strings)
+      sanitized[key] = `[IMAGE_DATA: ${value.length} chars]`;
+    } else if (typeof value === 'string' && value.length > 500) {
+      // Truncate any other large strings
+      sanitized[key] = `[TRUNCATED: ${value.length} chars]`;
     } else if (typeof value === 'object' && value !== null) {
       sanitized[key] = sanitizeForLogging(value, sensitiveKeys);
     } else {

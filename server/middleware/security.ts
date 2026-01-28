@@ -275,15 +275,23 @@ export const securityLogger = (req: Request, res: Response, next: NextFunction) 
       duration: `${duration}ms`,
       timestamp: new Date().toISOString(),
       // Sanitize body and headers to prevent logging sensitive data
-      body: req.body ? sanitizeForLogging(req.body) : undefined,
+      // Exclude body for image processing endpoints to prevent log bloat
+      body: (req.path.includes('/extract') || req.path.includes('/image')) 
+        ? '[IMAGE_PROCESSING_REQUEST]' 
+        : (req.body ? sanitizeForLogging(req.body) : undefined),
       headers: req.headers ? sanitizeForLogging(req.headers) : undefined,
     };
 
     // Only log errors and slow requests in production
     if (process.env.NODE_ENV === 'production') {
-      if (res.statusCode >= 400 || duration > 5000) {
+      if (res.statusCode >= 400) {
+        // Log actual errors as warnings
         console.warn('Security/Performance Alert:', sanitizeForLogging(logData));
+      } else if (duration > 10000) {
+        // Log very slow requests (>10s) as info, not error
+        console.log('Slow Request:', sanitizeForLogging(logData));
       }
+      // Don't log successful fast requests in production
     } else {
       console.log('Request:', sanitizeForLogging(logData));
     }
