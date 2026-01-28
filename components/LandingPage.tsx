@@ -520,8 +520,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             className="bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl shadow-sm p-8 md:p-12"
           >
             <div className="flex flex-col md:flex-row items-start gap-6 mb-8 pb-8 border-b border-[#E2E8F0]">
-              <div className="w-24 h-24 bg-[#003366] rounded-2xl flex items-center justify-center flex-shrink-0">
-                <Plane className="w-12 h-12 text-white" aria-hidden="true" />
+              <div className="w-24 h-24 rounded-2xl flex items-center justify-center flex-shrink-0 p-2">
+                <Logo size={80} />
               </div>
               <div className="flex-1">
                 <h3 className="text-2xl font-bold text-[#003366] mb-2">Marcus</h3>
@@ -556,8 +556,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
       <footer className="relative z-10 p-6 sm:p-12 text-center text-[#003366]/60 text-xs border-t border-[#E2E8F0] bg-white/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 px-4 sm:px-0">
           <div className="flex items-center gap-2">
-            <div className="bg-[#003366] p-1.5 rounded-md">
-              <Plane className="w-4 h-4 text-white" />
+            <div className="p-0.5 rounded-md">
+              <Logo size={20} />
             </div>
             <span className="font-bold text-[#003366]">LOGEXTRACT</span>
           </div>
