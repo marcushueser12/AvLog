@@ -302,6 +302,7 @@ const App: React.FC = () => {
       
       loadUserCredits();
       loadExistingAircraft();
+      loadPermanentLogForExport(); // Load permanent log to calculate dashboard stats
     } else {
       setUserCredits(0); // Show 0 credits when not logged in
       setExistingAircraftIds(new Set<string>());
@@ -882,22 +883,38 @@ const App: React.FC = () => {
     return map;
   }, [entries]);
 
-  // Calculate stats for Bento Grid from permanent log (verified entries) - MUST be before early returns
+  // Calculate stats for Bento Grid from permanent log page totals - MUST be before early returns
   const stats = useMemo(() => {
-    // Use exportableEntries (verified entries from permanent log) instead of all entries
-    const verifiedEntries = exportableEntries;
-    const totalTime = verifiedEntries.reduce((acc, curr) => acc + (parseFloat(curr.totalTime) || 0), 0);
-    const pic = verifiedEntries.reduce((acc, curr) => acc + (parseFloat(curr.pic) || 0), 0);
-    const multiEngine = verifiedEntries.filter(e => {
-      const type = e.aircraftType?.toLowerCase() || '';
-      return type.includes('multi') || type.includes('twin');
-    }).length;
-    const night = verifiedEntries.reduce((acc, curr) => acc + (parseFloat(curr.night) || 0), 0);
-    const instrument = verifiedEntries.reduce((acc, curr) => acc + (parseFloat(curr.instrument) || 0), 0);
-    const crossCountry = verifiedEntries.reduce((acc, curr) => acc + (parseFloat(curr.crossCountry) || 0), 0);
+    // Aggregate totals from all permanent log scans' page totals
+    let totalTime = 0;
+    let pic = 0;
+    let night = 0;
+    let instrument = 0;
+    let crossCountry = 0;
+    let multiEngine = 0;
+
+    // Sum up totals from each scan in permanent log
+    permanentLogScans.forEach(scan => {
+      const totals = scan.extractedTotals || scan.pageTotals;
+      if (totals) {
+        totalTime += parseFloat(totals.totalTime || '0');
+        pic += parseFloat(totals.pic || '0');
+        night += parseFloat(totals.night || '0');
+        instrument += parseFloat(totals.instrument || '0');
+        crossCountry += parseFloat(totals.crossCountry || '0');
+      }
+    });
+
+    // Count multi-engine entries from permanent log entries
+    Object.values(permanentLogEntries).flat().forEach(entry => {
+      const type = entry.aircraftType?.toLowerCase() || '';
+      if (type.includes('multi') || type.includes('twin')) {
+        multiEngine++;
+      }
+    });
     
     return { totalTime, pic, multiEngine, night, instrument, crossCountry };
-  }, [exportableEntries]);
+  }, [permanentLogScans, permanentLogEntries]);
 
   const currentTotalTime = useMemo(() => {
     // Use exportableEntries (verified entries from permanent log) instead of all entries
