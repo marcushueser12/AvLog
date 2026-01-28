@@ -947,9 +947,7 @@ const App: React.FC = () => {
           whileHover={{ scale: 1.02 }}
           transition={{ type: "spring", stiffness: 400, damping: 17 }}
         >
-          <div className="p-1 rounded-xl shadow-lg shadow-[#003366]/20 group-hover:shadow-[#003366]/30 transition-all">
-            <Logo size={32} />
-          </div>
+          <Logo size={32} />
           <span className="text-xl font-black text-[#003366] tracking-tight">LogExtract</span>
         </motion.div>
 
@@ -976,9 +974,7 @@ const App: React.FC = () => {
       {isMobile && (
         <header className="md:hidden bg-white/90 backdrop-blur-md border-b border-[#E2E8F0] px-4 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
           <div className="flex items-center gap-2">
-            <div className="p-0.5 rounded-lg">
-              <Logo size={24} />
-            </div>
+            <Logo size={24} />
             <span className="text-lg font-black text-[#003366]">LogExtract</span>
           </div>
           <div className="flex items-center gap-2">
