@@ -547,8 +547,8 @@ const App: React.FC = () => {
   };
 
   const handleVerifyScan = async (scanId: string, verified: boolean) => {
-    // Mark scan as verified locally
-    setScans(prev => prev.map(s => s.id === scanId ? { ...s, isVerified: verified } : s));
+    // Mark scan as verified locally and set status to 'verified' to remove from dashboard
+    setScans(prev => prev.map(s => s.id === scanId ? { ...s, isVerified: verified, status: verified ? 'verified' : s.status } : s));
     setEntries(prev => prev.map(e => e.scanId === scanId ? { ...e, isVerified: verified } : e));
 
     // If verified and user is authenticated, save to database
@@ -734,10 +734,36 @@ const App: React.FC = () => {
     }));
   };
 
-  const handleAircraftIdChange = (entryId: string, aircraftId: string) => {
-    if (!user || !aircraftId || !aircraftId.trim()) return;
+  const handleAircraftIdChange = (entryId: string, newAircraftId: string, oldAircraftId?: string) => {
+    if (!user || !newAircraftId || !newAircraftId.trim()) return;
 
-    const normalized = normalizeAircraftId(aircraftId);
+    const normalized = normalizeAircraftId(newAircraftId);
+    const oldNormalized = oldAircraftId ? normalizeAircraftId(oldAircraftId) : null;
+    
+    // If tail number changed, check if user wants to update all instances
+    if (oldNormalized && oldNormalized !== normalized) {
+      const matchingEntries = entries.filter(e => {
+        const eAircraftId = normalizeAircraftId(e.aircraftId || '');
+        return eAircraftId === oldNormalized && e.id !== entryId;
+      });
+
+      if (matchingEntries.length > 0) {
+        const shouldUpdateAll = confirm(
+          `Found ${matchingEntries.length} other entr${matchingEntries.length === 1 ? 'y' : 'ies'} with tail number ${oldNormalized}.\n\nWould you like to update all of them to ${normalized}?`
+        );
+
+        if (shouldUpdateAll) {
+          // Update all matching entries
+          matchingEntries.forEach(matchingEntry => {
+            setEntries(prev => prev.map(e => 
+              e.id === matchingEntry.id 
+                ? { ...e, aircraftId: normalized }
+                : e
+            ));
+          });
+        }
+      }
+    }
     
     // Check if this aircraft already exists
     if (!existingAircraftIds.has(normalized)) {
@@ -938,9 +964,10 @@ const App: React.FC = () => {
   };
 
   // Grouping logic for the verification queue (Completed but not yet Verified)
+  // Exclude verified scans - they should only appear in permanent log
   const pendingVerificationScans = useMemo(() => {
     return scans
-      .filter(s => s.status === 'completed')
+      .filter(s => s.status === 'completed' && !s.isVerified && s.status !== 'verified')
       .sort((a, b) => b.timestamp - a.timestamp);
   }, [scans]);
 
@@ -1430,7 +1457,8 @@ const App: React.FC = () => {
                   
                   <div className="space-y-12">
                     {pendingVerificationScans.map(scan => {
-                      const scanEntries = entriesByScan[scan.id] || [];
+                      // Filter out verified entries - they should only appear in permanent log
+                      const scanEntries = (entriesByScan[scan.id] || []).filter(e => !e.isVerified);
                       if (scanEntries.length === 0) return null;
 
                       const isExpanded = expandedScans.has(scan.id);

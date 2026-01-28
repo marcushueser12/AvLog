@@ -16,7 +16,7 @@ interface EntryEditorProps {
   onRotationChange?: (imageIndex: number, newRotation: number) => void; // Callback when rotation changes
   forceTableOnMobile?: boolean; // Force table view with horizontal scroll on mobile instead of cards
   twoColumnCards?: boolean; // Use 2-column card layout on mobile instead of single column
-  onAircraftIdChange?: (entryId: string, aircraftId: string) => void; // Callback when aircraft ID changes to check if it's new
+  onAircraftIdChange?: (entryId: string, aircraftId: string, oldAircraftId?: string) => void; // Callback when aircraft ID changes to check if it's new
   readOnly?: boolean; // If true, disable all inputs (for permanent log when not in edit mode)
   onUpdateApproaches?: (id: string, approaches: ApproachDetail[]) => void; // Callback to update approach details
 }
@@ -328,16 +328,16 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       onChange={(e) => {
                         const normalized = normalizeAircraftId(e.target.value);
                         onUpdate(entry.id, 'aircraftId', normalized);
-                        if (onAircraftIdChange) {
-                          onAircraftIdChange(entry.id, normalized);
-                        }
+                        // Don't trigger aircraft profile pop-up on onChange, only on blur
                       }}
                       onBlur={(e) => {
+                        const oldAircraftId = entry.aircraftId;
                         const normalized = normalizeAircraftId(e.target.value);
-                        if (normalized && normalized !== entry.aircraftId) {
+                        if (normalized && normalized !== oldAircraftId) {
                           onUpdate(entry.id, 'aircraftId', normalized);
+                          // Only trigger aircraft profile check on blur after value has changed
                           if (onAircraftIdChange) {
-                            onAircraftIdChange(entry.id, normalized);
+                            onAircraftIdChange(entry.id, normalized, oldAircraftId);
                           }
                         }
                       }}
@@ -704,16 +704,16 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       onChange={(e) => {
                         const normalized = normalizeAircraftId(e.target.value);
                         onUpdate(entry.id, 'aircraftId', normalized);
-                        if (onAircraftIdChange) {
-                          onAircraftIdChange(entry.id, normalized);
-                        }
+                        // Don't trigger aircraft profile pop-up on onChange, only on blur
                       }}
                       onBlur={(e) => {
+                        const oldAircraftId = entry.aircraftId;
                         const normalized = normalizeAircraftId(e.target.value);
-                        if (normalized && normalized !== entry.aircraftId) {
+                        if (normalized && normalized !== oldAircraftId) {
                           onUpdate(entry.id, 'aircraftId', normalized);
+                          // Only trigger aircraft profile check on blur after value has changed
                           if (onAircraftIdChange) {
-                            onAircraftIdChange(entry.id, normalized);
+                            onAircraftIdChange(entry.id, normalized, oldAircraftId);
                           }
                         }
                       }}
