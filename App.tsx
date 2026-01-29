@@ -16,6 +16,7 @@ import { useAuth } from './contexts/AuthContext';
 import { extractLogbookEntriesFromPair, extractLogbookEntriesSingle } from './services/geminiService';
 import { generateForeFlightCSV, downloadCSV } from './utils/csvUtils';
 import { reconcileFlightTimes, reconcileIFRData, normalizeDateSeparator, normalizeAircraftId } from './utils/logbookUtils';
+import { fetchWithRetry, safeApiCall } from './utils/apiUtils';
 import { getExifOrientation } from './utils/exifUtils';
 import { useMobile } from './utils/useMobile';
 import { motion } from 'framer-motion';
@@ -263,13 +264,17 @@ const App: React.FC = () => {
       const token = getAccessToken();
       if (!token) return;
 
-      const response = await fetch(`${API_URL}/api/aircraft`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await safeApiCall(
+        () => fetchWithRetry(`${API_URL}/api/aircraft`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }, 15000, 1), // 15 second timeout, 1 retry
+        null as any,
+        'Error loading existing aircraft'
+      );
 
-      if (response.ok) {
+      if (response && response.ok) {
         const data = await response.json();
         const aircraftIds = new Set<string>(
           (data.aircraft || []).map((a: any) => (a.aircraftId || a.aircraft_id || '').toUpperCase())
@@ -326,13 +331,17 @@ const App: React.FC = () => {
       const token = getAccessToken();
       if (!token) return;
 
-      const response = await fetch(`${API_URL}/api/verified/credits`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await safeApiCall(
+        () => fetchWithRetry(`${API_URL}/api/verified/credits`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }, 15000, 1), // 15 second timeout, 1 retry
+        null as any,
+        'Error loading credits'
+      );
 
-      if (response.ok) {
+      if (response && response.ok) {
         const data = await response.json();
         setUserCredits(data.credits || 0);
       }
@@ -704,26 +713,34 @@ const App: React.FC = () => {
       const token = getAccessToken();
       if (!token) return;
 
-      const response = await fetch(`${API_URL}/api/verified/scans`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await safeApiCall(
+        () => fetchWithRetry(`${API_URL}/api/verified/scans`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }, 20000, 1), // 20 second timeout, 1 retry
+        null as any,
+        'Error loading permanent log for export'
+      );
 
-      if (response.ok) {
+      if (response && response.ok) {
         const data = await response.json();
         setPermanentLogScans(data.scans || []);
         
-        // Load entries for all scans
+        // Load entries for all scans (with timeout and retry)
         const entriesMap: Record<string, LogbookEntry[]> = {};
         for (const scan of (data.scans || [])) {
           try {
-            const entriesResponse = await fetch(`${API_URL}/api/verified/entries/${scan.id}`, {
-              headers: {
-                'Authorization': `Bearer ${token}`
-              }
-            });
-            if (entriesResponse.ok) {
+            const entriesResponse = await safeApiCall(
+              () => fetchWithRetry(`${API_URL}/api/verified/entries/${scan.id}`, {
+                headers: {
+                  'Authorization': `Bearer ${token}`
+                }
+              }, 15000, 1), // 15 second timeout, 1 retry
+              null as any,
+              `Error loading entries for scan ${scan.id}`
+            );
+            if (entriesResponse && entriesResponse.ok) {
               const entriesData = await entriesResponse.json();
               entriesMap[scan.id] = entriesData.entries || [];
             }
