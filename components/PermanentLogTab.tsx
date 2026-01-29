@@ -206,11 +206,16 @@ const PermanentLogTab: React.FC = () => {
         return;
       }
 
-      const response = await fetch(`${API_URL}/api/verified/scans`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetchWithRetry(
+        `${API_URL}/api/verified/scans`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        },
+        20000, // 20 second timeout
+        1 // 1 retry
+      );
 
       if (!response.ok) {
         throw new Error('Failed to load verified scans');
@@ -219,27 +224,41 @@ const PermanentLogTab: React.FC = () => {
       const data = await response.json();
       setScans(data.scans || []);
       
-      // Auto-extract aircraft from all entries in permanent log
+      // Auto-extract aircraft from entries in permanent log
+      // Only load entries for first 10 scans to avoid timeout for users with many pages
       if (data.scans && data.scans.length > 0) {
-        // Load entries for all scans to extract aircraft
         const allEntries: LogbookEntry[] = [];
-        for (const scan of data.scans) {
-          try {
-            const entriesResponse = await fetch(`${API_URL}/api/verified/entries/${scan.id}`, {
-              headers: {
-                'Authorization': `Bearer ${token}`
+        const scansToProcess = data.scans.slice(0, 10); // Only process first 10 scans
+        
+        // Load entries in parallel batches of 5
+        const batchSize = 5;
+        for (let i = 0; i < scansToProcess.length; i += batchSize) {
+          const batch = scansToProcess.slice(i, i + batchSize);
+          await Promise.all(
+            batch.map(async (scan) => {
+              try {
+                const entriesResponse = await fetchWithRetry(
+                  `${API_URL}/api/verified/entries/${scan.id}`,
+                  {
+                    headers: {
+                      'Authorization': `Bearer ${token}`
+                    }
+                  },
+                  15000, // 15 second timeout
+                  1 // 1 retry
+                );
+                if (entriesResponse && entriesResponse.ok) {
+                  const entriesData = await entriesResponse.json();
+                  allEntries.push(...(entriesData.entries || []));
+                }
+              } catch (err) {
+                console.error(`Error loading entries for scan ${scan.id}:`, err);
               }
-            });
-            if (entriesResponse.ok) {
-              const entriesData = await entriesResponse.json();
-              allEntries.push(...(entriesData.entries || []));
-            }
-          } catch (err) {
-            console.error(`Error loading entries for scan ${scan.id}:`, err);
-          }
+            })
+          );
         }
         
-        // Auto-extract aircraft from all entries
+        // Auto-extract aircraft from entries
         await autoExtractAircraft(allEntries);
       }
     } catch (error) {
