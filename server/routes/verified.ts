@@ -379,9 +379,10 @@ router.get('/scans', verifyAuth, async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
 
+    // Only select necessary columns to reduce payload size
     const { data: scans, error } = await supabaseAdmin
       .from('verified_scans')
-      .select('*')
+      .select('id, page_number, mode, status, timestamp, created_at')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 

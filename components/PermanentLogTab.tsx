@@ -255,11 +255,16 @@ const PermanentLogTab: React.FC = () => {
       const token = getAccessToken();
       if (!token) return;
 
-      const response = await fetch(`${API_URL}/api/verified/entries/${scanId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetchWithRetry(
+        `${API_URL}/api/verified/entries/${scanId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        },
+        20000, // 20 second timeout for large pages
+        1 // 1 retry
+      );
 
       if (!response.ok) {
         throw new Error('Failed to load entries');
