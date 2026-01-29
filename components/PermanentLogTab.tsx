@@ -141,7 +141,7 @@ const PermanentLogTab: React.FC = () => {
       const uniqueAircraft = new Map<string, { aircraftId: string; aircraftType: string }>();
       entriesList.forEach(entry => {
         if (entry.aircraftId && entry.aircraftId.trim()) {
-          const id = normalizeAircraftId(entry.aircraftId);
+          const id = normalizeAircraftId(entry.aircraftId, false); // Permanent log always uses USA mode
           // Only add if not already in existing profiles
           if (!existingAircraft.includes(id)) {
             if (!uniqueAircraft.has(id)) {
