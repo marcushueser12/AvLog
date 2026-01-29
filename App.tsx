@@ -458,7 +458,7 @@ const App: React.FC = () => {
         const entriesWithScanRef = result.entries.map((e: any) => {
           // Normalize date separator (e.g., "8.5" -> "8/5", "12*10" -> "12/10")
           const normalizedDate = normalizeDateSeparator(e.date || '');
-          const normalizedAircraftId = normalizeAircraftId(e.aircraftId || '');
+          const normalizedAircraftId = normalizeAircraftId(e.aircraftId || '', false);
           return { ...e, scanId: scan.id, date: normalizedDate, aircraftId: normalizedAircraftId };
         });
         
@@ -473,7 +473,7 @@ const App: React.FC = () => {
               // After loading, check again for new aircraft
               entriesWithScanRef.forEach((entry: LogbookEntry) => {
                 if (entry.aircraftId && entry.aircraftId.trim()) {
-                  const normalized = normalizeAircraftId(entry.aircraftId);
+                  const normalized = normalizeAircraftId(entry.aircraftId, false);
                   setExistingAircraftIds(prev => {
                     if (!prev.has(normalized)) {
                       // Track aircraft IDs but don't prompt for profile creation
@@ -489,7 +489,7 @@ const App: React.FC = () => {
             // Existing aircraft already loaded, track IDs but don't prompt for profile creation
             entriesWithScanRef.forEach((entry: LogbookEntry) => {
               if (entry.aircraftId && entry.aircraftId.trim()) {
-                const normalized = normalizeAircraftId(entry.aircraftId);
+                const normalized = normalizeAircraftId(entry.aircraftId, false);
                 if (!existingAircraftIds.has(normalized)) {
                   // Track aircraft IDs but don't prompt for profile creation
                   // Users will create profiles in Aircraft Profiles tab after verification
@@ -653,8 +653,8 @@ const App: React.FC = () => {
 
   const handleAircraftIdChange = (entryId: string, newAircraftId: string, oldAircraftId?: string) => {
     // Normalize both values for comparison
-    const normalized = normalizeAircraftId(newAircraftId || '');
-    const oldNormalized = oldAircraftId ? normalizeAircraftId(oldAircraftId) : '';
+    const normalized = normalizeAircraftId(newAircraftId || '', false);
+    const oldNormalized = oldAircraftId ? normalizeAircraftId(oldAircraftId, false) : '';
     
     // If tail number changed and we have an old value, check if user wants to update all instances
     // Only show popup if old value exists and is different from new value
@@ -662,7 +662,7 @@ const App: React.FC = () => {
       // Find all other entries with the old tail number (excluding the current entry)
       const matchingEntries = entries.filter(e => {
         if (e.id === entryId) return false; // Exclude the entry being edited
-        const eAircraftId = normalizeAircraftId(e.aircraftId || '');
+        const eAircraftId = normalizeAircraftId(e.aircraftId || '', false);
         return eAircraftId === oldNormalized;
       });
 

@@ -4,14 +4,21 @@ import type { LogbookEntry } from "../types.js";
 /**
  * Normalize aircraft ID - adds "N" prefix if not present and converts to uppercase
  * Examples: "123AB" -> "N123AB", "n123ab" -> "N123AB", "N123AB" -> "N123AB"
+ * @param aircraftId - The aircraft ID to normalize
+ * @param internationalMode - If true, skip adding "N" prefix (for international registrations)
  */
-export const normalizeAircraftId = (aircraftId: string): string => {
+export const normalizeAircraftId = (aircraftId: string, internationalMode: boolean = false): string => {
   if (!aircraftId || typeof aircraftId !== 'string') return aircraftId;
   
   const trimmed = aircraftId.trim().toUpperCase();
   if (!trimmed) return trimmed;
   
-  // If it doesn't start with "N", add it
+  // If international mode is enabled, just return uppercase without adding "N"
+  if (internationalMode) {
+    return trimmed;
+  }
+  
+  // If it doesn't start with "N", add it (USA mode)
   if (!trimmed.startsWith('N')) {
     return `N${trimmed}`;
   }

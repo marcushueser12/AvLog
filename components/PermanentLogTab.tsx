@@ -72,7 +72,7 @@ const PermanentLogTab: React.FC = () => {
   const handleAircraftIdChange = (entryId: string, aircraftId: string) => {
     if (!user || !aircraftId || !aircraftId.trim()) return;
 
-    const normalized = normalizeAircraftId(aircraftId);
+    const normalized = normalizeAircraftId(aircraftId, false); // Permanent log always uses USA mode
     
     // Check if this aircraft already exists
     if (!existingAircraftIds.has(normalized)) {
@@ -775,7 +775,7 @@ const PermanentLogTab: React.FC = () => {
                             </span>
                           </div>
                           <p className="text-xs text-[#003366]/70 mt-1">
-                            {entriesCount > 0 ? `${entriesCount} entries` : 'Loading...'} • {formatDate(scan.created_at)}
+                            {entries[scan.id] ? `${entriesCount} entries` : 'Loading...'} • {formatDate(scan.created_at)}
                           </p>
                         </div>
                       </div>

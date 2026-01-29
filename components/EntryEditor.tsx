@@ -47,6 +47,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   const [editingDateValue, setEditingDateValue] = useState<string>('');
   const [cellMovementMode, setCellMovementMode] = useState(false);
   const [selectedCell, setSelectedCell] = useState<{ entryId: string; field: keyof LogbookEntry } | null>(null);
+  const [internationalMode, setInternationalMode] = useState(false); // Toggle for international aircraft registrations
   // Store original aircraft ID when user starts editing (for tail number change confirmation)
   const aircraftIdBeforeEdit = useRef<Record<string, string>>({});
 
@@ -211,6 +212,29 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
             </span>
           </div>
         </div>
+        {/* International Mode Toggle */}
+        {!readOnly && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setInternationalMode(!internationalMode);
+              }}
+              className={`px-3 py-2 sm:py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all min-h-[44px] sm:min-h-0 border ${
+                internationalMode
+                  ? 'bg-amber-100 border-amber-300 text-amber-800'
+                  : 'bg-white hover:bg-[#F4F7FA] border-[#E2E8F0] text-[#003366]'
+              }`}
+              title="Enable international mode to allow non-USA aircraft registrations (removes N-number requirement)"
+            >
+              <span className="flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/>
+                </svg>
+                {internationalMode ? 'International: ON' : 'Mark if not USA'}
+              </span>
+            </button>
+          </div>
+        )}
         {/* Cell Movement Mode Toggle */}
         {!readOnly && (
           <div className="flex items-center gap-2">
@@ -332,14 +356,14 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                         aircraftIdBeforeEdit.current[entry.id] = entry.aircraftId || '';
                       }}
                       onChange={(e) => {
-                        const normalized = normalizeAircraftId(e.target.value);
+                        const normalized = normalizeAircraftId(e.target.value, internationalMode);
                         onUpdate(entry.id, 'aircraftId', normalized);
                         // Don't trigger aircraft profile pop-up on onChange, only on blur
                       }}
                       onBlur={(e) => {
                         // Get the original value from before editing started
                         const oldAircraftId = aircraftIdBeforeEdit.current[entry.id] || entry.aircraftId || '';
-                        const normalized = normalizeAircraftId(e.target.value);
+                        const normalized = normalizeAircraftId(e.target.value, internationalMode);
                         // Clean up the stored value
                         delete aircraftIdBeforeEdit.current[entry.id];
                         
@@ -360,7 +384,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       }}
                       readOnly={readOnly}
                       className={getFieldClass(entry, 'aircraftId', `w-full bg-white border border-[#E2E8F0] rounded-lg ${twoColumnCards ? 'px-2 py-1.5' : 'px-3 py-2'} font-bold uppercase outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF] min-h-[44px] ${readOnly ? 'cursor-not-allowed opacity-60' : ''}`)}
-                      placeholder="N123AB"
+                      placeholder={internationalMode ? "G-ABCD" : "N123AB"}
                     />
                   </div>
                   
@@ -723,14 +747,14 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                         aircraftIdBeforeEdit.current[entry.id] = entry.aircraftId || '';
                       }}
                       onChange={(e) => {
-                        const normalized = normalizeAircraftId(e.target.value);
+                        const normalized = normalizeAircraftId(e.target.value, internationalMode);
                         onUpdate(entry.id, 'aircraftId', normalized);
                         // Don't trigger aircraft profile pop-up on onChange, only on blur
                       }}
                       onBlur={(e) => {
                         // Get the original value from before editing started
                         const oldAircraftId = aircraftIdBeforeEdit.current[entry.id] || entry.aircraftId || '';
-                        const normalized = normalizeAircraftId(e.target.value);
+                        const normalized = normalizeAircraftId(e.target.value, internationalMode);
                         // Clean up the stored value
                         delete aircraftIdBeforeEdit.current[entry.id];
                         
@@ -751,7 +775,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       }}
                       readOnly={readOnly}
                       className={getFieldClass(entry, 'aircraftId', "bg-white hover:border-[#007BFF] focus:border-[#007BFF] rounded px-2 py-1.5 w-full outline-none text-xs font-bold uppercase border border-[#E2E8F0] text-black text-center")}
-                      placeholder="N123AB"
+                      placeholder={internationalMode ? "G-ABCD" : "N123AB"}
                     />
                   </td>
                   <td className="p-1 bg-white">
