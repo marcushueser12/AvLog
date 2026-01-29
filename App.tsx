@@ -701,7 +701,7 @@ const App: React.FC = () => {
   };
 
   // Load permanent log scans for export selection
-  const loadPermanentLogForExport = async () => {
+  const loadPermanentLogForExport = async (loadAllPages: boolean = false) => {
     if (!user) {
       setPermanentLogScans([]);
       setPermanentLogEntries({});
@@ -727,11 +727,12 @@ const App: React.FC = () => {
         const data = await response.json();
         setPermanentLogScans(data.scans || []);
         
-        // Load entries for scans in batches to avoid overwhelming the server
-        // For users with many pages, we'll load entries lazily (only when needed)
-        // For now, load first 10 scans immediately, rest will load on-demand
+        // If loadAllPages is true (for export), load all pages. Otherwise, only load first 10 for dashboard
+        const scansToLoad = loadAllPages 
+          ? (data.scans || []) // Load all pages for export
+          : (data.scans || []).slice(0, 10); // Only load first 10 pages for dashboard
+        
         const entriesMap: Record<string, LogbookEntry[]> = {};
-        const scansToLoad = (data.scans || []).slice(0, 10); // Only load first 10 pages initially
         
         // Load entries in smaller parallel batches of 2 to avoid rate limiting
         const batchSize = 2;
