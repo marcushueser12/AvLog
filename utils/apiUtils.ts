@@ -58,6 +58,18 @@ export const fetchWithRetry = async (
         return response;
       }
 
+      // If it's a rate limit error (429), retry with exponential backoff
+      if (response.status === 429 && attempt < retries) {
+        const retryAfter = response.headers.get('Retry-After');
+        const delay = retryAfter 
+          ? parseInt(retryAfter, 10) * 1000 
+          : RETRY_DELAY * Math.pow(2, attempt); // Exponential backoff: 1s, 2s, 4s
+        console.warn(`Rate limited (429), retrying after ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        lastError = new Error(`Rate limited, retrying...`);
+        continue;
+      }
+
       // If it's a server error (5xx), retry
       if (response.status >= 500 && attempt < retries) {
         lastError = new Error(`Server error ${response.status}, retrying...`);

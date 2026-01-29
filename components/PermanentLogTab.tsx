@@ -230,8 +230,8 @@ const PermanentLogTab: React.FC = () => {
         const allEntries: LogbookEntry[] = [];
         const scansToProcess = data.scans.slice(0, 10); // Only process first 10 scans
         
-        // Load entries in parallel batches of 5
-        const batchSize = 5;
+        // Load entries in smaller parallel batches of 2 to avoid rate limiting
+        const batchSize = 2;
         for (let i = 0; i < scansToProcess.length; i += batchSize) {
           const batch = scansToProcess.slice(i, i + batchSize);
           await Promise.all(
@@ -245,7 +245,7 @@ const PermanentLogTab: React.FC = () => {
                     }
                   },
                   15000, // 15 second timeout
-                  1 // 1 retry
+                  2 // 2 retries (handles 429 errors)
                 );
                 if (entriesResponse && entriesResponse.ok) {
                   const entriesData = await entriesResponse.json();
@@ -256,6 +256,10 @@ const PermanentLogTab: React.FC = () => {
               }
             })
           );
+          // Add a small delay between batches to avoid overwhelming the rate limiter
+          if (i + batchSize < scansToProcess.length) {
+            await new Promise(resolve => setTimeout(resolve, 200)); // 200ms delay between batches
+          }
         }
         
         // Auto-extract aircraft from entries

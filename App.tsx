@@ -733,8 +733,8 @@ const App: React.FC = () => {
         const entriesMap: Record<string, LogbookEntry[]> = {};
         const scansToLoad = (data.scans || []).slice(0, 10); // Only load first 10 pages initially
         
-        // Load entries in parallel batches of 5
-        const batchSize = 5;
+        // Load entries in smaller parallel batches of 2 to avoid rate limiting
+        const batchSize = 2;
         for (let i = 0; i < scansToLoad.length; i += batchSize) {
           const batch = scansToLoad.slice(i, i + batchSize);
           await Promise.all(
@@ -745,7 +745,7 @@ const App: React.FC = () => {
                     headers: {
                       'Authorization': `Bearer ${token}`
                     }
-                  }, 15000, 1), // 15 second timeout, 1 retry
+                  }, 15000, 2), // 15 second timeout, 2 retries (handles 429 errors)
                   null as any,
                   `Error loading entries for scan ${scan.id}`
                 );
@@ -758,6 +758,10 @@ const App: React.FC = () => {
               }
             })
           );
+          // Add a small delay between batches to avoid overwhelming the rate limiter
+          if (i + batchSize < scansToLoad.length) {
+            await new Promise(resolve => setTimeout(resolve, 200)); // 200ms delay between batches
+          }
         }
         setPermanentLogEntries(entriesMap);
       }

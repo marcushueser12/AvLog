@@ -5,11 +5,11 @@ import { sanitizeForLogging } from '../utils/sanitize.js';
 
 /**
  * General API rate limiter - applies to all API routes
- * Allows 100 requests per 15 minutes per IP
+ * Allows 300 requests per 15 minutes per IP (increased for users with many pages)
  */
 export const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: 300, // Limit each IP to 300 requests per windowMs (increased from 100)
   message: {
     error: 'Too many requests from this IP, please try again later.',
   },
@@ -86,10 +86,11 @@ export const webhookLimiter = rateLimit({
 /**
  * Rate limiter for authenticated API endpoints
  * Applied to routes that require authentication
+ * Increased limit for users loading many pages
  */
 export const authenticatedLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // Limit each IP to 200 authenticated requests per windowMs
+  max: 500, // Limit each IP to 500 authenticated requests per windowMs (increased from 200)
   message: {
     error: 'Too many requests. Please wait before trying again.',
   },
@@ -261,6 +262,11 @@ export const validateExpectedCount = (req: Request, res: Response, next: NextFun
  * Request logging middleware for security monitoring
  * Sanitizes sensitive data before logging
  */
+// Track rate limit errors to avoid log spam
+let rateLimitErrorCount = 0;
+let lastRateLimitLogTime = 0;
+const RATE_LIMIT_LOG_INTERVAL = 5000; // Only log rate limit errors every 5 seconds
+
 export const securityLogger = (req: Request, res: Response, next: NextFunction) => {
   const startTime = Date.now();
   
