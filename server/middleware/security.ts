@@ -288,6 +288,18 @@ export const securityLogger = (req: Request, res: Response, next: NextFunction) 
       headers: req.headers ? sanitizeForLogging(req.headers) : undefined,
     };
 
+    // Reduce logging for 429 errors to avoid Railway log rate limits
+    if (res.statusCode === 429) {
+      const now = Date.now();
+      if (now - lastRateLimitLogTime > RATE_LIMIT_LOG_INTERVAL) {
+        rateLimitErrorCount++;
+        console.warn(`Rate limit (429) - ${rateLimitErrorCount} occurrences in last ${RATE_LIMIT_LOG_INTERVAL}ms`);
+        lastRateLimitLogTime = now;
+      }
+      // Don't log full request details for 429 errors
+      return;
+    }
+
     // Only log errors and slow requests in production
     if (process.env.NODE_ENV === 'production') {
       if (res.statusCode >= 400) {
