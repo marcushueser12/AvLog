@@ -806,7 +806,8 @@ const App: React.FC = () => {
   const handleExportModalOpen = () => {
     setShowExportModal(true);
     if (user) {
-      loadPermanentLogForExport();
+      // Load ALL pages when opening export modal (not just first 10)
+      loadPermanentLogForExport(true); // true = load all pages for export
       loadAircraftForExport();
     }
     // Initialize selection with all current exportable entries' scan IDs
@@ -823,6 +824,49 @@ const App: React.FC = () => {
   }, [exportAircraftProfiles]);
 
   const handleExport = async () => {
+    // Ensure all selected scans have their entries loaded
+    const missingScans = Array.from(selectedScansForExport).filter(
+      scanId => !permanentLogEntries[scanId]
+    );
+    
+    if (missingScans.length > 0) {
+      // Load missing entries before exporting
+      const token = getAccessToken();
+      if (token) {
+        const entriesMap: Record<string, LogbookEntry[]> = { ...permanentLogEntries };
+        const batchSize = 2;
+        
+        for (let i = 0; i < missingScans.length; i += batchSize) {
+          const batch = missingScans.slice(i, i + batchSize);
+          await Promise.all(
+            batch.map(async (scanId) => {
+              try {
+                const entriesResponse = await safeApiCall(
+                  () => fetchWithRetry(`${API_URL}/api/verified/entries/${scanId}`, {
+                    headers: {
+                      'Authorization': `Bearer ${token}`
+                    }
+                  }, 15000, 2),
+                  null as any,
+                  `Error loading entries for scan ${scanId}`
+                );
+                if (entriesResponse && entriesResponse.ok) {
+                  const entriesData = await entriesResponse.json();
+                  entriesMap[scanId] = entriesData.entries || [];
+                }
+              } catch (err) {
+                console.error(`Error loading entries for scan ${scanId}:`, err);
+              }
+            })
+          );
+          if (i + batchSize < missingScans.length) {
+            await new Promise(resolve => setTimeout(resolve, 200));
+          }
+        }
+        setPermanentLogEntries(entriesMap);
+      }
+    }
+
     // Combine current verified entries with selected permanent log entries
     const currentVerifiedEntries = entries.filter(e => {
       const scanId = e.scanId;
