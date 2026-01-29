@@ -727,26 +727,37 @@ const App: React.FC = () => {
         const data = await response.json();
         setPermanentLogScans(data.scans || []);
         
-        // Load entries for all scans (with timeout and retry)
+        // Load entries for scans in batches to avoid overwhelming the server
+        // For users with many pages, we'll load entries lazily (only when needed)
+        // For now, load first 10 scans immediately, rest will load on-demand
         const entriesMap: Record<string, LogbookEntry[]> = {};
-        for (const scan of (data.scans || [])) {
-          try {
-            const entriesResponse = await safeApiCall(
-              () => fetchWithRetry(`${API_URL}/api/verified/entries/${scan.id}`, {
-                headers: {
-                  'Authorization': `Bearer ${token}`
+        const scansToLoad = (data.scans || []).slice(0, 10); // Only load first 10 pages initially
+        
+        // Load entries in parallel batches of 5
+        const batchSize = 5;
+        for (let i = 0; i < scansToLoad.length; i += batchSize) {
+          const batch = scansToLoad.slice(i, i + batchSize);
+          await Promise.all(
+            batch.map(async (scan) => {
+              try {
+                const entriesResponse = await safeApiCall(
+                  () => fetchWithRetry(`${API_URL}/api/verified/entries/${scan.id}`, {
+                    headers: {
+                      'Authorization': `Bearer ${token}`
+                    }
+                  }, 15000, 1), // 15 second timeout, 1 retry
+                  null as any,
+                  `Error loading entries for scan ${scan.id}`
+                );
+                if (entriesResponse && entriesResponse.ok) {
+                  const entriesData = await entriesResponse.json();
+                  entriesMap[scan.id] = entriesData.entries || [];
                 }
-              }, 15000, 1), // 15 second timeout, 1 retry
-              null as any,
-              `Error loading entries for scan ${scan.id}`
-            );
-            if (entriesResponse && entriesResponse.ok) {
-              const entriesData = await entriesResponse.json();
-              entriesMap[scan.id] = entriesData.entries || [];
-            }
-          } catch (err) {
-            console.error(`Error loading entries for scan ${scan.id}:`, err);
-          }
+              } catch (err) {
+                console.error(`Error loading entries for scan ${scan.id}:`, err);
+              }
+            })
+          );
         }
         setPermanentLogEntries(entriesMap);
       }

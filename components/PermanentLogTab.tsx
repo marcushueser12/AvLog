@@ -6,6 +6,7 @@ import AuthModal from './AuthModal';
 import EntryEditor from './EntryEditor';
 import NewAircraftModal from './NewAircraftModal';
 import { reconcileFlightTimes, reconcileIFRData, normalizeAircraftId } from '../utils/logbookUtils';
+import { fetchWithRetry } from '../utils/apiUtils';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
