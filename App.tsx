@@ -1176,7 +1176,6 @@ const App: React.FC = () => {
             </button>
           </nav>
         </div>
-      )}
 
       <main className="flex-1 flex flex-col min-w-0 bg-[#F4F7FA]">
         {/* Desktop Header - Only show on large screens */}
