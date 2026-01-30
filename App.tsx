@@ -367,11 +367,7 @@ const App: React.FC = () => {
       return;
     }
 
-    // Check if Terms are accepted
-    if (!acceptedTerms) {
-      alert('You must accept the Terms of Service and acknowledge that you are responsible for verifying the accuracy of all flight data before proceeding.');
-      return;
-    }
+    // Terms acceptance is only required during sign-up, not for each scan
 
     // Check if user has enough credits
     if (userCredits === null || userCredits < 1) {
@@ -919,7 +915,7 @@ const App: React.FC = () => {
     // Reset state
     setScans([]);
     setEntries([]);
-    setAcceptedTerms(false);
+    // Terms acceptance is only required during sign-up, not on sign-out
   };
 
   // Grouping logic for the verification queue (Completed but not yet Verified)
@@ -1273,36 +1269,12 @@ const App: React.FC = () => {
                       </div>
                     </div>
                     
-                    <div className="flex items-start gap-2 p-3 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-xl">
-                      <input
-                        type="checkbox"
-                        id="terms-checkbox-upload"
-                        checked={acceptedTerms}
-                        onChange={(e) => setAcceptedTerms(e.target.checked)}
-                        className="mt-1 w-4 h-4 text-[#007BFF] bg-white border-[#E2E8F0] rounded focus:ring-[#007BFF] focus:ring-2"
-                      />
-                      <label htmlFor="terms-checkbox-upload" className="text-xs text-[#003366]/70 cursor-pointer flex-1">
-                        I agree to the{' '}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setShowTermsModal(true);
-                          }}
-                          className="text-[#007BFF] hover:underline font-semibold"
-                        >
-                          Terms of Service
-                        </button>
-                        {' '}and acknowledge that I am responsible for verifying the accuracy of all flight data.
-                      </label>
-                    </div>
-                    
                     <motion.button 
                       onClick={processPendingScans}
-                      disabled={isBatchProcessing || !user || (userCredits !== null && userCredits < 1) || !acceptedTerms || !scans.some(s => s.status === 'pending' && (s.mode === 'single' ? s.images.length >= 1 : s.images.length === 2))}
+                      disabled={isBatchProcessing || !user || (userCredits !== null && userCredits < 1) || !scans.some(s => s.status === 'pending' && (s.mode === 'single' ? s.images.length >= 1 : s.images.length === 2))}
                       className="flex items-center justify-center gap-2 px-6 py-3 bg-[#003366] hover:bg-[#003366]/90 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-[#003366]/20 min-h-[44px] shiny-button w-full sm:w-auto"
-                      title={!user ? 'Sign in required' : !acceptedTerms ? 'You must accept the Terms of Service' : (userCredits !== null && userCredits < 1) ? 'Insufficient credits' : 'Start extraction (1 credit per scan)'}
-                      whileHover={{ scale: isBatchProcessing || !user || (userCredits !== null && userCredits < 1) || !acceptedTerms ? 1 : 1.05 }}
+                      title={!user ? 'Sign in required' : (userCredits !== null && userCredits < 1) ? 'Insufficient credits' : 'Start extraction (1 credit per scan)'}
+                      whileHover={{ scale: isBatchProcessing || !user || (userCredits !== null && userCredits < 1) ? 1 : 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
                       {isBatchProcessing ? (
