@@ -1191,7 +1191,7 @@ const App: React.FC = () => {
             ) : activeTab === 'permanent-log' ? (
               <PermanentLogTab />
             ) : activeTab === 'dashboard' ? (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {/* Bento Grid Stats - Mobile optimized */}
                 <motion.section
                   initial={{ opacity: 0, y: 20 }}
@@ -1224,10 +1224,264 @@ const App: React.FC = () => {
                     <p className="text-[8px] text-[#003366]/60">hrs</p>
                   </motion.div>
                 </motion.section>
-                {/* Note: Full dashboard content is in desktop version - mobile shows simplified view */}
+
+                {/* Staging Area - Mobile optimized */}
+                <section className="space-y-3">
+                  <div>
+                    <h3 className="text-sm font-bold text-[#003366]">Staging Area</h3>
+                    <p className="text-[10px] text-[#003366]/70">The software verifies row alignment and image clarity before extraction.</p>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <motion.button 
+                        onClick={() => addStagingSlot('single')}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white/80 hover:bg-white border border-[#E2E8F0] text-[#003366] rounded-lg text-[10px] font-semibold transition-all shadow-sm hover:shadow-md min-h-[44px]"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Plus className="w-3.5 h-3.5" /> Single
+                      </motion.button>
+                      <motion.button 
+                        onClick={() => addStagingSlot('spread')}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white/80 hover:bg-white border border-[#E2E8F0] text-[#003366] rounded-lg text-[10px] font-semibold transition-all shadow-sm hover:shadow-md min-h-[44px]"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Plus className="w-3.5 h-3.5" /> Spread
+                      </motion.button>
+                    </div>
+                    
+                    <motion.button 
+                      onClick={processPendingScans}
+                      disabled={isBatchProcessing || !user || (userCredits !== null && userCredits < 1) || !scans.some(s => s.status === 'pending' && (s.mode === 'single' ? s.images.length >= 1 : s.images.length === 2))}
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#003366] hover:bg-[#003366]/90 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-lg text-[11px] font-bold transition-all shadow-lg shadow-[#003366]/20 min-h-[44px] shiny-button w-full"
+                      title={!user ? 'Sign in required' : (userCredits !== null && userCredits < 1) ? 'Insufficient credits' : 'Start extraction (1 credit per scan)'}
+                      whileHover={{ scale: isBatchProcessing || !user || (userCredits !== null && userCredits < 1) ? 1 : 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      {isBatchProcessing ? (
+                        <><span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin"></span> Reconciling...</>
+                      ) : (
+                        <><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Start Extraction</>
+                      )}
+                    </motion.button>
+                  </div>
+                </section>
+
+                {/* Scan Cards - Mobile optimized */}
+                {scans.filter(s => s.status !== 'verified').length === 0 ? (
+                  <div className="h-32 border-2 border-dashed border-[#E2E8F0] rounded-xl flex flex-col items-center justify-center gap-2 text-[#003366]/60 bg-white/50 backdrop-blur-sm">
+                    <div className="p-3 bg-[#F4F7FA] rounded-xl">
+                        <Upload className="w-6 h-6 text-[#007BFF]" />
+                    </div>
+                    <p className="text-[11px] font-medium">Create a scan slot and upload your logbook pages.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    {scans.filter(s => s.status !== 'verified').map(scan => (
+                      <motion.div
+                        key={scan.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="relative flex flex-col bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-xl overflow-hidden group hover:border-[#007BFF]/30 hover:shadow-lg transition-all shadow-sm"
+                      >
+                        <div className="p-2 border-b border-[#E2E8F0] flex items-center justify-between bg-[#F4F7FA]/50">
+                          <div className="flex items-center gap-1.5">
+                            <div className={`w-1.5 h-1.5 rounded-full ${scan.status === 'completed' ? 'bg-emerald-500' : scan.status === 'processing' ? 'bg-[#007BFF] animate-pulse' : 'bg-amber-500'}`}></div>
+                            <span className="text-[8px] font-bold uppercase tracking-widest text-[#003366]/70">
+                                {scan.mode === 'single' ? 'Single' : 'Spread'}
+                            </span>
+                          </div>
+                          <button onClick={() => deleteScan(scan.id)} className="p-0.5 text-[#003366]/60 hover:text-red-500 transition-colors">
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+
+                        <div className="flex-1 p-2 grid gap-2" style={{ gridTemplateColumns: scan.mode === 'spread' ? '1fr 1fr' : '1fr' }}>
+                          {[...Array(scan.mode === 'spread' ? 2 : 1)].map((_, i) => (
+                            <div key={i} className="relative aspect-[3/4] bg-[#F4F7FA] border border-[#E2E8F0] rounded-lg overflow-hidden flex flex-col items-center justify-center">
+                              {scan.images[i] ? (
+                                <img src={scan.images[i]} className={`w-full h-full object-cover ${scan.status === 'completed' ? 'opacity-30' : 'opacity-70'}`} />
+                              ) : (
+                                <>
+                                  <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => e.target.files?.[0] && handleImageUpload(scan.id, i, e.target.files[0])} />
+                                  <div className="text-[#007BFF] mb-1"><Plus className="w-4 h-4" /></div>
+                                  <span className="text-[8px] font-bold text-[#003366]/70 uppercase">Page {i+1}</span>
+                                </>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+
+                        {scan.status === 'pending' && (
+                          <div className="px-2 pb-2">
+                            <div className="flex items-center justify-between gap-1.5 bg-[#F4F7FA] p-1.5 rounded-lg border border-[#E2E8F0]">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[8px] font-bold text-[#003366]/70 uppercase tracking-tight">Rows:</span>
+                                <input 
+                                  type="number" 
+                                  min="1"
+                                  max="50"
+                                  value={scan.expectedEntries || ''}
+                                  placeholder="?"
+                                  onChange={(e) => handleUpdateExpectedEntries(scan.id, e.target.value ? parseInt(e.target.value) : undefined)}
+                                  className="w-8 bg-transparent border-0 text-[10px] font-mono text-[#007BFF] focus:outline-none placeholder:text-[#003366]/40"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {scan.status === 'completed' && scan.extractedTotals && (
+                            <div className="px-2 py-1.5 bg-[#F4F7FA] border-t border-[#E2E8F0]">
+                               <div className="flex justify-between items-center text-[8px] font-bold">
+                                  <span className="text-[#003366]/70">TOTALS</span>
+                                  <span className="text-[#007BFF]">{scan.extractedTotals.totalTime} HRS</span>
+                               </div>
+                            </div>
+                        )}
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Verification Queue - Mobile optimized */}
+                {entries.filter(e => !e.isVerified).length > 0 && (
+                  <section className="space-y-4">
+                    <div>
+                      <h3 className="text-sm font-bold text-[#003366]">Verification Queue</h3>
+                      <p className="text-[10px] text-slate-500">
+                        Results are grouped by page scan and auto-sorted by date.
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-6">
+                      {pendingVerificationScans.map(scan => {
+                        const scanEntries = (entriesByScan[scan.id] || []).filter(e => !e.isVerified);
+                        if (scanEntries.length === 0) return null;
+
+                        const isExpanded = expandedScans.has(scan.id);
+                        const pageNumber = scan.pageNumber || 1;
+                        const isVerified = scan.isVerified || false;
+                        
+                        const calculatedTotals: PageTotals = {
+                          totalTime: scanEntries.reduce((acc, e) => acc + (parseFloat(e.totalTime) || 0), 0).toFixed(1),
+                          day: scanEntries.reduce((acc, e) => acc + (parseFloat(e.day) || 0), 0).toFixed(1),
+                          night: scanEntries.reduce((acc, e) => acc + (parseFloat(e.night) || 0), 0).toFixed(1),
+                          crossCountry: scanEntries.reduce((acc, e) => acc + (parseFloat(e.crossCountry) || 0), 0).toFixed(1),
+                          pic: scanEntries.reduce((acc, e) => acc + (parseFloat(e.pic) || 0), 0).toFixed(1),
+                          sic: scanEntries.reduce((acc, e) => acc + (parseFloat(e.sic) || 0), 0).toFixed(1),
+                          dualReceived: scanEntries.reduce((acc, e) => acc + (parseFloat(e.dualReceived) || 0), 0).toFixed(1),
+                          dualGiven: scanEntries.reduce((acc, e) => acc + (parseFloat(e.dualGiven) || 0), 0).toFixed(1),
+                          instrument: scanEntries.reduce((acc, e) => acc + (parseFloat(e.instrument) || 0), 0).toFixed(1),
+                          simulatedInstrument: scanEntries.reduce((acc, e) => acc + (parseFloat(e.simulatedInstrument) || 0), 0).toFixed(1),
+                          approaches: scanEntries.reduce((acc, e) => acc + (parseInt(e.approaches) || 0), 0).toString(),
+                          landingsDay: scanEntries.reduce((acc, e) => acc + (parseInt(e.landingsDay) || 0), 0).toString(),
+                          landingsNight: scanEntries.reduce((acc, e) => acc + (parseInt(e.landingsNight) || 0), 0).toString()
+                        };
+
+                        return (
+                          <div key={scan.id} className="space-y-3">
+                            {!isExpanded && (
+                              <ScanReviewRow
+                                pageNumber={pageNumber}
+                                totals={calculatedTotals}
+                                isExpanded={isExpanded}
+                                isVerified={isVerified}
+                                onToggleExpand={() => toggleScanExpand(scan.id)}
+                                onToggleVerify={(checked) => handleVerifyScan(scan.id, checked)}
+                              />
+                            )}
+
+                            {isExpanded && (
+                              <>
+                                <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden p-1">
+                                  <EntryEditor 
+                                    entries={scanEntries}
+                                    images={scan.images}
+                                    rotations={scan.imageRotations}
+                                    onUpdate={handleUpdateEntry}
+                                    onAircraftIdChange={handleAircraftIdChange}
+                                    forceTableOnMobile={true}
+                                    onRotationChange={(imageIndex, newRotation) => {
+                                      setScans(prev => prev.map(s => {
+                                        if (s.id === scan.id) {
+                                          const newRotations = [...(s.imageRotations || [0, 0])];
+                                          newRotations[imageIndex] = newRotation;
+                                          return { ...s, imageRotations: newRotations };
+                                        }
+                                        return s;
+                                      }));
+                                    }} 
+                                    onDelete={(id) => {
+                                        setEntries(prev => prev.filter(e => e.id !== id));
+                                    }}
+                                    onAdd={() => {
+                                      const newEntry: LogbookEntry = {
+                                        id: `manual-${Date.now()}`,
+                                        scanId: scan.id,
+                                        date: scanEntries.length > 0 ? scanEntries[scanEntries.length - 1].date : new Date().toISOString().slice(0, 10),
+                                        aircraftId: "",
+                                        aircraftType: "",
+                                        from: "",
+                                        to: "",
+                                        route: "",
+                                        totalTime: "0.0",
+                                        day: "0.0",
+                                        night: "0.0",
+                                        crossCountry: "",
+                                        pic: "",
+                                        solo: "",
+                                        sic: "",
+                                        dualReceived: "",
+                                        dualGiven: "",
+                                        instrument: "",
+                                        simulatedInstrument: "",
+                                        approaches: "",
+                                        landingsDay: "",
+                                        landingsNight: "",
+                                        groundReceived: "",
+                                        groundGiven: "",
+                                        comments: "",
+                                        isVerified: false
+                                      };
+                                      setEntries(prev => [...prev, newEntry]);
+                                    }}
+                                    onUpdateApproaches={handleUpdateApproaches}
+                                  />
+                                  <div className="p-2 bg-slate-950/50 flex justify-between items-center">
+                                      <label className="flex items-center gap-1.5 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={isVerified}
+                                        onChange={(e) => handleVerifyScan(scan.id, e.target.checked)}
+                                        disabled={savingVerified.has(scan.id)}
+                                        className="w-4 h-4 rounded border-2 border-slate-600 bg-slate-800 text-emerald-600 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-0 disabled:opacity-50"
+                                      />
+                                      <span className="text-[10px] font-bold text-slate-400">
+                                        {savingVerified.has(scan.id) ? 'Saving...' : 'Mark as Verified'}
+                                      </span>
+                                    </label>
+                                    <button 
+                                      onClick={() => toggleScanExpand(scan.id)}
+                                      className="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-[10px] font-bold transition-all"
+                                    >
+                                      Collapse
+                                    </button>
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+                )}
+
                 {!user && (
-                  <div className="text-center p-4 bg-white/80 rounded-xl border border-[#E2E8F0]">
-                    <p className="text-sm text-[#003366]/70">Create a free account to start digitizing your logbook</p>
+                  <div className="text-center p-3 bg-white/80 rounded-xl border border-[#E2E8F0]">
+                    <p className="text-[11px] text-[#003366]/70">Create a free account to start digitizing your logbook</p>
                   </div>
                 )}
               </div>
