@@ -1015,8 +1015,8 @@ const App: React.FC = () => {
     <>
       <LandscapePrompt show={view === 'app'} />
       <div className="min-h-screen bg-[#F4F7FA] flex flex-col md:flex-row overflow-hidden text-[#003366] md:pb-0">
-      {/* Desktop Sidebar - Hidden on Mobile */}
-      <aside className="hidden md:flex w-64 bg-white/80 backdrop-blur-md border-r border-[#E2E8F0] p-6 flex-col gap-8 shrink-0 shadow-sm">
+      {/* Desktop Sidebar - Only show on large screens (not mobile landscape) */}
+      <aside className="hidden lg:flex w-64 bg-white/80 backdrop-blur-md border-r border-[#E2E8F0] p-6 flex-col gap-8 shrink-0 shadow-sm">
         <motion.div 
           className="flex items-center gap-3 cursor-pointer group"
           onClick={() => setView('landing')}
@@ -1046,16 +1046,17 @@ const App: React.FC = () => {
         </nav>
       </aside>
 
-      {/* Mobile Top Bar with Tabs */}
-      {isMobile && (
-        <div className="md:hidden sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-[#E2E8F0] shadow-sm">
-          {/* Compact Top Ribbon */}
-          <header className="px-2 py-1.5 flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <Logo size={18} />
-              <span className="text-sm font-black text-[#003366]">LogExtract</span>
+      {/* Mobile Top Bar with Tabs - Show on all screens below lg (1024px) */}
+      <div className="lg:hidden sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-[#E2E8F0] shadow-sm">
+          {/* Compact Top Ribbon - Responsive scaling */}
+          <header className="px-1 sm:px-2 py-1 flex items-center justify-between gap-1 min-w-0">
+            <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+              <div className="w-4 h-4 sm:w-[18px] sm:h-[18px]">
+                <Logo size={16} />
+              </div>
+              <span className="text-xs sm:text-sm font-black text-[#003366] truncate">LogExtract</span>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5 sm:gap-1 min-w-0 flex-shrink">
               <button
                 onClick={() => {
                   if (!user) {
@@ -1064,56 +1065,56 @@ const App: React.FC = () => {
                     setShowPaymentModal(true);
                   }
                 }}
-                className={`flex items-center gap-1 px-1.5 py-0.5 rounded border transition-all text-[10px] font-semibold ${
+                className={`flex items-center gap-0.5 px-1 sm:px-1.5 py-0.5 rounded border transition-all text-[8px] sm:text-[9px] font-semibold shrink-0 ${
                   !user || userCredits === 0
                     ? 'bg-red-100 border-red-300 text-red-600' 
                     : 'bg-[#007BFF]/10 border-[#007BFF]/30 text-[#007BFF]'
                 }`}
                 title={!user ? 'Create an account to get 3 free credits' : userCredits === 0 ? 'Buy credits' : `${userCredits} credit${userCredits !== 1 ? 's' : ''} available`}
               >
-                <span className="text-[9px]">C:</span>
-                <span className="text-[10px]">{loadingCredits ? '...' : `${userCredits ?? 0}`}</span>
+                <span className="text-[7px] sm:text-[8px]">C:</span>
+                <span className="text-[8px] sm:text-[9px]">{loadingCredits ? '...' : `${userCredits ?? 0}`}</span>
               </button>
               {user && (
                 <button
                   onClick={() => setShowPaymentModal(true)}
-                  className="flex items-center justify-center p-0.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded transition-all"
+                  className="flex items-center justify-center p-0.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded transition-all shrink-0"
                   title="Buy more credits"
                 >
-                  <Plus className="w-3 h-3" />
+                  <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 </button>
               )}
               {user && (
                 <button
                   onClick={handleExportModalOpen}
-                  className="flex items-center justify-center p-0.5 bg-[#003366]/10 hover:bg-[#003366]/20 border border-[#003366]/30 text-[#003366] rounded transition-all relative"
+                  className="flex items-center justify-center p-0.5 bg-[#003366]/10 hover:bg-[#003366]/20 border border-[#003366]/30 text-[#003366] rounded transition-all relative shrink-0"
                   title="Export"
                 >
-                  <Download className="w-3 h-3" />
+                  <Download className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                   {exportableEntries.length > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 bg-[#007BFF] text-white text-[7px] font-bold px-0.5 rounded-full min-w-[10px] h-2.5 flex items-center justify-center">
+                    <span className="absolute -top-0.5 -right-0.5 bg-[#007BFF] text-white text-[6px] sm:text-[7px] font-bold px-0.5 rounded-full min-w-[8px] sm:min-w-[10px] h-2 sm:h-2.5 flex items-center justify-center">
                       {exportableEntries.length}
                     </span>
                   )}
                 </button>
               )}
               {user && (
-                <div className="flex items-center gap-0.5 px-1 py-0.5 bg-white/80 rounded border border-[#E2E8F0]">
-                  <span className="text-[9px] text-[#003366]/70 font-medium truncate max-w-[50px]">{user.email?.split('@')[0]}</span>
+                <div className="flex items-center gap-0.5 px-0.5 sm:px-1 py-0.5 bg-white/80 rounded border border-[#E2E8F0] shrink-0 min-w-0">
+                  <span className="text-[7px] sm:text-[8px] text-[#003366]/70 font-medium truncate max-w-[40px] sm:max-w-[50px]">{user.email?.split('@')[0]}</span>
                 </div>
               )}
               {user ? (
                 <button
                   onClick={handleSignOut}
-                  className="p-0.5 bg-[#F4F7FA] hover:bg-[#E2E8F0] text-[#003366]/70 rounded"
+                  className="p-0.5 bg-[#F4F7FA] hover:bg-[#E2E8F0] text-[#003366]/70 rounded shrink-0"
                   title="Sign Out"
                 >
-                  <LogOut className="w-3 h-3" />
+                  <LogOut className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 </button>
               ) : (
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="px-1.5 py-0.5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded text-[9px] font-semibold"
+                  className="px-1 sm:px-1.5 py-0.5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded text-[8px] sm:text-[9px] font-semibold shrink-0"
                 >
                   Sign In
                 </button>
@@ -1178,8 +1179,8 @@ const App: React.FC = () => {
       )}
 
       <main className="flex-1 flex flex-col min-w-0 bg-[#F4F7FA]">
-        {/* Desktop Header */}
-        <header className="hidden md:flex h-14 px-6 border-b border-[#E2E8F0] items-center justify-between bg-white/70 backdrop-blur-md sticky top-0 z-20 shrink-0 shadow-sm">
+        {/* Desktop Header - Only show on large screens */}
+        <header className="hidden lg:flex h-14 px-6 border-b border-[#E2E8F0] items-center justify-between bg-white/70 backdrop-blur-md sticky top-0 z-20 shrink-0 shadow-sm">
           <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
             <h2 className="text-sm sm:text-base font-bold text-[#003366] truncate">
               {activeTab === 'dashboard' ? 'Logbook Digitizer' : 
@@ -1188,7 +1189,7 @@ const App: React.FC = () => {
                activeTab === 'aircraft' ? 'Aircraft' :
                activeTab === 'reviews' ? 'Reviews' : 'Dashboard'}
             </h2>
-            <div className="hidden md:flex items-center gap-2 px-2.5 py-1 bg-[#007BFF]/10 rounded-lg border border-[#007BFF]/20 text-[#007BFF] text-[10px] font-bold">
+            <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 bg-[#007BFF]/10 rounded-lg border border-[#007BFF]/20 text-[#007BFF] text-[10px] font-bold">
               <span className="w-1.5 h-1.5 bg-[#007BFF] rounded-full animate-pulse"></span>
               OCR
             </div>
@@ -1231,7 +1232,7 @@ const App: React.FC = () => {
             </div>
             {user ? (
               <>
-                <div className="hidden md:flex items-center gap-2 px-2.5 py-1.5 bg-white/80 rounded-lg border border-[#E2E8F0] shadow-sm">
+                <div className="hidden lg:flex items-center gap-2 px-2.5 py-1.5 bg-white/80 rounded-lg border border-[#E2E8F0] shadow-sm">
                   <span className="text-xs text-[#003366]/70 font-medium truncate max-w-[120px]">{user.email?.split('@')[0]}</span>
                 </div>
                 <button
