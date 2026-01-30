@@ -129,7 +129,9 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
     const readOnlyClass = readOnly ? 'cursor-not-allowed opacity-60 pointer-events-none' : '';
     const isSelected = cellMovementMode && selectedCell?.entryId === entry.id && selectedCell?.field === field;
     const isMovable = cellMovementMode && !readOnly && field !== 'day' && field !== 'id' && field !== 'rowAnchor' && field !== 'isVerified' && field !== 'aiConfidence' && field !== 'reconciliationConfidence' && field !== 'uncertainFields' && field !== 'validationError' && field !== 'fieldBoundingBoxes' && field !== 'approachDetails' && field !== 'scanId';
-    return `${base} transition-all duration-300 ${uncertain ? 'bg-amber-50 border-amber-300 ring-1 ring-amber-200' : 'border-transparent'} ${readOnlyClass} ${isSelected ? 'ring-2 ring-[#007BFF] bg-[#007BFF]/10' : ''} ${isMovable && !isSelected ? 'hover:ring-1 hover:ring-[#007BFF]/50 cursor-pointer' : ''}`;
+    // Add touch-manipulation for better mobile touch handling
+    const touchClass = useTableOnMobile ? ' touch-manipulation' : '';
+    return `${base}${touchClass} transition-all duration-300 ${uncertain ? 'bg-amber-50 border-amber-300 ring-1 ring-amber-200' : 'border-transparent'} ${readOnlyClass} ${isSelected ? 'ring-2 ring-[#007BFF] bg-[#007BFF]/10' : ''} ${isMovable && !isSelected ? 'hover:ring-1 hover:ring-[#007BFF]/50 cursor-pointer' : ''}`;
   };
 
   // Handle cell movement mode
@@ -640,12 +642,14 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
           className={`overflow-x-auto custom-scrollbar flex-1 ${useTableOnMobile ? 'pb-4 touch-pan-x' : ''}`}
           style={{ 
             WebkitOverflowScrolling: 'touch',
-            touchAction: useTableOnMobile ? 'pan-x pan-y' : 'auto',
+            touchAction: useTableOnMobile ? 'pan-x pan-y pinch-zoom' : 'auto',
             overflowX: 'auto',
             overflowY: 'visible',
             minHeight: useTableOnMobile ? '200px' : 'auto',
             width: useTableOnMobile ? '100%' : 'auto',
-            maxWidth: useTableOnMobile ? '100vw' : 'none'
+            maxWidth: useTableOnMobile ? '100vw' : 'none',
+            // Ensure touch interactions work properly
+            WebkitTapHighlightColor: 'transparent'
           }}
         >
         <table className="w-full text-left border-collapse min-w-[3000px] text-[11px] sm:text-xs" style={{ width: 'max-content' }}>

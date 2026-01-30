@@ -12,6 +12,7 @@ import ReviewsTab from './components/ReviewsTab';
 import AuthModal from './components/AuthModal';
 import PaymentModal from './components/PaymentModal';
 import Logo from './components/Logo';
+import LandscapePrompt from './components/LandscapePrompt';
 import { useAuth } from './contexts/AuthContext';
 import { extractLogbookEntriesFromPair, extractLogbookEntriesSingle } from './services/geminiService';
 import { generateForeFlightCSV, downloadCSV } from './utils/csvUtils';
@@ -1011,7 +1012,9 @@ const App: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#F4F7FA] flex flex-col md:flex-row overflow-hidden text-[#003366] pb-16 md:pb-0">
+    <>
+      <LandscapePrompt show={view === 'app'} />
+      <div className="min-h-screen bg-[#F4F7FA] flex flex-col md:flex-row overflow-hidden text-[#003366] pb-16 md:pb-0 mobile-scale">
       {/* Desktop Sidebar - Hidden on Mobile */}
       <aside className="hidden md:flex w-64 bg-white/80 backdrop-blur-md border-r border-[#E2E8F0] p-6 flex-col gap-8 shrink-0 shadow-sm">
         <motion.div 
@@ -1473,6 +1476,7 @@ const App: React.FC = () => {
                                   rotations={scan.imageRotations}
                                   onUpdate={handleUpdateEntry}
                                   onAircraftIdChange={handleAircraftIdChange}
+                                  forceTableOnMobile={true}
                                   onRotationChange={(imageIndex, newRotation) => {
                                     setScans(prev => prev.map(s => {
                                       if (s.id === scan.id) {
@@ -1888,7 +1892,8 @@ const App: React.FC = () => {
         </div>
       )}
       <Analytics />
-    </div>
+      </div>
+    </>
   );
 };
 
