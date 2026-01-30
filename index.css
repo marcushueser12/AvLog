@@ -22,7 +22,7 @@ body {
 @media (max-width: 768px) {
   /* Scale down font size for more screen real estate */
   html {
-    font-size: 90%;
+    font-size: 85%;
   }
   
   /* Prevent Safari address bar from showing on scroll */

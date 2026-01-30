@@ -1014,7 +1014,7 @@ const App: React.FC = () => {
   return (
     <>
       <LandscapePrompt show={view === 'app'} />
-      <div className="min-h-screen bg-[#F4F7FA] flex flex-col md:flex-row overflow-hidden text-[#003366] pb-16 md:pb-0">
+      <div className="min-h-screen bg-[#F4F7FA] flex flex-col md:flex-row overflow-hidden text-[#003366] md:pb-0">
       {/* Desktop Sidebar - Hidden on Mobile */}
       <aside className="hidden md:flex w-64 bg-white/80 backdrop-blur-md border-r border-[#E2E8F0] p-6 flex-col gap-8 shrink-0 shadow-sm">
         <motion.div 
@@ -1046,15 +1046,16 @@ const App: React.FC = () => {
         </nav>
       </aside>
 
-      {/* Mobile Top Bar */}
+      {/* Mobile Top Bar with Tabs */}
       {isMobile && (
-        <header className="md:hidden bg-white/90 backdrop-blur-md border-b border-[#E2E8F0] px-4 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
-          <div className="flex items-center gap-2">
-            <Logo size={24} />
-            <span className="text-lg font-black text-[#003366]">LogExtract</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2">
+        <div className="md:hidden sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-[#E2E8F0] shadow-sm">
+          {/* Compact Top Ribbon */}
+          <header className="px-2 py-1.5 flex items-center justify-between">
+            <div className="flex items-center gap-1">
+              <Logo size={18} />
+              <span className="text-sm font-black text-[#003366]">LogExtract</span>
+            </div>
+            <div className="flex items-center gap-1">
               <button
                 onClick={() => {
                   if (!user) {
@@ -1063,45 +1064,117 @@ const App: React.FC = () => {
                     setShowPaymentModal(true);
                   }
                 }}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-sm font-semibold ${
+                className={`flex items-center gap-1 px-1.5 py-0.5 rounded border transition-all text-[10px] font-semibold ${
                   !user || userCredits === 0
-                    ? 'bg-red-100 border-red-300 text-red-600 hover:bg-red-200 cursor-pointer' 
-                    : 'bg-[#007BFF]/10 border-[#007BFF]/30 text-[#007BFF] hover:bg-[#007BFF]/20'
+                    ? 'bg-red-100 border-red-300 text-red-600' 
+                    : 'bg-[#007BFF]/10 border-[#007BFF]/30 text-[#007BFF]'
                 }`}
                 title={!user ? 'Create an account to get 3 free credits' : userCredits === 0 ? 'Buy credits' : `${userCredits} credit${userCredits !== 1 ? 's' : ''} available`}
               >
-                <span>Credits</span>
-                <span>{loadingCredits ? '...' : `${userCredits ?? 0}`}</span>
+                <span className="text-[9px]">C:</span>
+                <span className="text-[10px]">{loadingCredits ? '...' : `${userCredits ?? 0}`}</span>
               </button>
               {user && (
                 <button
                   onClick={() => setShowPaymentModal(true)}
-                  className="flex items-center justify-center p-1.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-lg transition-all"
+                  className="flex items-center justify-center p-0.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded transition-all"
                   title="Buy more credits"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-3 h-3" />
+                </button>
+              )}
+              {user && (
+                <button
+                  onClick={handleExportModalOpen}
+                  className="flex items-center justify-center p-0.5 bg-[#003366]/10 hover:bg-[#003366]/20 border border-[#003366]/30 text-[#003366] rounded transition-all relative"
+                  title="Export"
+                >
+                  <Download className="w-3 h-3" />
+                  {exportableEntries.length > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 bg-[#007BFF] text-white text-[7px] font-bold px-0.5 rounded-full min-w-[10px] h-2.5 flex items-center justify-center">
+                      {exportableEntries.length}
+                    </span>
+                  )}
+                </button>
+              )}
+              {user && (
+                <div className="flex items-center gap-0.5 px-1 py-0.5 bg-white/80 rounded border border-[#E2E8F0]">
+                  <span className="text-[9px] text-[#003366]/70 font-medium truncate max-w-[50px]">{user.email?.split('@')[0]}</span>
+                </div>
+              )}
+              {user ? (
+                <button
+                  onClick={handleSignOut}
+                  className="p-0.5 bg-[#F4F7FA] hover:bg-[#E2E8F0] text-[#003366]/70 rounded"
+                  title="Sign Out"
+                >
+                  <LogOut className="w-3 h-3" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="px-1.5 py-0.5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded text-[9px] font-semibold"
+                >
+                  Sign In
                 </button>
               )}
             </div>
-            {user ? (
-              <>
-                <button
-                  onClick={handleSignOut}
-                  className="p-2 bg-[#F4F7FA] hover:bg-[#E2E8F0] text-[#003366]/70 rounded-lg"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={() => setShowAuthModal(true)}
-                className="px-3 py-1.5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-lg text-xs font-semibold"
-              >
-                Sign In
-              </button>
-            )}
-          </div>
-        </header>
+          </header>
+          
+          {/* Tabs Navigation */}
+          <nav className="flex items-center gap-0.5 px-1 pb-1 overflow-x-auto">
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`flex-1 min-w-0 px-2 py-1.5 rounded-lg transition-all text-[10px] font-semibold whitespace-nowrap ${
+                activeTab === 'dashboard' 
+                  ? 'bg-[#007BFF]/10 text-[#007BFF] border border-[#007BFF]/30' 
+                  : 'text-[#003366]/70 hover:bg-[#F4F7FA]'
+              }`}
+            >
+              Scanner
+            </button>
+            <button
+              onClick={() => setActiveTab('permanent-log')}
+              className={`flex-1 min-w-0 px-2 py-1.5 rounded-lg transition-all text-[10px] font-semibold whitespace-nowrap ${
+                activeTab === 'permanent-log' 
+                  ? 'bg-[#007BFF]/10 text-[#007BFF] border border-[#007BFF]/30' 
+                  : 'text-[#003366]/70 hover:bg-[#F4F7FA]'
+              }`}
+            >
+              Log
+            </button>
+            <button
+              onClick={() => setActiveTab('aircraft')}
+              className={`flex-1 min-w-0 px-2 py-1.5 rounded-lg transition-all text-[10px] font-semibold whitespace-nowrap ${
+                activeTab === 'aircraft' 
+                  ? 'bg-[#007BFF]/10 text-[#007BFF] border border-[#007BFF]/30' 
+                  : 'text-[#003366]/70 hover:bg-[#F4F7FA]'
+              }`}
+            >
+              Aircraft
+            </button>
+            <button
+              onClick={() => setActiveTab('tutorial')}
+              className={`flex-1 min-w-0 px-2 py-1.5 rounded-lg transition-all text-[10px] font-semibold whitespace-nowrap ${
+                activeTab === 'tutorial' 
+                  ? 'bg-[#007BFF]/10 text-[#007BFF] border border-[#007BFF]/30' 
+                  : 'text-[#003366]/70 hover:bg-[#F4F7FA]'
+              }`}
+            >
+              Help
+            </button>
+            <button
+              onClick={() => setActiveTab('reviews')}
+              className={`flex-1 min-w-0 px-2 py-1.5 rounded-lg transition-all text-[10px] font-semibold whitespace-nowrap ${
+                activeTab === 'reviews' 
+                  ? 'bg-[#007BFF]/10 text-[#007BFF] border border-[#007BFF]/30' 
+                  : 'text-[#003366]/70 hover:bg-[#F4F7FA]'
+              }`}
+            >
+              Reviews
+            </button>
+          </nav>
+        </div>
       )}
 
       <main className="flex-1 flex flex-col min-w-0 bg-[#F4F7FA]">
@@ -1570,74 +1643,6 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* Mobile Bottom Navigation */}
-      {isMobile && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-[#E2E8F0] z-40 md:hidden shadow-lg">
-          <div className="grid grid-cols-5 gap-1 px-1 py-2">
-            <button
-              onClick={() => setActiveTab('dashboard')}
-              className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg transition-all min-h-[48px] min-w-[48px] ${activeTab === 'dashboard' ? 'text-[#007BFF] bg-[#007BFF]/10' : 'text-[#003366]/70'}`}
-              aria-label="Scanner Dashboard"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-              </svg>
-              <span className="text-[10px] font-semibold">Scan</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('permanent-log')}
-              className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg transition-all min-h-[48px] min-w-[48px] ${activeTab === 'permanent-log' ? 'text-[#007BFF] bg-[#007BFF]/10' : 'text-[#003366]/70'}`}
-              aria-label="Permanent Log"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-              </svg>
-              <span className="text-[10px] font-semibold">Log</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('aircraft')}
-              className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg transition-all min-h-[48px] min-w-[48px] ${activeTab === 'aircraft' ? 'text-[#007BFF] bg-[#007BFF]/10' : 'text-[#003366]/70'}`}
-              aria-label="Aircraft Profiles"
-            >
-              <ICONS.Aircraft />
-              <span className="text-[10px] font-semibold">Aircraft</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('tutorial')}
-              className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg transition-all min-h-[48px] min-w-[48px] ${activeTab === 'tutorial' ? 'text-[#007BFF] bg-[#007BFF]/10' : 'text-[#003366]/70'}`}
-              aria-label="App Tutorial"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
-              </svg>
-              <span className="text-[10px] font-semibold">Help</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('reviews')}
-              className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg transition-all min-h-[48px] min-w-[48px] ${activeTab === 'reviews' ? 'text-[#007BFF] bg-[#007BFF]/10' : 'text-[#003366]/70'}`}
-              aria-label="Reviews"
-            >
-              <MessageSquare className="w-5 h-5" />
-              <span className="text-[10px] font-semibold">Reviews</span>
-            </button>
-            <button
-              onClick={handleExportModalOpen}
-              className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg transition-all relative min-h-[48px] min-w-[48px] ${exportableEntries.length > 0 ? 'text-emerald-600' : 'text-[#003366]/70'}`}
-              aria-label="Export logbook entries"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              <span className="text-[10px] font-semibold">Export</span>
-              {exportableEntries.length > 0 && (
-                <span className="absolute top-0 right-0 bg-emerald-600 text-white text-[8px] font-bold px-1 rounded-full min-w-[14px] h-3.5 flex items-center justify-center">
-                  {exportableEntries.length}
-                </span>
-              )}
-            </button>
-          </div>
-        </nav>
-      )}
 
       {showExportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md">
