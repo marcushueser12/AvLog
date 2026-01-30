@@ -23,6 +23,11 @@ body {
   /* Scale down font size for more screen real estate */
   html {
     font-size: 85%;
+    /* Prevent Safari from showing address bar on scroll */
+    height: 100%;
+    height: -webkit-fill-available;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
   }
   
   /* Prevent Safari address bar from showing on scroll */
@@ -30,14 +35,26 @@ body {
     position: fixed;
     width: 100%;
     height: 100%;
+    height: -webkit-fill-available;
+    height: 100dvh; /* Dynamic viewport height - prevents address bar reveal */
     overflow: hidden;
+    overscroll-behavior: none;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
   }
 
   #root {
     width: 100%;
     height: 100%;
+    height: -webkit-fill-available;
+    height: 100dvh; /* Dynamic viewport height */
     overflow: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
+    overscroll-behavior-y: none;
+    /* Prevent Safari from detecting scroll and showing address bar */
+    touch-action: pan-y;
   }
   
   /* Ensure all interactive elements are touch-friendly */
@@ -56,6 +73,18 @@ body {
   table input, table textarea {
     -webkit-user-select: text;
     user-select: text;
+  }
+  
+  /* Prevent Safari from showing address bar on scroll for scrollable containers */
+  * {
+    overscroll-behavior-y: contain;
+  }
+  
+  /* Main scrollable areas should not trigger Safari UI */
+  main, [class*="overflow"], [class*="overflow-y-auto"], [class*="overflow-auto"] {
+    overscroll-behavior: none;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
