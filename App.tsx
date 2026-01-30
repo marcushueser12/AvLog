@@ -1046,140 +1046,215 @@ const App: React.FC = () => {
         </nav>
       </aside>
 
-      {/* Mobile Top Bar with Tabs - Show on all screens below lg (1024px) */}
-      <div className="lg:hidden sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-[#E2E8F0] shadow-sm">
-          {/* Compact Top Ribbon - Responsive scaling */}
-          <header className="px-1 sm:px-2 py-1 flex items-center justify-between gap-1 min-w-0">
-            <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
-              <div className="w-4 h-4 sm:w-[18px] sm:h-[18px]">
-                <Logo size={16} />
-              </div>
-              <span className="text-xs sm:text-sm font-black text-[#003366] truncate">LogExtract</span>
+      {/* Mobile Top Bar - Full width, show on all screens below lg (1024px) */}
+      <header className="lg:hidden sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-[#E2E8F0] shadow-sm">
+        {/* Compact Top Ribbon - Full width, all buttons in one line */}
+        <div className="px-1 sm:px-2 py-1 flex items-center justify-between gap-1 min-w-0 w-full">
+          <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+            <div className="w-4 h-4 sm:w-[18px] sm:h-[18px]">
+              <Logo size={16} />
             </div>
-            <div className="flex items-center gap-0.5 sm:gap-1 min-w-0">
+            <span className="text-xs sm:text-sm font-black text-[#003366] truncate">LogExtract</span>
+          </div>
+          <div className="flex items-center gap-0.5 sm:gap-1 min-w-0 flex-1 justify-end">
+            <button
+              onClick={() => {
+                if (!user) {
+                  setShowAuthModal(true);
+                } else if (userCredits === 0) {
+                  setShowPaymentModal(true);
+                }
+              }}
+              className={`flex items-center gap-0.5 px-1 sm:px-1.5 py-0.5 rounded border transition-all text-[8px] sm:text-[9px] font-semibold shrink-0 ${
+                !user || userCredits === 0
+                  ? 'bg-red-100 border-red-300 text-red-600' 
+                  : 'bg-[#007BFF]/10 border-[#007BFF]/30 text-[#007BFF]'
+              }`}
+              title={!user ? 'Create an account to get 3 free credits' : userCredits === 0 ? 'Buy credits' : `${userCredits} credit${userCredits !== 1 ? 's' : ''} available`}
+            >
+              <span className="text-[7px] sm:text-[8px]">C:</span>
+              <span className="text-[8px] sm:text-[9px]">{loadingCredits ? '...' : `${userCredits ?? 0}`}</span>
+            </button>
+            {user && (
               <button
-                onClick={() => {
-                  if (!user) {
-                    setShowAuthModal(true);
-                  } else if (userCredits === 0) {
-                    setShowPaymentModal(true);
-                  }
-                }}
-                className={`flex items-center gap-0.5 px-1 sm:px-1.5 py-0.5 rounded border transition-all text-[8px] sm:text-[9px] font-semibold shrink-0 ${
-                  !user || userCredits === 0
-                    ? 'bg-red-100 border-red-300 text-red-600' 
-                    : 'bg-[#007BFF]/10 border-[#007BFF]/30 text-[#007BFF]'
-                }`}
-                title={!user ? 'Create an account to get 3 free credits' : userCredits === 0 ? 'Buy credits' : `${userCredits} credit${userCredits !== 1 ? 's' : ''} available`}
+                onClick={() => setShowPaymentModal(true)}
+                className="flex items-center justify-center p-0.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded transition-all shrink-0"
+                title="Buy more credits"
               >
-                <span className="text-[7px] sm:text-[8px]">C:</span>
-                <span className="text-[8px] sm:text-[9px]">{loadingCredits ? '...' : `${userCredits ?? 0}`}</span>
+                <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
               </button>
-              {user && (
-                <button
-                  onClick={() => setShowPaymentModal(true)}
-                  className="flex items-center justify-center p-0.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded transition-all shrink-0"
-                  title="Buy more credits"
-                >
-                  <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                </button>
-              )}
-              {user && (
-                <button
-                  onClick={handleExportModalOpen}
-                  className="flex items-center justify-center p-0.5 bg-[#003366]/10 hover:bg-[#003366]/20 border border-[#003366]/30 text-[#003366] rounded transition-all relative shrink-0"
-                  title="Export"
-                >
-                  <Download className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                  {exportableEntries.length > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 bg-[#007BFF] text-white text-[6px] sm:text-[7px] font-bold px-0.5 rounded-full min-w-[8px] sm:min-w-[10px] h-2 sm:h-2.5 flex items-center justify-center">
-                      {exportableEntries.length}
-                    </span>
-                  )}
-                </button>
-              )}
-              {user && (
-                <div className="flex items-center gap-0.5 px-0.5 sm:px-1 py-0.5 bg-white/80 rounded border border-[#E2E8F0] shrink-0 min-w-0">
-                  <span className="text-[7px] sm:text-[8px] text-[#003366]/70 font-medium truncate max-w-[40px] sm:max-w-[50px]">{user.email?.split('@')[0]}</span>
-                </div>
-              )}
-              {user ? (
-                <button
-                  onClick={handleSignOut}
-                  className="p-0.5 bg-[#F4F7FA] hover:bg-[#E2E8F0] text-[#003366]/70 rounded shrink-0"
-                  title="Sign Out"
-                >
-                  <LogOut className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                </button>
-              ) : (
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="px-1 sm:px-1.5 py-0.5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded text-[8px] sm:text-[9px] font-semibold shrink-0"
-                >
-                  Sign In
-                </button>
-              )}
-            </div>
-          </header>
-          
-          {/* Tabs Navigation */}
-          <nav className="flex items-center gap-0.5 px-1 pb-1 overflow-x-auto">
+            )}
+            {user && (
+              <button
+                onClick={handleExportModalOpen}
+                className="flex items-center justify-center p-0.5 bg-[#003366]/10 hover:bg-[#003366]/20 border border-[#003366]/30 text-[#003366] rounded transition-all relative shrink-0"
+                title="Export"
+              >
+                <Download className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                {exportableEntries.length > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 bg-[#007BFF] text-white text-[6px] sm:text-[7px] font-bold px-0.5 rounded-full min-w-[8px] sm:min-w-[10px] h-2 sm:h-2.5 flex items-center justify-center">
+                    {exportableEntries.length}
+                  </span>
+                )}
+              </button>
+            )}
+            {user && (
+              <div className="flex items-center gap-0.5 px-0.5 sm:px-1 py-0.5 bg-white/80 rounded border border-[#E2E8F0] shrink-0 min-w-0">
+                <span className="text-[7px] sm:text-[8px] text-[#003366]/70 font-medium truncate max-w-[40px] sm:max-w-[50px]">{user.email?.split('@')[0]}</span>
+              </div>
+            )}
+            {user ? (
+              <button
+                onClick={handleSignOut}
+                className="p-0.5 bg-[#F4F7FA] hover:bg-[#E2E8F0] text-[#003366]/70 rounded shrink-0"
+                title="Sign Out"
+              >
+                <LogOut className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="px-1 sm:px-1.5 py-0.5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded text-[8px] sm:text-[9px] font-semibold shrink-0"
+              >
+                Sign In
+              </button>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Layout - Sidebar + Main Content */}
+      <div className="lg:hidden flex flex-row flex-1 min-h-0 overflow-hidden">
+        {/* Vertical Tabs Sidebar - Left side */}
+        <aside className="w-16 sm:w-20 bg-white/90 backdrop-blur-md border-r border-[#E2E8F0] flex flex-col py-2 shrink-0">
+          <nav className="flex flex-col gap-1 px-1">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`flex-1 min-w-0 px-2 py-1.5 rounded-lg transition-all text-[10px] font-semibold whitespace-nowrap ${
+              className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg transition-all text-[9px] sm:text-[10px] font-semibold ${
                 activeTab === 'dashboard' 
                   ? 'bg-[#007BFF]/10 text-[#007BFF] border border-[#007BFF]/30' 
                   : 'text-[#003366]/70 hover:bg-[#F4F7FA]'
               }`}
+              title="Scanner Dashboard"
             >
-              Scanner
+              <Grid3x3 className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="text-[8px] sm:text-[9px]">Scan</span>
             </button>
             <button
               onClick={() => setActiveTab('permanent-log')}
-              className={`flex-1 min-w-0 px-2 py-1.5 rounded-lg transition-all text-[10px] font-semibold whitespace-nowrap ${
+              className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg transition-all text-[9px] sm:text-[10px] font-semibold ${
                 activeTab === 'permanent-log' 
                   ? 'bg-[#007BFF]/10 text-[#007BFF] border border-[#007BFF]/30' 
                   : 'text-[#003366]/70 hover:bg-[#F4F7FA]'
               }`}
+              title="Permanent Log"
             >
-              Log
+              <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="text-[8px] sm:text-[9px]">Log</span>
             </button>
             <button
               onClick={() => setActiveTab('aircraft')}
-              className={`flex-1 min-w-0 px-2 py-1.5 rounded-lg transition-all text-[10px] font-semibold whitespace-nowrap ${
+              className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg transition-all text-[9px] sm:text-[10px] font-semibold ${
                 activeTab === 'aircraft' 
                   ? 'bg-[#007BFF]/10 text-[#007BFF] border border-[#007BFF]/30' 
                   : 'text-[#003366]/70 hover:bg-[#F4F7FA]'
               }`}
+              title="Aircraft Profiles"
             >
-              Aircraft
+              <ICONS.Aircraft className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="text-[8px] sm:text-[9px]">Aircraft</span>
             </button>
             <button
               onClick={() => setActiveTab('tutorial')}
-              className={`flex-1 min-w-0 px-2 py-1.5 rounded-lg transition-all text-[10px] font-semibold whitespace-nowrap ${
+              className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg transition-all text-[9px] sm:text-[10px] font-semibold ${
                 activeTab === 'tutorial' 
                   ? 'bg-[#007BFF]/10 text-[#007BFF] border border-[#007BFF]/30' 
                   : 'text-[#003366]/70 hover:bg-[#F4F7FA]'
               }`}
+              title="Help"
             >
-              Help
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="sm:w-5 sm:h-5">
+                <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+              </svg>
+              <span className="text-[8px] sm:text-[9px]">Help</span>
             </button>
             <button
               onClick={() => setActiveTab('reviews')}
-              className={`flex-1 min-w-0 px-2 py-1.5 rounded-lg transition-all text-[10px] font-semibold whitespace-nowrap ${
+              className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg transition-all text-[9px] sm:text-[10px] font-semibold ${
                 activeTab === 'reviews' 
                   ? 'bg-[#007BFF]/10 text-[#007BFF] border border-[#007BFF]/30' 
                   : 'text-[#003366]/70 hover:bg-[#F4F7FA]'
               }`}
+              title="Reviews"
             >
-              Reviews
+              <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="text-[8px] sm:text-[9px]">Reviews</span>
             </button>
           </nav>
-        </div>
+        </aside>
 
-      <main className="flex-1 flex flex-col min-w-0 bg-[#F4F7FA]">
+        {/* Main Content Area - Mobile */}
+        <main className="flex-1 flex flex-col min-w-0 bg-[#F4F7FA] overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-2 sm:p-4">
+            {/* All tabs are now accessible without authentication */}
+            {activeTab === 'reviews' ? (
+              <ReviewsTab />
+            ) : activeTab === 'tutorial' ? (
+              <TutorialTab />
+            ) : activeTab === 'permanent-log' ? (
+              <PermanentLogTab />
+            ) : activeTab === 'dashboard' ? (
+              <div className="space-y-6">
+                {/* Bento Grid Stats - Mobile optimized */}
+                <motion.section
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="grid grid-cols-3 gap-2"
+                >
+                  <motion.div className="p-3 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-xl shadow-sm">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[9px] font-semibold text-[#003366]/70">Total</span>
+                      <Clock className="w-3 h-3 text-[#007BFF]" />
+                    </div>
+                    <p className="text-lg font-black text-[#003366]">{stats.totalTime.toFixed(1)}</p>
+                    <p className="text-[8px] text-[#003366]/60">hrs</p>
+                  </motion.div>
+                  <motion.div className="p-3 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-xl shadow-sm">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[9px] font-semibold text-[#003366]/70">PIC</span>
+                      <Plane className="w-3 h-3 text-[#007BFF]" />
+                    </div>
+                    <p className="text-lg font-black text-[#003366]">{stats.pic.toFixed(1)}</p>
+                    <p className="text-[8px] text-[#003366]/60">hrs</p>
+                  </motion.div>
+                  <motion.div className="p-3 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-xl shadow-sm">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[9px] font-semibold text-[#003366]/70">XC</span>
+                      <Plane className="w-3 h-3 text-[#007BFF]" />
+                    </div>
+                    <p className="text-lg font-black text-[#003366]">{stats.crossCountry.toFixed(1)}</p>
+                    <p className="text-[8px] text-[#003366]/60">hrs</p>
+                  </motion.div>
+                </motion.section>
+                {/* Note: Full dashboard content is in desktop version - mobile shows simplified view */}
+                {!user && (
+                  <div className="text-center p-4 bg-white/80 rounded-xl border border-[#E2E8F0]">
+                    <p className="text-sm text-[#003366]/70">Create a free account to start digitizing your logbook</p>
+                  </div>
+                )}
+              </div>
+            ) : activeTab === 'aircraft' ? (
+              <AircraftProfilesTab />
+            ) : null}
+          </div>
+        </main>
+      </div>
+
+      {/* Desktop Main Content Area */}
+      <main className="hidden lg:flex flex-1 flex flex-col min-w-0 bg-[#F4F7FA]">
         {/* Desktop Header - Only show on large screens */}
-        <header className="hidden lg:flex h-14 px-6 border-b border-[#E2E8F0] items-center justify-between bg-white/70 backdrop-blur-md sticky top-0 z-20 shrink-0 shadow-sm">
+        <header className="h-14 px-6 border-b border-[#E2E8F0] items-center justify-between bg-white/70 backdrop-blur-md sticky top-0 z-20 shrink-0 shadow-sm flex">
           <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
             <h2 className="text-sm sm:text-base font-bold text-[#003366] truncate">
               {activeTab === 'dashboard' ? 'Logbook Digitizer' : 
