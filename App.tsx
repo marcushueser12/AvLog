@@ -1014,7 +1014,7 @@ const App: React.FC = () => {
   return (
     <>
       <LandscapePrompt show={view === 'app'} />
-      <div className="min-h-screen bg-[#F4F7FA] flex flex-col md:flex-row overflow-hidden text-[#003366] pb-16 md:pb-0 mobile-scale">
+      <div className="min-h-screen bg-[#F4F7FA] flex flex-col md:flex-row overflow-hidden text-[#003366] pb-16 md:pb-0">
       {/* Desktop Sidebar - Hidden on Mobile */}
       <aside className="hidden md:flex w-64 bg-white/80 backdrop-blur-md border-r border-[#E2E8F0] p-6 flex-col gap-8 shrink-0 shadow-sm">
         <motion.div 

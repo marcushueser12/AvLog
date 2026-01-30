@@ -16,27 +16,46 @@ body {
   padding: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Prevent Safari address bar from showing on scroll */
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
 }
 
-#root {
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Mobile scaling - scale down to 90% for more screen real estate */
+/* Mobile optimizations */
 @media (max-width: 768px) {
-  .mobile-scale {
-    transform: scale(0.9);
-    transform-origin: top center;
-    width: 111.11%; /* Compensate for scale to maintain full width */
-    min-height: 111.11vh; /* Compensate for scale */
+  /* Scale down font size for more screen real estate */
+  html {
+    font-size: 90%;
+  }
+  
+  /* Prevent Safari address bar from showing on scroll */
+  body {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  #root {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Ensure all interactive elements are touch-friendly */
+  input, button, select, textarea {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Prevent text selection on table cells during scrolling */
+  table td, table th {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  /* Allow text selection in input fields */
+  table input, table textarea {
+    -webkit-user-select: text;
+    user-select: text;
   }
 }
 
