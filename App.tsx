@@ -1265,7 +1265,7 @@ const App: React.FC = () => {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-8">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pb-8">
           {/* All tabs are now accessible without authentication */}
           {activeTab === 'reviews' ? (
             <ReviewsTab />
