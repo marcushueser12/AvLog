@@ -1056,7 +1056,7 @@ const App: React.FC = () => {
               </div>
               <span className="text-xs sm:text-sm font-black text-[#003366] truncate">LogExtract</span>
             </div>
-            <div className="flex items-center gap-0.5 sm:gap-1 min-w-0 flex-shrink">
+            <div className="flex items-center gap-0.5 sm:gap-1 min-w-0">
               <button
                 onClick={() => {
                   if (!user) {
