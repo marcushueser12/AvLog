@@ -24,6 +24,17 @@ const formatNumeric = (value: string): string => {
 };
 
 /**
+ * Creates a row with exactly 71 columns, padding with spaces (not empty strings) to match ForeFlight template
+ */
+const createRow = (values: string[]): string => {
+  const padded = [...values];
+  while (padded.length < 71) {
+    padded.push(' '); // Use space, not empty string, to match template
+  }
+  return padded.slice(0, 71).join(',');
+};
+
+/**
  * Formats date to MM/DD/YYYY format required by ForeFlight
  * Handles various input formats: YYYY-MM-DD, MM/DD/YYYY, DD/MM/YYYY, etc.
  */
@@ -71,18 +82,33 @@ const formatDateForForeFlight = (dateStr: string | undefined): string => {
 export const generateForeFlightCSV = (entries: LogbookEntry[], aircraftProfiles: AircraftProfile[] = []): string => {
   const csvRows: string[] = [];
 
-  // 1. Mandatory Header Row
-  csvRows.push("ForeFlight Logbook Import ,This row is required for importing into ForeFlight. Do not delete or modify. ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
-  csvRows.push(",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
-
-  // 2. Aircraft Table Section (ForeFlight uses this to define aircraft profiles)
-  csvRows.push("Aircraft Table,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
-  // Sub-header for Aircraft Table (Data Types)
-  csvRows.push("Text,Text,Text,YYYY,Text,Text,Text,Text,Text,Boolean,Boolean,Boolean,Boolean,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
-  // Headers for Aircraft Table
-  csvRows.push(FOREFLIGHT_AIRCRAFT_HEADERS.join(',') + ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
+  // 1. Mandatory Header Row - must match template exactly
+  csvRows.push(createRow([
+    "ForeFlight Logbook Import ",
+    "This row is required for importing into ForeFlight. Do not delete or modify. "
+  ]));
   
-  // Use saved aircraft profiles, or fall back to extracting from entries
+  // 2. Empty row with spaces
+  csvRows.push(createRow([]));
+
+  // 3. Aircraft Table Section (ForeFlight uses this to define aircraft profiles)
+  csvRows.push(createRow(["Aircraft Table"]));
+  
+  // 4. Sub-header for Aircraft Table (Data Types)
+  csvRows.push(createRow([
+    "Text", "Text", "Text", "YYYY", "Text", "Text", "Text", "Text", "Text", 
+    "Boolean", "Boolean", "Boolean", "Boolean"
+  ]));
+  
+  // 5. Headers for Aircraft Table
+  csvRows.push(createRow(FOREFLIGHT_AIRCRAFT_HEADERS));
+  
+  // 6-11. Empty rows with spaces (6 empty rows as per template)
+  for (let i = 0; i < 6; i++) {
+    csvRows.push(createRow([]));
+  }
+  
+  // 12. Aircraft data rows
   const uniqueAircraftIds = Array.from(new Set(entries.map(e => e.aircraftId).filter(id => id && id.trim())));
   
   uniqueAircraftIds.forEach(aircraftId => {
@@ -106,7 +132,7 @@ export const generateForeFlightCSV = (entries: LogbookEntry[], aircraftProfiles:
         profile.pressurized ? 'TRUE' : '',
         profile.taa ? 'TRUE' : ''
       ];
-      csvRows.push(row.join(',') + ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
+      csvRows.push(createRow(row));
     } else {
       // Fall back to basic data from entries
       const firstMatch = entries.find(e => e.aircraftId === aircraftId);
@@ -125,31 +151,27 @@ export const generateForeFlightCSV = (entries: LogbookEntry[], aircraftProfiles:
         "", // Pressurized
         ""  // TAA
       ];
-      csvRows.push(row.join(',') + ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
+      csvRows.push(createRow(row));
     }
   });
 
-  // Space between tables
-  csvRows.push(",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
-  csvRows.push(",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
-
-  // 3. Flights Table Section
-  csvRows.push("Flights Table,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
+  // 13. Flights Table Section
+  csvRows.push(createRow(["Flights Table"]));
   
-  // Data Types for Flights Table (ForeFlight uses these to parse values)
-  // We provide a row that tells ForeFlight which columns are Decimals, Text, etc.
+  // 14. Data Types for Flights Table (ForeFlight uses these to parse values)
   const flightDataTypes = FOREFLIGHT_FLIGHT_HEADERS.map(h => {
     if (["Date"].includes(h)) return "Date";
     if (["TotalTime", "PIC", "SIC", "Solo", "Night", "CrossCountry", "ActualInstrument", "SimulatedInstrument", "GroundTraining", "GroundTrainingGiven", "DualGiven", "DualReceived", "Day", "SimulatedFlight"].includes(h)) return "Decimal or HH:MM";
     if (["DayTakeoffs", "DayLandingsFullStop", "NightTakeoffs", "NightLandingsFullStop", "AllLandings", "Approaches", "Holds"].includes(h)) return "Number";
+    if (["TimeOut", "TimeOff", "TimeOn", "TimeIn", "OnDuty", "OffDuty"].includes(h)) return "HH:MM";
     return "Text";
   });
-  csvRows.push(flightDataTypes.join(','));
+  csvRows.push(createRow(flightDataTypes));
   
-  // Official Column Headers for Flights Table
-  csvRows.push(FOREFLIGHT_FLIGHT_HEADERS.join(','));
+  // 15. Official Column Headers for Flights Table
+  csvRows.push(createRow(FOREFLIGHT_FLIGHT_HEADERS));
 
-  // The Data Rows
+  // 16+. The Data Rows
   entries.forEach(entry => {
     // Map existing LogbookEntry to the 71 columns of the Flights Table
     // Ensure we always return exactly 71 values (one per header)
@@ -233,10 +255,11 @@ export const generateForeFlightCSV = (entries: LogbookEntry[], aircraftProfiles:
         default: return ""; // Everything else empty
       }
     });
-    csvRows.push(row.join(','));
+    csvRows.push(createRow(row));
   });
 
-  return csvRows.join('\n');
+  // Use Windows line endings (\r\n) to match ForeFlight template
+  return csvRows.join('\r\n');
 };
 
 export const downloadCSV = (content: string, fileName: string) => {

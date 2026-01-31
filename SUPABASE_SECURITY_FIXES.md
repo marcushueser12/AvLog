@@ -86,9 +86,32 @@ After applying the fixes:
 
 2. **Check Auth settings:** Go to Authentication → Settings and verify "Leaked Password Protection" is enabled.
 
+## Performance Optimizations (Fixed)
+
+### RLS Policy Performance
+
+All RLS policies have been optimized to use `(select auth.uid())` instead of `auth.uid()`. This prevents the function from being re-evaluated for each row, significantly improving query performance at scale.
+
+**What was fixed:**
+- All policies in `schema.sql` now use `(select auth.uid())`
+- Reviews table policies consolidated to reduce multiple permissive policies
+- Created `migration_rls_performance_fix.sql` for easy application
+
+**To apply the performance fixes:**
+Run `supabase/migration_rls_performance_fix.sql` in your Supabase SQL Editor. This will drop and recreate all policies with the optimizations.
+
+**Tables optimized:**
+- `user_profiles` (3 policies)
+- `verified_scans` (4 policies)
+- `verified_entries` (4 policies)
+- `credit_transactions` (1 policy)
+- `aircraft_profiles` (4 policies)
+- `reviews` (2 policies consolidated into 1)
+
 ## Additional Security Recommendations
 
 1. **Enable Row Level Security (RLS)** - Already enabled ✅
 2. **Use parameterized queries** - Already using Supabase client ✅
 3. **Regular security audits** - Run Supabase linter regularly
 4. **Keep dependencies updated** - Regularly update npm packages
+5. **Monitor performance** - Use Supabase dashboard to track query performance

@@ -923,7 +923,7 @@ const App: React.FC = () => {
   // Exclude verified scans - they should only appear in permanent log
   const pendingVerificationScans = useMemo(() => {
     return scans
-      .filter(s => s.status === 'completed' && !s.isVerified && s.status !== 'verified')
+      .filter(s => s.status === 'completed' && !s.isVerified)
       .sort((a, b) => b.timestamp - a.timestamp);
   }, [scans]);
 
@@ -1015,8 +1015,10 @@ const App: React.FC = () => {
     <>
       <LandscapePrompt show={view === 'app'} />
       <div className="min-h-screen bg-[#F4F7FA] flex flex-col overflow-hidden text-[#003366]">
-      {/* Desktop Sidebar - Only show on large screens (not mobile landscape) */}
-      <aside className="hidden lg:flex w-64 bg-white/80 backdrop-blur-md border-r border-[#E2E8F0] p-6 flex-col gap-8 shrink-0 shadow-sm">
+      {/* Desktop Layout - Sidebar and Main Content side-by-side */}
+      <div className="hidden lg:flex flex-1 min-w-0 overflow-hidden">
+        {/* Desktop Sidebar - Only show on large screens (not mobile landscape) */}
+        <aside className="w-64 bg-white/80 backdrop-blur-md border-r border-[#E2E8F0] p-6 flex-col gap-8 shrink-0 shadow-sm flex">
         <motion.div 
           className="flex items-center gap-3 cursor-pointer group"
           onClick={() => setView('landing')}
@@ -1941,8 +1943,6 @@ const App: React.FC = () => {
                 </section>
               )}
             </div>
-          ) : activeTab === 'tutorial' ? (
-            <TutorialTab />
           ) : activeTab === 'aircraft' ? (
             <AircraftProfilesTab />
           ) : (
@@ -1950,13 +1950,15 @@ const App: React.FC = () => {
                <div className="w-20 h-20 bg-slate-800 rounded-3xl flex items-center justify-center text-slate-600">
                   <ICONS.Plane />
                </div>
-               <h2 className="text-2xl font-black text-white capitalize">{activeTab.replace('-', ' ')}</h2>
+               <h2 className="text-2xl font-black text-white capitalize">{(activeTab as string).replace('-', ' ')}</h2>
                <p className="text-slate-500 max-w-sm">This module is currently being optimized for high-volume data visualization. Check back soon for your personalized pilot analytics.</p>
                <button onClick={() => setActiveTab('dashboard')} className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-all">Back to Dashboard</button>
             </div>
           )}
         </div>
       </main>
+      </div>
+      {/* End Desktop Layout */}
 
 
       {showExportModal && (
