@@ -559,7 +559,60 @@ const ReviewsTab: React.FC = () => {
           </motion.div>
         )}
 
-        {/* Admin Support Tickets Section */}
+        {/* Reviews Grid - main content first */}
+        {reviews.length === 0 ? (
+          <div className="text-center py-12 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl">
+            <MessageSquare className="w-12 h-12 text-[#003366]/20 mx-auto mb-4" />
+            <p className="text-[#003366]/70">No reviews yet. Be the first to share your experience!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {reviews.map((review) => (
+              <motion.div
+                key={review.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-[#007BFF]/10 rounded-full flex items-center justify-center">
+                      <User className="w-5 h-5 text-[#007BFF]" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-[#003366]">
+                        {review.reviewer_name}
+                        {review.pilot_ratings && (
+                          <span className="text-[#003366]/60 font-normal">
+                            {' • '}{review.pilot_ratings}
+                          </span>
+                        )}
+                      </p>
+                      <div className="flex items-center gap-1 mt-1">
+                        {renderStars(review.rating)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-sm text-[#003366]/70 leading-relaxed mb-4">
+                  {review.review_text}
+                </p>
+                <div className="flex items-center gap-2 text-xs text-[#003366]/50">
+                  <Calendar className="w-4 h-4" />
+                  <span>
+                    {new Date(review.created_at).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
+                  </span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+        {/* Admin Support Tickets Section - below main reviews for admins */}
         {isAdmin && (
           <div className="mb-8 bg-blue-50 border border-blue-200 rounded-2xl p-6">
             <h2 className="text-xl font-bold text-[#003366] mb-4 flex items-center gap-2">
@@ -764,59 +817,6 @@ const ReviewsTab: React.FC = () => {
                 </div>
               ))}
             </div>
-          </div>
-        )}
-
-        {/* Reviews Grid */}
-        {reviews.length === 0 ? (
-          <div className="text-center py-12 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl">
-            <MessageSquare className="w-12 h-12 text-[#003366]/20 mx-auto mb-4" />
-            <p className="text-[#003366]/70">No reviews yet. Be the first to share your experience!</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {reviews.map((review) => (
-              <motion.div
-                key={review.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#007BFF]/10 rounded-full flex items-center justify-center">
-                      <User className="w-5 h-5 text-[#007BFF]" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-[#003366]">
-                        {review.reviewer_name}
-                        {review.pilot_ratings && (
-                          <span className="text-[#003366]/60 font-normal">
-                            {' • '}{review.pilot_ratings}
-                          </span>
-                        )}
-                      </p>
-                      <div className="flex items-center gap-1 mt-1">
-                        {renderStars(review.rating)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <p className="text-sm text-[#003366]/70 leading-relaxed mb-4">
-                  {review.review_text}
-                </p>
-                <div className="flex items-center gap-2 text-xs text-[#003366]/50">
-                  <Calendar className="w-4 h-4" />
-                  <span>
-                    {new Date(review.created_at).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}
-                  </span>
-                </div>
-              </motion.div>
-            ))}
           </div>
         )}
       </div>
