@@ -1983,7 +1983,7 @@ const App: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md">
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowExportModal(false)}></div>
           <div className="relative bg-white/90 backdrop-blur-md border border-[#E2E8F0] rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95">
-            <h3 className="text-xl font-bold mb-2 text-[#003366]">Export to ForeFlight</h3>
+            <h3 className="text-xl font-bold mb-2 text-[#003366]">Export to Logbook CSV</h3>
             
             {/* Current verified entries count */}
             {exportableEntries.length > 0 && (
@@ -2166,7 +2166,7 @@ const App: React.FC = () => {
               onClick={handleExport}
               className="w-full py-4 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-2xl font-black text-lg transition-all shadow-lg shadow-[#003366]/20"
             >
-              Download .CSV for ForeFlight
+              Download Logbook CSV
             </button>
             <button onClick={() => setShowExportModal(false)} className="w-full mt-4 py-2 text-[#003366]/70 hover:text-[#003366] font-medium">Cancel</button>
           </div>

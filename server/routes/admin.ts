@@ -163,47 +163,49 @@ router.get(
 /**
  * GET /api/admin/check
  * Check if authenticated user is admin
- * Uses admin email list (can be moved to env var or database)
+ * Uses BOTH database (user_profiles.is_admin) AND ADMIN_EMAILS - either grants admin
  */
 router.get('/check', verifyAuth, async (req: any, res) => {
   try {
     const userId = req.userId!;
-    
-    // First, check database for is_admin flag (preferred method)
+    const userEmail = (req.userEmail || '').toLowerCase().trim();
+
+    // Method 1: Check ADMIN_EMAILS env var (redundant path, no DB needed)
+    const adminEmailsRaw = process.env.ADMIN_EMAILS || '';
+    const adminEmails = adminEmailsRaw
+      .split(',')
+      .map(e => e.trim().toLowerCase())
+      .filter(e => e.length > 0);
+    const fromEmailList = userEmail && adminEmails.includes(userEmail);
+
+    // Method 2: Check user_profiles.is_admin in database
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('user_profiles')
       .select('is_admin')
       .eq('user_id', userId)
-      .single();
-    
-    let isAdmin = false;
-    
-    if (!profileError && profile) {
-      // Use database is_admin flag if profile exists
-      isAdmin = profile.is_admin || false;
-    } else {
-      // Fallback to email list check if profile doesn't exist or doesn't have is_admin set
-      const adminEmailsRaw = process.env.ADMIN_EMAILS || '';
-      const adminEmails = adminEmailsRaw
-        .split(',')
-        .map(e => e.trim().toLowerCase())
-        .filter(e => e.length > 0);
-      
-      const userEmail = (req.userEmail || '').toLowerCase().trim();
-      isAdmin = adminEmails.includes(userEmail);
-    }
-    
-    // Log for debugging (only in development)
+      .maybeSingle();
+
+    const rawIsAdmin = profile?.is_admin;
+    const fromDatabase = !!(
+      !profileError &&
+      profile &&
+      (rawIsAdmin === true || rawIsAdmin === 'true' || rawIsAdmin === 't')
+    );
+
+    const isAdmin = fromEmailList || fromDatabase;
+
     if (process.env.NODE_ENV === 'development') {
       console.log('Admin check:', {
         userId,
         userEmail: req.userEmail,
         isAdmin,
-        fromDatabase: !profileError && profile ? profile.is_admin : null,
-        fromEmailList: profileError ? 'checked' : 'not checked'
+        fromEmailList,
+        fromDatabase,
+        rawIsAdmin,
+        profileError: profileError?.message
       });
     }
-    
+
     res.json({ isAdmin });
   } catch (error: any) {
     console.error('Admin check error:', error);
@@ -281,18 +283,21 @@ router.post(
   }
 );
 
-/** Helper to check if user is admin */
+/** Helper to check if user is admin - uses BOTH database and ADMIN_EMAILS */
 const checkIsAdmin = async (req: AuthRequest): Promise<boolean> => {
   const userId = req.userId!;
+  const userEmail = (req.userEmail || '').toLowerCase().trim();
+
+  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()).filter(e => e) || [];
+  if (userEmail && adminEmails.includes(userEmail)) return true;
+
   const { data: profile } = await supabaseAdmin
     .from('user_profiles')
     .select('is_admin')
     .eq('user_id', userId)
-    .single();
-  if (profile?.is_admin) return true;
-  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()).filter(e => e) || [];
-  const userEmail = (req.userEmail || '').toLowerCase().trim();
-  return adminEmails.includes(userEmail);
+    .maybeSingle();
+  const raw = profile?.is_admin;
+  return !!(raw === true || raw === 'true' || raw === 't');
 };
 
 /**
