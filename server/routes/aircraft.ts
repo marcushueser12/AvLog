@@ -144,24 +144,32 @@ router.post(
 
         if (fetchError) throw fetchError;
 
-        // Update existing profile
+        // Update existing profile - only update fields that have actual data (preserve existing data for empty fields)
+        // This prevents auto-extracted minimal data from overwriting manually entered detailed profiles
+        const updateData: any = {
+          updated_at: new Date().toISOString()
+        };
+
+        // Only update fields that have non-empty values (preserve existing data if incoming is empty)
+        if (safeTrim(equipmentType) !== null) updateData.equipment_type = safeTrim(equipmentType);
+        if (safeTrim(typeCode) !== null) updateData.type_code = safeTrim(typeCode);
+        if (safeTrim(year) !== null) updateData.year = safeTrim(year);
+        if (safeTrim(make) !== null) updateData.make = safeTrim(make);
+        if (safeTrim(model) !== null) updateData.model = safeTrim(model);
+        if (safeTrim(gearType) !== null) updateData.gear_type = safeTrim(gearType);
+        if (safeTrim(engineType) !== null) updateData.engine_type = safeTrim(engineType);
+        if (safeTrim(categoryClass) !== null) updateData.category_class = safeTrim(categoryClass);
+        
+        // Boolean fields: only update if explicitly provided (not just default false)
+        // Check if the request body explicitly contains these fields
+        if (req.body.hasOwnProperty('complex')) updateData.complex = Boolean(complex);
+        if (req.body.hasOwnProperty('highPerformance')) updateData.high_performance = Boolean(highPerformance);
+        if (req.body.hasOwnProperty('pressurized')) updateData.pressurized = Boolean(pressurized);
+        if (req.body.hasOwnProperty('taa')) updateData.taa = Boolean(taa);
+
         const { data: updatedData, error: updateError } = await supabaseAdmin
           .from('aircraft_profiles')
-          .update({
-            equipment_type: safeTrim(equipmentType),
-            type_code: safeTrim(typeCode),
-            year: safeTrim(year),
-            make: safeTrim(make),
-            model: safeTrim(model),
-            gear_type: safeTrim(gearType),
-            engine_type: safeTrim(engineType),
-            category_class: safeTrim(categoryClass),
-            complex: Boolean(complex),
-            high_performance: Boolean(highPerformance),
-            pressurized: Boolean(pressurized),
-            taa: Boolean(taa),
-            updated_at: new Date().toISOString()
-          })
+          .update(updateData)
           .eq('id', existing.id)
           .select()
           .single();
