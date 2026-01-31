@@ -89,50 +89,48 @@ const ReviewsTab: React.FC = () => {
   }, [supportStatusFilter]);
 
   const checkAdminStatus = async () => {
+    console.log('[Admin Debug] checkAdminStatus called', { userEmail: user?.email, hasUser: !!user });
     if (user) {
       try {
         const token = getAccessToken();
         if (!token) {
+          console.warn('[Admin Debug] No access token - cannot check admin status');
           setIsAdmin(false);
           return;
         }
-        
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/admin/check`, {
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+        console.log('[Admin Debug] Calling', `${apiUrl}/api/admin/check`);
+        const response = await fetch(`${apiUrl}/api/admin/check`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-        
+        const data = await response.json().catch(() => ({}));
+        const adminStatus = data.isAdmin || false;
+        console.log('[Admin Debug] API response:', {
+          status: response.status,
+          ok: response.ok,
+          isAdmin: adminStatus,
+          rawData: data,
+          userEmail: user?.email
+        });
         if (response.ok) {
-          const data = await response.json();
-          const adminStatus = data.isAdmin || false;
           setIsAdmin(adminStatus);
-          
-          // Log for debugging
-          if (process.env.NODE_ENV === 'development') {
-            console.log('Admin status check result:', {
-              userEmail: user.email,
-              isAdmin: adminStatus,
-              response: data
-            });
-          }
-          
-          // Force load pending reviews if admin (bypass isAdmin check since state update is async)
           if (adminStatus) {
             loadPendingReviews(true);
           } else {
             setPendingReviews([]);
           }
         } else {
-          const errorData = await response.json().catch(() => ({}));
-          console.error('Admin check failed:', response.status, errorData);
+          console.error('[Admin Debug] Admin check failed:', response.status, data);
           setIsAdmin(false);
         }
       } catch (error) {
-        console.error('Error checking admin status:', error);
+        console.error('[Admin Debug] Error checking admin status:', error);
         setIsAdmin(false);
       }
     } else {
+      console.log('[Admin Debug] No user - setting isAdmin false');
       setIsAdmin(false);
     }
   };
