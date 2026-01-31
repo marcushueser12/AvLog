@@ -273,6 +273,32 @@ router.post(
 );
 
 /**
+ * GET /api/admin/pending-reviews
+ * List all pending (unapproved) reviews (admin only)
+ * Uses service role to bypass RLS - frontend cannot fetch pending reviews due to RLS
+ */
+router.get('/pending-reviews', verifyAuth, async (req: AuthRequest, res) => {
+  try {
+    if (!(await checkIsAdmin(req))) {
+      return res.status(403).json({ error: 'Unauthorized - Admin access required' });
+    }
+    const { data, error } = await supabaseAdmin
+      .from('reviews')
+      .select('*')
+      .eq('approved', false)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    res.json({ reviews: data || [] });
+  } catch (error: any) {
+    console.error('Admin pending reviews error:', error);
+    res.status(500).json({
+      error: 'Failed to fetch pending reviews',
+      ...(process.env.NODE_ENV === 'development' && { details: error.message }),
+    });
+  }
+});
+
+/**
  * GET /api/admin/support-tickets
  * List all support tickets (admin only)
  * Query: status (optional) - filter by open, in_progress, resolved, closed

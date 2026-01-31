@@ -229,24 +229,22 @@ const ReviewsTab: React.FC = () => {
   };
 
   const loadPendingReviews = async (forceLoad = false) => {
-    // Allow force loading even if isAdmin isn't set yet (for async state updates)
     if (!isAdmin && !forceLoad) return;
+    const token = getAccessToken();
+    if (!token) return;
     try {
-      const { data, error } = await supabase
-        .from('reviews')
-        .select('*')
-        .eq('approved', false)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setPendingReviews(data || []);
-      
-      // Log for debugging
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Loaded pending reviews:', data?.length || 0);
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/admin/pending-reviews`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setPendingReviews(data.reviews || []);
+      } else {
+        setPendingReviews([]);
       }
     } catch (error) {
       console.error('Error loading pending reviews:', error);
+      setPendingReviews([]);
     }
   };
 
@@ -750,12 +748,15 @@ const ReviewsTab: React.FC = () => {
         )}
 
         {/* Admin Pending Reviews Section */}
-        {isAdmin && pendingReviews.length > 0 && (
+        {isAdmin && (
           <div className="mb-8 bg-amber-50 border border-amber-200 rounded-2xl p-6">
             <h2 className="text-xl font-bold text-[#003366] mb-4 flex items-center gap-2">
               <AlertCircle className="w-6 h-6 text-amber-600" />
               Pending Reviews ({pendingReviews.length})
             </h2>
+            {pendingReviews.length === 0 ? (
+              <p className="text-[#003366]/60 py-4">No pending reviews to approve.</p>
+            ) : (
             <div className="space-y-4">
               {pendingReviews.map((review) => (
                 <div
@@ -800,6 +801,7 @@ const ReviewsTab: React.FC = () => {
                 </div>
               ))}
             </div>
+            )}
           </div>
         )}
       </div>
