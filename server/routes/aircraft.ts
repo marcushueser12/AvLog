@@ -74,37 +74,30 @@ router.post(
     taa: { type: 'boolean', required: false },
   }),
   async (req: AuthRequest, res) => {
+  const userId = req.userId!;
+  const {
+    aircraftId,
+    equipmentType = '',
+    typeCode = '',
+    year = '',
+    make = '',
+    model = '',
+    gearType = '',
+    engineType = '',
+    categoryClass = '',
+    complex = false,
+    highPerformance = false,
+    pressurized = false,
+    taa = false
+  } = req.body;
+
+  // Normalize aircraft ID: add "N" prefix if not present and convert to uppercase
+  let normalizedAircraftId = aircraftId.trim().toUpperCase();
+  if (normalizedAircraftId && !normalizedAircraftId.startsWith('N')) {
+    normalizedAircraftId = `N${normalizedAircraftId}`;
+  }
+
   try {
-    const userId = req.userId!;
-    const {
-      aircraftId,
-      equipmentType = '',
-      typeCode = '',
-      year = '',
-      make = '',
-      model = '',
-      gearType = '',
-      engineType = '',
-      categoryClass = '',
-      complex = false,
-      highPerformance = false,
-      pressurized = false,
-      taa = false
-    } = req.body;
-
-    // Normalize aircraft ID: add "N" prefix if not present and convert to uppercase
-    let normalizedAircraftId = aircraftId.trim().toUpperCase();
-    if (normalizedAircraftId && !normalizedAircraftId.startsWith('N')) {
-      normalizedAircraftId = `N${normalizedAircraftId}`;
-    }
-
-    // Check if aircraft profile already exists for this user/aircraft
-    const { data: existing } = await supabaseAdmin
-      .from('aircraft_profiles')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('aircraft_id', normalizedAircraftId)
-      .single();
 
     // Helper function to safely trim or return null
     const safeTrim = (value: string | null | undefined): string | null => {
@@ -113,63 +106,98 @@ router.post(
       return trimmed === '' ? null : trimmed;
     };
 
-    if (existing) {
-      // Update existing
-      const { data, error } = await supabaseAdmin
-        .from('aircraft_profiles')
-        .update({
-          aircraft_id: normalizedAircraftId, // Ensure it's normalized
-          equipment_type: safeTrim(equipmentType),
-          type_code: safeTrim(typeCode),
-          year: safeTrim(year),
-          make: safeTrim(make),
-          model: safeTrim(model),
-          gear_type: safeTrim(gearType),
-          engine_type: safeTrim(engineType),
-          category_class: safeTrim(categoryClass),
-          complex: Boolean(complex),
-          high_performance: Boolean(highPerformance),
-          pressurized: Boolean(pressurized),
-          taa: Boolean(taa),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', existing.id)
-        .select()
-        .single();
+    // Try to insert first, if duplicate then update
+    const profileData = {
+      user_id: userId,
+      aircraft_id: normalizedAircraftId,
+      equipment_type: safeTrim(equipmentType),
+      type_code: safeTrim(typeCode),
+      year: safeTrim(year),
+      make: safeTrim(make),
+      model: safeTrim(model),
+      gear_type: safeTrim(gearType),
+      engine_type: safeTrim(engineType),
+      category_class: safeTrim(categoryClass),
+      complex: Boolean(complex),
+      high_performance: Boolean(highPerformance),
+      pressurized: Boolean(pressurized),
+      taa: Boolean(taa)
+    };
 
-      if (error) throw error;
-      res.json({ aircraft: transformAircraftProfile(data) });
+    // Try insert first
+    const { data: insertedData, error: insertError } = await supabaseAdmin
+      .from('aircraft_profiles')
+      .insert(profileData)
+      .select()
+      .single();
+
+    if (insertError) {
+      // If duplicate key error, fetch existing and update it
+      if (insertError.code === '23505') {
+        // Fetch existing profile
+        const { data: existing, error: fetchError } = await supabaseAdmin
+          .from('aircraft_profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('aircraft_id', normalizedAircraftId)
+          .single();
+
+        if (fetchError) throw fetchError;
+
+        // Update existing profile
+        const { data: updatedData, error: updateError } = await supabaseAdmin
+          .from('aircraft_profiles')
+          .update({
+            equipment_type: safeTrim(equipmentType),
+            type_code: safeTrim(typeCode),
+            year: safeTrim(year),
+            make: safeTrim(make),
+            model: safeTrim(model),
+            gear_type: safeTrim(gearType),
+            engine_type: safeTrim(engineType),
+            category_class: safeTrim(categoryClass),
+            complex: Boolean(complex),
+            high_performance: Boolean(highPerformance),
+            pressurized: Boolean(pressurized),
+            taa: Boolean(taa),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existing.id)
+          .select()
+          .single();
+
+        if (updateError) throw updateError;
+        res.json({ aircraft: transformAircraftProfile(updatedData) });
+      } else {
+        throw insertError;
+      }
     } else {
-      // Create new
-      const { data, error } = await supabaseAdmin
-        .from('aircraft_profiles')
-        .insert({
-          user_id: userId,
-          aircraft_id: normalizedAircraftId,
-          equipment_type: safeTrim(equipmentType),
-          type_code: safeTrim(typeCode),
-          year: safeTrim(year),
-          make: safeTrim(make),
-          model: safeTrim(model),
-          gear_type: safeTrim(gearType),
-          engine_type: safeTrim(engineType),
-          category_class: safeTrim(categoryClass),
-          complex: Boolean(complex),
-          high_performance: Boolean(highPerformance),
-          pressurized: Boolean(pressurized),
-          taa: Boolean(taa)
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      res.json({ aircraft: transformAircraftProfile(data) });
+      // Successfully inserted
+      res.json({ aircraft: transformAircraftProfile(insertedData) });
     }
   } catch (error: any) {
     console.error('Error saving aircraft profile:', error);
+    // If we still get a duplicate error after our upsert logic, it means something went wrong
+    // In this case, try to fetch and return the existing record
     if (error.code === '23505') {
-      // Unique constraint violation
-      res.status(409).json({ error: 'An aircraft profile with this ID already exists' });
+      try {
+        const { data: existing, error: fetchError } = await supabaseAdmin
+          .from('aircraft_profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('aircraft_id', normalizedAircraftId)
+          .single();
+
+        if (fetchError) throw fetchError;
+        // Return existing record instead of error
+        res.json({ aircraft: transformAircraftProfile(existing) });
+      } catch (fallbackError: any) {
+        console.error('Error fetching existing aircraft profile:', fallbackError);
+        res.status(500).json({ 
+          error: 'Failed to save aircraft profile',
+          ...(process.env.NODE_ENV === 'development' && { details: fallbackError.message })
+        });
+      }
     } else {
       res.status(500).json({ 
         error: 'Failed to save aircraft profile',
