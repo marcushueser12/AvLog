@@ -167,6 +167,18 @@ Keep these handy - you'll need them in Step 4.
    - etc.
 4. Check all four tables have policies
 
+### 3.7 Optional: Support & Feature Requests Table
+
+To enable the Support Request modal (Contact support / Feature requests from the landing page):
+
+1. In SQL Editor, click **"New query"**
+2. Open `supabase/migration_support_requests.sql` in your project
+3. Copy its contents and paste into the SQL Editor
+4. Click **"Run"**
+5. Verify: Table Editor should show a new `support_requests` table
+
+**If you see "404" or "Support requests temporarily unavailable" when submitting:** Run this migration.
+
 ---
 
 ## Step 4: Configure Environment Variables

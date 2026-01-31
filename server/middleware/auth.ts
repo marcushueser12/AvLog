@@ -38,6 +38,27 @@ export const verifyAuth = async (req: AuthRequest, res: Response, next: NextFunc
 };
 
 /**
+ * Optional auth - attaches user info if token is valid, but doesn't require it
+ */
+export const optionalAuth = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return next();
+    }
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+    if (!error && user) {
+      req.userId = user.id;
+      req.userEmail = user.email;
+    }
+    next();
+  } catch {
+    next();
+  }
+};
+
+/**
  * Middleware to verify admin secret token
  */
 export const verifyAdmin = (req: Request, res: Response, next: NextFunction) => {

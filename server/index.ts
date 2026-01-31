@@ -216,6 +216,7 @@ import adminRoutes from './routes/admin.js';
 import verifiedRoutes from './routes/verified.js';
 import paymentRoutes from './routes/payments.js';
 import aircraftRoutes from './routes/aircraft.js';
+import supportRoutes from './routes/support.js';
 import { adminLimiter, webhookLimiter, authenticatedLimiter } from './middleware/security.js';
 
 // Admin routes (protected by secret token + rate limiting)
@@ -226,6 +227,9 @@ app.use('/api/verified', authenticatedLimiter, verifiedRoutes);
 
 // Payment routes (checkout session requires auth, webhook is public with rate limiting)
 app.use('/api/payments', paymentRoutes);
+
+// Support requests (auth optional - uses general rate limiting only)
+app.use('/api', supportRoutes);
 
 // Aircraft profiles routes (protected by auth token + rate limiting)
 app.use('/api', authenticatedLimiter, aircraftRoutes);

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
 import { X, Send, Loader2 } from 'lucide-react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface SupportRequestModalProps {
   isOpen: boolean;
@@ -9,7 +10,7 @@ interface SupportRequestModalProps {
 }
 
 const SupportRequestModal: React.FC<SupportRequestModalProps> = ({ isOpen, onClose }) => {
-  const { user } = useAuth();
+  const { user, getAccessToken } = useAuth();
   const [requestType, setRequestType] = useState<'support' | 'feature'>('support');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
@@ -31,20 +32,29 @@ const SupportRequestModal: React.FC<SupportRequestModalProps> = ({ isOpen, onClo
     setError(null);
 
     try {
-      const { data, error: insertError } = await supabase
-        .from('support_requests')
-        .insert({
-          user_id: user?.id || null,
-          user_email: user?.email || null,
-          request_type: requestType,
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      const token = getAccessToken?.();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${API_URL}/api/support`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          requestType,
           subject: subject.trim(),
           message: message.trim(),
-          status: 'open'
-        })
-        .select()
-        .single();
+        }),
+      });
 
-      if (insertError) throw insertError;
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.error || `Request failed (${response.status})`);
+      }
 
       setSuccess(true);
       setSubject('');
@@ -57,7 +67,7 @@ const SupportRequestModal: React.FC<SupportRequestModalProps> = ({ isOpen, onClo
       }, 2000);
     } catch (err: any) {
       console.error('Error submitting support request:', err);
-      setError(err.message || 'Failed to submit request. Please try again.');
+      setError(err?.message || 'Failed to submit request. Please try again.');
     } finally {
       setSubmitting(false);
     }
