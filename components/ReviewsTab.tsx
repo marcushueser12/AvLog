@@ -2,8 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { ICONS } from '../constants';
-import { Star, MessageSquare, User, Calendar, CheckCircle2, XCircle, AlertCircle, X } from 'lucide-react';
+import { Star, MessageSquare, User, Calendar, CheckCircle2, XCircle, AlertCircle, X, Send, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+
+interface SupportTicket {
+  id: string;
+  user_id: string | null;
+  user_email: string | null;
+  request_type: string;
+  subject: string;
+  message: string;
+  status: string;
+  admin_notes: string | null;
+  admin_response: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 interface Review {
   id: string;
@@ -28,6 +42,14 @@ const ReviewsTab: React.FC = () => {
   const [pendingReviews, setPendingReviews] = useState<Review[]>([]);
   const [featuredReviews, setFeaturedReviews] = useState<Review[]>([]);
   const [loadingFeatured, setLoadingFeatured] = useState(true);
+  const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
+  const [loadingSupportTickets, setLoadingSupportTickets] = useState(false);
+  const [supportStatusFilter, setSupportStatusFilter] = useState<string>('open');
+  const [expandedTicket, setExpandedTicket] = useState<string | null>(null);
+  const [respondTicketId, setRespondTicketId] = useState<string | null>(null);
+  const [respondText, setRespondText] = useState('');
+  const [internalNotes, setInternalNotes] = useState('');
+  const [submittingRespond, setSubmittingRespond] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -53,10 +75,18 @@ const ReviewsTab: React.FC = () => {
   useEffect(() => {
     if (isAdmin) {
       loadPendingReviews(true);
+      loadSupportTickets();
     } else {
       setPendingReviews([]);
+      setSupportTickets([]);
     }
   }, [isAdmin]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      loadSupportTickets();
+    }
+  }, [supportStatusFilter]);
 
   const checkAdminStatus = async () => {
     if (user) {
@@ -142,6 +172,75 @@ const ReviewsTab: React.FC = () => {
       console.error('Error loading featured reviews:', error);
     } finally {
       setLoadingFeatured(false);
+    }
+  };
+
+  const loadSupportTickets = async () => {
+    if (!isAdmin) return;
+    setLoadingSupportTickets(true);
+    try {
+      const token = getAccessToken();
+      if (!token) return;
+      const url = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/admin/support-tickets${supportStatusFilter ? `?status=${supportStatusFilter}` : ''}`;
+      const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      if (response.ok) {
+        const data = await response.json();
+        setSupportTickets(data.tickets || []);
+      }
+    } catch (error) {
+      console.error('Error loading support tickets:', error);
+    } finally {
+      setLoadingSupportTickets(false);
+    }
+  };
+
+  const handleRespondToTicket = async (ticketId: string) => {
+    try {
+      setSubmittingRespond(true);
+      const token = getAccessToken();
+      if (!token) return;
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/admin/support-tickets/${ticketId}/respond`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ response: respondText, internalNotes: internalNotes || undefined }),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to respond');
+      }
+      setRespondTicketId(null);
+      setRespondText('');
+      setInternalNotes('');
+      loadSupportTickets();
+    } catch (error: any) {
+      alert(error.message || 'Failed to respond to ticket');
+    } finally {
+      setSubmittingRespond(false);
+    }
+  };
+
+  const handleUpdateTicketStatus = async (ticketId: string, status: string) => {
+    try {
+      const token = getAccessToken();
+      if (!token) return;
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/admin/support-tickets/${ticketId}/status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status }),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to update status');
+      }
+      loadSupportTickets();
+    } catch (error: any) {
+      alert(error.message || 'Failed to update status');
     }
   };
 
@@ -457,6 +556,149 @@ const ReviewsTab: React.FC = () => {
               </div>
             </form>
           </motion.div>
+        )}
+
+        {/* Admin Support Tickets Section */}
+        {isAdmin && (
+          <div className="mb-8 bg-blue-50 border border-blue-200 rounded-2xl p-6">
+            <h2 className="text-xl font-bold text-[#003366] mb-4 flex items-center gap-2">
+              <MessageSquare className="w-6 h-6 text-[#007BFF]" />
+              Support Tickets
+            </h2>
+            <div className="flex gap-2 mb-4">
+              {['open', 'in_progress', 'resolved', 'closed'].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setSupportStatusFilter(s)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                    supportStatusFilter === s
+                      ? 'bg-[#007BFF] text-white'
+                      : 'bg-white border border-blue-200 text-[#003366]/70 hover:bg-blue-100'
+                  }`}
+                >
+                  {s.replace('_', ' ')}
+                </button>
+              ))}
+            </div>
+            {loadingSupportTickets ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-[#007BFF]" />
+              </div>
+            ) : supportTickets.length === 0 ? (
+              <p className="text-[#003366]/60 py-4">No tickets in this status.</p>
+            ) : (
+              <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                {supportTickets.map((ticket) => (
+                  <div key={ticket.id} className="bg-white border border-blue-200 rounded-xl overflow-hidden">
+                    <div className="px-4 py-3 flex items-center justify-between gap-2">
+                      <button
+                        onClick={() => setExpandedTicket(expandedTicket === ticket.id ? null : ticket.id)}
+                        className="flex-1 text-left min-w-0"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                            ticket.request_type === 'feature' ? 'bg-purple-100 text-purple-800' : 'bg-amber-100 text-amber-800'
+                          }`}>
+                            {ticket.request_type}
+                          </span>
+                          <span className="font-semibold text-[#003366] truncate">{ticket.subject}</span>
+                          <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                            ticket.status === 'resolved' || ticket.status === 'closed' ? 'bg-emerald-100 text-emerald-800' :
+                            ticket.status === 'in_progress' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
+                          }`}>
+                            {ticket.status}
+                          </span>
+                        </div>
+                        {ticket.user_email && (
+                          <p className="text-xs text-[#003366]/50 mt-1">{ticket.user_email}</p>
+                        )}
+                      </button>
+                      <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        {ticket.status !== 'in_progress' && ticket.status !== 'resolved' && ticket.status !== 'closed' && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleUpdateTicketStatus(ticket.id, 'in_progress'); }}
+                            className="px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                          >
+                            Start
+                          </button>
+                        )}
+                        {ticket.status !== 'resolved' && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleUpdateTicketStatus(ticket.id, 'resolved'); }}
+                            className="px-2 py-1 text-xs font-semibold bg-emerald-100 text-emerald-700 rounded hover:bg-emerald-200"
+                          >
+                            Resolve
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    {expandedTicket === ticket.id && (
+                      <div className="px-4 pb-4 pt-0 border-t border-blue-100">
+                        <p className="text-sm text-[#003366]/80 mt-3 whitespace-pre-wrap">{ticket.message}</p>
+                        {ticket.admin_response && (
+                          <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                            <p className="text-xs font-semibold text-[#007BFF] mb-1">Your response to user:</p>
+                            <p className="text-sm text-[#003366] whitespace-pre-wrap">{ticket.admin_response}</p>
+                          </div>
+                        )}
+                        {respondTicketId === ticket.id ? (
+                          <div className="mt-4 space-y-3">
+                            <div>
+                              <label className="block text-xs font-semibold text-[#003366] mb-1">Response (visible to user)</label>
+                              <textarea
+                                value={respondText}
+                                onChange={(e) => setRespondText(e.target.value)}
+                                rows={3}
+                                className="w-full px-3 py-2 border border-[#E2E8F0] rounded-lg text-sm"
+                                placeholder="Write your response to the user..."
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-[#003366] mb-1">Internal notes (admin only)</label>
+                              <textarea
+                                value={internalNotes}
+                                onChange={(e) => setInternalNotes(e.target.value)}
+                                rows={2}
+                                className="w-full px-3 py-2 border border-[#E2E8F0] rounded-lg text-sm"
+                                placeholder="Private notes (not shown to user)"
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleRespondToTicket(ticket.id)}
+                                disabled={!respondText.trim() || submittingRespond}
+                                className="px-4 py-2 bg-[#007BFF] text-white rounded-lg font-semibold text-sm hover:bg-[#007BFF]/90 disabled:opacity-50 flex items-center gap-2"
+                              >
+                                {submittingRespond ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                Send Response
+                              </button>
+                              <button
+                                onClick={() => { setRespondTicketId(null); setRespondText(''); setInternalNotes(''); }}
+                                className="px-4 py-2 bg-white border border-[#E2E8F0] text-[#003366] rounded-lg font-semibold text-sm hover:bg-[#F4F7FA]"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => { setRespondTicketId(ticket.id); setRespondText(ticket.admin_response || ''); setInternalNotes(ticket.admin_notes || ''); }}
+                            className="mt-3 px-3 py-2 bg-[#007BFF]/10 text-[#007BFF] rounded-lg font-semibold text-sm hover:bg-[#007BFF]/20 flex items-center gap-2"
+                          >
+                            <Send className="w-4 h-4" />
+                            {ticket.admin_response ? 'Edit Response' : 'Respond'}
+                          </button>
+                        )}
+                        <p className="text-xs text-[#003366]/40 mt-2">
+                          Submitted {new Date(ticket.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
         {/* Admin Pending Reviews Section */}

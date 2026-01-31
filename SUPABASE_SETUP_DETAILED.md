@@ -179,6 +179,8 @@ To enable the Support Request modal (Contact support / Feature requests from the
 
 **If you see "404" or "Support requests temporarily unavailable" when submitting:** Run this migration.
 
+**For admin responses:** Also run `supabase/migration_support_requests_admin_response.sql` to add the `admin_response` column (allows admins to reply to users).
+
 ---
 
 ## Step 4: Configure Environment Variables

@@ -281,4 +281,136 @@ router.post(
   }
 );
 
+/** Helper to check if user is admin */
+const checkIsAdmin = async (req: AuthRequest): Promise<boolean> => {
+  const userId = req.userId!;
+  const { data: profile } = await supabaseAdmin
+    .from('user_profiles')
+    .select('is_admin')
+    .eq('user_id', userId)
+    .single();
+  if (profile?.is_admin) return true;
+  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()).filter(e => e) || [];
+  const userEmail = (req.userEmail || '').toLowerCase().trim();
+  return adminEmails.includes(userEmail);
+};
+
+/**
+ * GET /api/admin/support-tickets
+ * List all support tickets (admin only)
+ * Query: status (optional) - filter by open, in_progress, resolved, closed
+ */
+router.get('/support-tickets', verifyAuth, async (req: AuthRequest, res) => {
+  try {
+    if (!(await checkIsAdmin(req))) {
+      return res.status(403).json({ error: 'Unauthorized - Admin access required' });
+    }
+    const status = req.query.status as string | undefined;
+    let query = supabaseAdmin
+      .from('support_requests')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (status && ['open', 'in_progress', 'resolved', 'closed'].includes(status)) {
+      query = query.eq('status', status);
+    }
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json({ tickets: data || [] });
+  } catch (error: any) {
+    console.error('Admin support tickets list error:', error);
+    res.status(500).json({
+      error: 'Failed to fetch support tickets',
+      ...(process.env.NODE_ENV === 'development' && { details: error.message }),
+    });
+  }
+});
+
+/**
+ * POST /api/admin/support-tickets/:id/respond
+ * Add admin response to a support ticket (admin only)
+ * Body: { response: string, internalNotes?: string }
+ */
+router.post(
+  '/support-tickets/:id/respond',
+  verifyAuth,
+  validateParams({ id: 'id' }),
+  validateAndSanitizeBody({
+    response: { type: 'text', required: true, maxLength: 5000 },
+    internalNotes: { type: 'text', required: false, maxLength: 2000 },
+  }),
+  async (req: AuthRequest, res) => {
+    try {
+      if (!(await checkIsAdmin(req))) {
+        return res.status(403).json({ error: 'Unauthorized - Admin access required' });
+      }
+      const { id } = req.params;
+      const { response, internalNotes } = req.body;
+      const update: Record<string, unknown> = { admin_response: response };
+      if (internalNotes !== undefined && internalNotes !== null) {
+        update.admin_notes = internalNotes;
+      }
+      const { data, error } = await supabaseAdmin
+        .from('support_requests')
+        .update(update)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      if (!data) return res.status(404).json({ error: 'Ticket not found' });
+      res.json({ success: true, ticket: data });
+    } catch (error: any) {
+      console.error('Admin respond to ticket error:', error);
+      res.status(500).json({
+        error: 'Failed to respond to ticket',
+        ...(process.env.NODE_ENV === 'development' && { details: error.message }),
+      });
+    }
+  }
+);
+
+/**
+ * POST /api/admin/support-tickets/:id/status
+ * Update support ticket status (admin only)
+ * Body: { status: 'open' | 'in_progress' | 'resolved' | 'closed' }
+ */
+router.post(
+  '/support-tickets/:id/status',
+  verifyAuth,
+  validateParams({ id: 'id' }),
+  validateAndSanitizeBody({
+    status: {
+      type: 'string',
+      required: true,
+      validate: (v: string) =>
+        ['open', 'in_progress', 'resolved', 'closed'].includes(v)
+          ? true
+          : 'status must be open, in_progress, resolved, or closed',
+    },
+  }),
+  async (req: AuthRequest, res) => {
+    try {
+      if (!(await checkIsAdmin(req))) {
+        return res.status(403).json({ error: 'Unauthorized - Admin access required' });
+      }
+      const { id } = req.params;
+      const { status } = req.body;
+      const { data, error } = await supabaseAdmin
+        .from('support_requests')
+        .update({ status })
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      if (!data) return res.status(404).json({ error: 'Ticket not found' });
+      res.json({ success: true, ticket: data });
+    } catch (error: any) {
+      console.error('Admin update ticket status error:', error);
+      res.status(500).json({
+        error: 'Failed to update ticket status',
+        ...(process.env.NODE_ENV === 'development' && { details: error.message }),
+      });
+    }
+  }
+);
+
 export default router;

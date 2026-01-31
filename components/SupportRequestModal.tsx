@@ -1,8 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { X, Send, Loader2 } from 'lucide-react';
+import { X, Send, Loader2, MessageSquare, CheckCircle2, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+interface SupportTicket {
+  id: string;
+  request_type: string;
+  subject: string;
+  message: string;
+  status: string;
+  admin_response: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 interface SupportRequestModalProps {
   isOpen: boolean;
@@ -11,12 +22,41 @@ interface SupportRequestModalProps {
 
 const SupportRequestModal: React.FC<SupportRequestModalProps> = ({ isOpen, onClose }) => {
   const { user, getAccessToken } = useAuth();
+  const [view, setView] = useState<'form' | 'tickets'>('form');
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [loadingTickets, setLoadingTickets] = useState(false);
+  const [expandedTicket, setExpandedTicket] = useState<string | null>(null);
   const [requestType, setRequestType] = useState<'support' | 'feature'>('support');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const loadTickets = async () => {
+    if (!user || !getAccessToken?.()) return;
+    setLoadingTickets(true);
+    try {
+      const token = getAccessToken();
+      const response = await fetch(`${API_URL}/api/support/tickets`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setTickets(data.tickets || []);
+      }
+    } catch {
+      setTickets([]);
+    } finally {
+      setLoadingTickets(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && user) {
+      loadTickets();
+    }
+  }, [isOpen, user]);
 
   if (!isOpen) return null;
 
@@ -59,11 +99,11 @@ const SupportRequestModal: React.FC<SupportRequestModalProps> = ({ isOpen, onClo
       setSuccess(true);
       setSubject('');
       setMessage('');
-      
-      // Close modal after 2 seconds
+      if (user) loadTickets();
       setTimeout(() => {
         setSuccess(false);
-        onClose();
+        if (user) setView('tickets');
+        else onClose();
       }, 2000);
     } catch (err: any) {
       console.error('Error submitting support request:', err);
@@ -71,6 +111,26 @@ const SupportRequestModal: React.FC<SupportRequestModalProps> = ({ isOpen, onClo
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const statusBadge = (status: string) => {
+    const colors: Record<string, string> = {
+      open: 'bg-amber-100 text-amber-800 border-amber-200',
+      in_progress: 'bg-blue-100 text-blue-800 border-blue-200',
+      resolved: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+      closed: 'bg-slate-100 text-slate-600 border-slate-200',
+    };
+    const labels: Record<string, string> = {
+      open: 'Open',
+      in_progress: 'In Progress',
+      resolved: 'Resolved',
+      closed: 'Closed',
+    };
+    return (
+      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${colors[status] || 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+        {labels[status] || status}
+      </span>
+    );
   };
 
   return (
@@ -90,7 +150,111 @@ const SupportRequestModal: React.FC<SupportRequestModalProps> = ({ isOpen, onClo
           </button>
         </div>
 
-        {success ? (
+        {/* Tabs: New Request / My Tickets (only when logged in) */}
+        {user && (
+          <div className="flex gap-2 mb-6">
+            <button
+              onClick={() => { setView('form'); setError(null); }}
+              className={`px-4 py-2 rounded-xl font-semibold transition-all border-2 ${
+                view === 'form'
+                  ? 'bg-[#007BFF]/10 border-[#007BFF] text-[#007BFF]'
+                  : 'bg-white border-[#E2E8F0] text-[#003366]/70 hover:border-[#007BFF]/30'
+              }`}
+            >
+              New Request
+            </button>
+            <button
+              onClick={() => { setView('tickets'); setError(null); loadTickets(); }}
+              className={`px-4 py-2 rounded-xl font-semibold transition-all border-2 ${
+                view === 'tickets'
+                  ? 'bg-[#007BFF]/10 border-[#007BFF] text-[#007BFF]'
+                  : 'bg-white border-[#E2E8F0] text-[#003366]/70 hover:border-[#007BFF]/30'
+              }`}
+            >
+              My Tickets
+            </button>
+          </div>
+        )}
+
+        {view === 'tickets' && user ? (
+          <div className="space-y-4">
+            {loadingTickets ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-[#007BFF]" />
+              </div>
+            ) : tickets.length === 0 ? (
+              <div className="text-center py-12 text-[#003366]/70">
+                <MessageSquare className="w-12 h-12 mx-auto mb-4 text-[#003366]/20" />
+                <p>You haven&apos;t submitted any support requests yet.</p>
+                <button
+                  onClick={() => setView('form')}
+                  className="mt-4 px-4 py-2 bg-[#007BFF] text-white rounded-xl font-semibold hover:bg-[#007BFF]/90"
+                >
+                  Submit a Request
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[50vh] overflow-y-auto">
+                {tickets.map((ticket) => (
+                  <div
+                    key={ticket.id}
+                    className="border border-[#E2E8F0] rounded-xl overflow-hidden bg-white"
+                  >
+                    <button
+                      onClick={() => setExpandedTicket(expandedTicket === ticket.id ? null : ticket.id)}
+                      className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-[#F4F7FA] transition-colors"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        {ticket.request_type === 'feature' ? (
+                          <span className="text-[#007BFF] shrink-0">Feature</span>
+                        ) : (
+                          <span className="text-amber-600 shrink-0">Support</span>
+                        )}
+                        <span className="font-semibold text-[#003366] truncate">{ticket.subject}</span>
+                        {statusBadge(ticket.status)}
+                      </div>
+                      {expandedTicket === ticket.id ? (
+                        <ChevronUp className="w-5 h-5 shrink-0 text-[#003366]/50" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 shrink-0 text-[#003366]/50" />
+                      )}
+                    </button>
+                    {expandedTicket === ticket.id && (
+                      <div className="px-4 pb-4 pt-0 border-t border-[#E2E8F0]">
+                        <p className="text-sm text-[#003366]/80 mt-3">{ticket.message}</p>
+                        {ticket.admin_response ? (
+                          <div className="mt-4 p-3 bg-[#007BFF]/5 border border-[#007BFF]/20 rounded-xl">
+                            <p className="text-xs font-semibold text-[#007BFF] mb-1 flex items-center gap-1">
+                              <CheckCircle2 className="w-4 h-4" /> Response from support
+                            </p>
+                            <p className="text-sm text-[#003366] whitespace-pre-wrap">{ticket.admin_response}</p>
+                            {ticket.updated_at && (
+                              <p className="text-xs text-[#003366]/50 mt-2">
+                                Updated {new Date(ticket.updated_at).toLocaleDateString('en-US', {
+                                  month: 'short', day: 'numeric', year: 'numeric',
+                                  hour: '2-digit', minute: '2-digit'
+                                })}
+                              </p>
+                            )}
+                          </div>
+                        ) : (ticket.status === 'open' || ticket.status === 'in_progress') && (
+                          <p className="mt-4 text-sm text-[#003366]/50 flex items-center gap-2">
+                            <Clock className="w-4 h-4" /> Awaiting response from support
+                          </p>
+                        )}
+                        <p className="text-xs text-[#003366]/40 mt-2">
+                          Submitted {new Date(ticket.created_at).toLocaleDateString('en-US', {
+                            month: 'short', day: 'numeric', year: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : success ? (
           <div className="text-center py-8">
             <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Send className="w-8 h-8 text-emerald-600" />
