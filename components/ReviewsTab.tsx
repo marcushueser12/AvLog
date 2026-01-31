@@ -663,7 +663,7 @@ const ReviewsTab: React.FC = () => {
                                 placeholder="Private notes (not shown to user)"
                               />
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 flex-wrap">
                               <button
                                 onClick={() => handleRespondToTicket(ticket.id)}
                                 disabled={!respondText.trim() || submittingRespond}
@@ -681,13 +681,24 @@ const ReviewsTab: React.FC = () => {
                             </div>
                           </div>
                         ) : (
-                          <button
-                            onClick={() => { setRespondTicketId(ticket.id); setRespondText(ticket.admin_response || ''); setInternalNotes(ticket.admin_notes || ''); }}
-                            className="mt-3 px-3 py-2 bg-[#007BFF]/10 text-[#007BFF] rounded-lg font-semibold text-sm hover:bg-[#007BFF]/20 flex items-center gap-2"
-                          >
-                            <Send className="w-4 h-4" />
-                            {ticket.admin_response ? 'Edit Response' : 'Respond'}
-                          </button>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <button
+                              onClick={() => { setRespondTicketId(ticket.id); setRespondText(ticket.admin_response || ''); setInternalNotes(ticket.admin_notes || ''); }}
+                              className="px-3 py-2 bg-[#007BFF]/10 text-[#007BFF] rounded-lg font-semibold text-sm hover:bg-[#007BFF]/20 flex items-center gap-2"
+                            >
+                              <Send className="w-4 h-4" />
+                              {ticket.admin_response ? 'Edit Response' : 'Respond'}
+                            </button>
+                            {(ticket.status === 'open' || ticket.status === 'in_progress') && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleUpdateTicketStatus(ticket.id, 'resolved'); }}
+                                className="px-3 py-2 bg-emerald-100 text-emerald-700 rounded-lg font-semibold text-sm hover:bg-emerald-200 flex items-center gap-2"
+                              >
+                                <CheckCircle2 className="w-4 h-4" />
+                                Mark as Resolved
+                              </button>
+                            )}
+                          </div>
                         )}
                         <p className="text-xs text-[#003366]/40 mt-2">
                           Submitted {new Date(ticket.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
