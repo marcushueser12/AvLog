@@ -34,6 +34,7 @@ interface Review {
 
 const ReviewsTab: React.FC = () => {
   const { user, getAccessToken } = useAuth();
+  console.warn('[Admin Debug] ReviewsTab RENDERED', { hasUser: !!user, userEmail: user?.email });
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -61,11 +62,13 @@ const ReviewsTab: React.FC = () => {
   });
 
   useEffect(() => {
+    console.log('[Admin Debug] ReviewsTab mounted/updated', { hasUser: !!user, userEmail: user?.email });
     loadReviews();
     loadFeaturedReviews();
     if (user) {
       checkAdminStatus();
     } else {
+      console.log('[Admin Debug] No user - skip admin check, set isAdmin false');
       setIsAdmin(false);
       setPendingReviews([]);
     }
