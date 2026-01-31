@@ -193,19 +193,6 @@ router.get('/check', verifyAuth, async (req: any, res) => {
     );
 
     const isAdmin = fromEmailList || fromDatabase;
-
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Admin check:', {
-        userId,
-        userEmail: req.userEmail,
-        isAdmin,
-        fromEmailList,
-        fromDatabase,
-        rawIsAdmin,
-        profileError: profileError?.message
-      });
-    }
-
     res.json({ isAdmin });
   } catch (error: any) {
     console.error('Admin check error:', error);

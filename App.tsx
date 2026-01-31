@@ -32,7 +32,6 @@ const App: React.FC = () => {
   const [view, setView] = useState<'landing' | 'app'>('landing');
   const [activeTab, setActiveTab] = useState<AppTab>('dashboard');
   const isMobile = useMobile();
-  const showDebug = typeof window !== 'undefined' && window.location.search.includes('debug=1');
   
   // Load scans and entries from localStorage on mount
   const loadFromLocalStorage = (): { scans: ScanDocument[], entries: LogbookEntry[] } => {
@@ -999,16 +998,7 @@ const App: React.FC = () => {
   }
 
   if (view === 'landing') {
-    return (
-      <>
-        {showDebug && (
-          <div className="fixed top-0 left-0 right-0 z-[9999] bg-amber-400 text-black px-4 py-2 text-xs font-mono font-bold">
-            DEBUG: view=landing | activeTab={activeTab} | (click Get Started or Reviews to enter app)
-          </div>
-        )}
-        <LandingPage onStart={handleSignIn} />
-      </>
-    );
+    return <LandingPage onStart={handleSignIn} />;
   }
 
   const NavButton = ({ tab, label, icon: Icon }: { tab: AppTab, label: string, icon: React.FC }) => (
@@ -1025,11 +1015,6 @@ const App: React.FC = () => {
 
   return (
     <>
-      {showDebug && (
-        <div className="fixed top-0 left-0 right-0 z-[9999] bg-amber-400 text-black px-4 py-2 text-xs font-mono font-bold">
-          DEBUG: view={view} | activeTab={activeTab} | ReviewsTab rendered={activeTab === 'reviews'} | user={user?.email ? 'yes' : 'no'}
-        </div>
-      )}
       <LandscapePrompt show={view === 'app'} />
       <div className="min-h-screen bg-[#F4F7FA] flex flex-col overflow-hidden text-[#003366]">
       {/* Desktop Layout - Sidebar and Main Content side-by-side */}
