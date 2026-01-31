@@ -213,10 +213,26 @@ router.get('/check', verifyAuth, async (req: any, res) => {
   }
 });
 
+/** Helper to check if user is admin - uses BOTH database and ADMIN_EMAILS */
+const checkIsAdmin = async (req: AuthRequest): Promise<boolean> => {
+  const userId = req.userId!;
+  const userEmail = (req.userEmail || '').toLowerCase().trim();
+  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()).filter(e => e) || [];
+  if (userEmail && adminEmails.includes(userEmail)) return true;
+  const { data: profile } = await supabaseAdmin
+    .from('user_profiles')
+    .select('is_admin')
+    .eq('user_id', userId)
+    .maybeSingle();
+  const raw = profile?.is_admin;
+  return !!(raw === true || raw === 'true' || raw === 't');
+};
+
 /**
  * POST /api/admin/approve-review
  * Approve or reject a review (admin only)
- * Requires: authenticated user + admin email OR admin token
+ * - Approve: sets approved=true
+ * - Reject: deletes the review from Supabase
  * Body: { reviewId: string, approve: boolean }
  */
 router.post(
@@ -226,79 +242,48 @@ router.post(
     reviewId: { type: 'id', required: true },
     approve: { type: 'boolean', required: true },
   }),
-  async (req: any, res) => {
-  try {
-    const userId = req.userId!;
-    
-    // Check database for is_admin flag first
-    const { data: profile } = await supabaseAdmin
-      .from('user_profiles')
-      .select('is_admin')
-      .eq('user_id', userId)
-      .single();
-    
-    let isAdmin = false;
-    
-    if (profile) {
-      isAdmin = profile.is_admin || false;
-    } else {
-      // Fallback to email list check
-      const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()).filter(e => e) || [];
-      const userEmail = (req.userEmail || '').toLowerCase().trim();
-      isAdmin = adminEmails.includes(userEmail);
-    }
-    
-    if (!isAdmin) {
-      return res.status(403).json({ error: 'Unauthorized - Admin access required' });
-    }
-    
-    const { reviewId, approve } = req.body;
+  async (req: AuthRequest, res) => {
+    try {
+      if (!(await checkIsAdmin(req))) {
+        return res.status(403).json({ error: 'Unauthorized - Admin access required' });
+      }
+      const { reviewId, approve } = req.body;
 
-    const { error } = await supabaseAdmin
-      .from('reviews')
-      .update({ 
+      if (approve) {
+        const { error } = await supabaseAdmin
+          .from('reviews')
+          .update({ approved: true, updated_at: new Date().toISOString() })
+          .eq('id', reviewId);
+        if (error) {
+          console.error('Error approving review:', error);
+          return res.status(500).json({ error: 'Failed to approve review' });
+        }
+      } else {
+        const { error } = await supabaseAdmin
+          .from('reviews')
+          .delete()
+          .eq('id', reviewId);
+        if (error) {
+          console.error('Error rejecting (deleting) review:', error);
+          return res.status(500).json({ error: 'Failed to reject review' });
+        }
+      }
+
+      res.json({
+        success: true,
+        reviewId,
         approved: approve,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', reviewId);
-
-    if (error) {
-      console.error('Error updating review:', error);
-      return res.status(500).json({ error: 'Failed to update review' });
+        message: approve ? 'Review approved successfully' : 'Review rejected and removed'
+      });
+    } catch (error: any) {
+      console.error('Admin approve review error:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        ...(process.env.NODE_ENV === 'development' && { details: error.message }),
+      });
     }
-
-    res.json({
-      success: true,
-      reviewId,
-      approved: approve,
-      message: `Review ${approve ? 'approved' : 'rejected'} successfully`
-    });
-  } catch (error: any) {
-    console.error('Admin approve review error:', error);
-    res.status(500).json({ 
-      error: 'Internal server error',
-      ...(process.env.NODE_ENV === 'development' && { details: error.message })
-    });
-  }
   }
 );
-
-/** Helper to check if user is admin - uses BOTH database and ADMIN_EMAILS */
-const checkIsAdmin = async (req: AuthRequest): Promise<boolean> => {
-  const userId = req.userId!;
-  const userEmail = (req.userEmail || '').toLowerCase().trim();
-
-  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()).filter(e => e) || [];
-  if (userEmail && adminEmails.includes(userEmail)) return true;
-
-  const { data: profile } = await supabaseAdmin
-    .from('user_profiles')
-    .select('is_admin')
-    .eq('user_id', userId)
-    .maybeSingle();
-  const raw = profile?.is_admin;
-  return !!(raw === true || raw === 'true' || raw === 't');
-};
 
 /**
  * GET /api/admin/support-tickets
