@@ -11,6 +11,7 @@ import AircraftProfilesTab from './components/AircraftProfilesTab';
 import ReviewsTab from './components/ReviewsTab';
 import AuthModal from './components/AuthModal';
 import PaymentModal from './components/PaymentModal';
+import SupportRequestModal from './components/SupportRequestModal';
 import Logo from './components/Logo';
 import LandscapePrompt from './components/LandscapePrompt';
 import { useAuth } from './contexts/AuthContext';
@@ -21,7 +22,7 @@ import { fetchWithRetry, safeApiCall } from './utils/apiUtils';
 import { getExifOrientation } from './utils/exifUtils';
 import { useMobile } from './utils/useMobile';
 import { motion } from 'framer-motion';
-import { Plane, Grid3x3, FileText, Clock, Home, LogOut, Download, Plus, Trash2, Upload, X, MessageSquare } from 'lucide-react';
+import { Plane, Grid3x3, FileText, Clock, Home, LogOut, Download, Plus, Trash2, Upload, X, MessageSquare, Headphones } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -74,6 +75,7 @@ const App: React.FC = () => {
   const [existingAircraftIds, setExistingAircraftIds] = useState<Set<string>>(new Set());
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
 
   const handleSignIn = (tab: AppTab = 'dashboard') => {
     setView('app');
@@ -1037,6 +1039,15 @@ const App: React.FC = () => {
           <NavButton tab="tutorial" label="User Guide" icon={() => <FileText className="w-4 h-4" />} />
           <NavButton tab="reviews" label="Reviews" icon={() => <MessageSquare className="w-4 h-4" />} />
           <motion.button 
+            onClick={() => setShowSupportModal(true)}
+            className="flex items-center gap-3 px-4 py-3 text-[#003366]/70 hover:text-[#003366] hover:bg-[#F4F7FA] rounded-xl font-semibold text-sm transition-all border border-transparent"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Headphones className="w-4 h-4" />
+            Support {user && '(My Tickets)'}
+          </motion.button>
+          <motion.button 
             onClick={() => setView('landing')}
             className="flex items-center gap-3 px-4 py-3 text-[#003366]/70 hover:text-[#003366] hover:bg-[#F4F7FA] rounded-xl font-semibold text-sm transition-all border border-transparent"
             whileHover={{ scale: 1.02 }}
@@ -1143,6 +1154,13 @@ const App: React.FC = () => {
                 <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
               </button>
             )}
+            <button
+              onClick={() => setShowSupportModal(true)}
+              className="flex items-center justify-center p-0.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded transition-all shrink-0"
+              title={user ? "Support & My Tickets" : "Support"}
+            >
+              <Headphones className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+            </button>
             {user && (
               <button
                 onClick={handleExportModalOpen}
@@ -2170,6 +2188,8 @@ const App: React.FC = () => {
         }}
       />
 
+      {/* Support Modal - access from sidebar/mobile */}
+      <SupportRequestModal isOpen={showSupportModal} onClose={() => setShowSupportModal(false)} />
 
       {/* Terms of Service Modal */}
       {showTermsModal && (

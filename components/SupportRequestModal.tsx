@@ -55,6 +55,9 @@ const SupportRequestModal: React.FC<SupportRequestModalProps> = ({ isOpen, onClo
   useEffect(() => {
     if (isOpen && user) {
       loadTickets();
+      setView('tickets'); // Default to My Tickets for logged-in users so they see their tickets immediately
+    } else if (isOpen) {
+      setView('form'); // Non-logged-in users see the submit form
     }
   }, [isOpen, user]);
 
@@ -266,6 +269,11 @@ const SupportRequestModal: React.FC<SupportRequestModalProps> = ({ isOpen, onClo
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
+            {!user && (
+              <p className="text-sm text-[#003366]/60 bg-[#F4F7FA] rounded-xl px-4 py-3 border border-[#E2E8F0]">
+                Sign in to view and track your support requests.
+              </p>
+            )}
             {/* Request Type Selection */}
             <div>
               <label className="block text-sm font-semibold text-[#003366] mb-2">
