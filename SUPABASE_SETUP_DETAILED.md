@@ -181,6 +181,18 @@ To enable the Support Request modal (Contact support / Feature requests from the
 
 **For admin responses:** Also run `supabase/migration_support_requests_admin_response.sql` to add the `admin_response` column (allows admins to reply to users).
 
+### 3.8 Optional: Featured Reviews
+
+To let admins manually select which reviews appear in the Featured Reviews section:
+
+1. In SQL Editor, click **"New query"**
+2. Open `supabase/migration_add_featured_reviews.sql` in your project
+3. Copy its contents and paste into the SQL Editor
+4. Click **"Run"**
+5. Verify: The `reviews` table should have a new `featured` column
+
+**Without this migration:** Featured Reviews will fall back to the top 3 highest-rated approved reviews.
+
 ---
 
 ## Step 4: Configure Environment Variables

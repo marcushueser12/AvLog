@@ -28,6 +28,7 @@ interface Review {
   review_text: string;
   pilot_ratings: string | null;
   approved: boolean;
+  featured?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -142,16 +143,30 @@ const ReviewsTab: React.FC = () => {
   const loadFeaturedReviews = async () => {
     try {
       setLoadingFeatured(true);
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('reviews')
         .select('*')
         .eq('approved', true)
-        .order('rating', { ascending: false })
+        .eq('featured', true)
         .order('created_at', { ascending: false })
-        .limit(3);
+        .limit(6);
 
-      if (error) throw error;
-      setFeaturedReviews(data || []);
+      if (error && (error.message?.includes('featured') || error.code === '42703')) {
+        data = null;
+        error = null;
+        const fallback = await supabase
+          .from('reviews')
+          .select('*')
+          .eq('approved', true)
+          .order('rating', { ascending: false })
+          .order('created_at', { ascending: false })
+          .limit(3);
+        if (fallback.error) throw fallback.error;
+        setFeaturedReviews(fallback.data || []);
+      } else {
+        if (error) throw error;
+        setFeaturedReviews(data || []);
+      }
     } catch (error) {
       console.error('Error loading featured reviews:', error);
     } finally {
@@ -296,7 +311,30 @@ const ReviewsTab: React.FC = () => {
     }
   };
 
-  const handleApproveReview = async (reviewId: string, approve: boolean) => {
+  const handleToggleFeature = async (reviewId: string, currentlyFeatured: boolean) => {
+    try {
+      const token = getAccessToken();
+      if (!token) return;
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/admin/reviews/${reviewId}/feature`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ featured: !currentlyFeatured }),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to update');
+      }
+      await loadReviews();
+      await loadFeaturedReviews();
+    } catch (error: any) {
+      alert(error.message || 'Failed to feature review');
+    }
+  };
+
+  const handleApproveReview = async (reviewId: string, approve: boolean, alsoFeature = false) => {
     try {
       const token = getAccessToken();
       if (!token) {
@@ -309,10 +347,8 @@ const ReviewsTab: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
-          // Admin token should NOT be client-side - removed for security
-          // Admin access is verified server-side via ADMIN_EMAILS or ADMIN_SECRET_TOKEN
         },
-        body: JSON.stringify({ reviewId, approve })
+        body: JSON.stringify({ reviewId, approve, feature: alsoFeature })
       });
 
       if (!response.ok) {
@@ -322,6 +358,7 @@ const ReviewsTab: React.FC = () => {
 
       await loadPendingReviews(true);
       await loadReviews();
+      await loadFeaturedReviews();
     } catch (error: any) {
       console.error('Error approving review:', error);
       alert(error.message || 'Error updating review. Please try again.');
@@ -574,6 +611,19 @@ const ReviewsTab: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                  {isAdmin && (
+                    <button
+                      onClick={() => handleToggleFeature(review.id, !!review.featured)}
+                      className={`p-2 rounded-lg transition-colors shrink-0 ${
+                        review.featured
+                          ? 'bg-amber-100 hover:bg-amber-200 text-amber-600'
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-400 hover:text-amber-600'
+                      }`}
+                      title={review.featured ? 'Unfeature' : 'Feature this review'}
+                    >
+                      <Star className={`w-5 h-5 ${review.featured ? 'fill-amber-400' : ''}`} />
+                    </button>
+                  )}
                 </div>
                 <p className="text-sm text-[#003366]/70 leading-relaxed mb-4">
                   {review.review_text}
@@ -777,13 +827,21 @@ const ReviewsTab: React.FC = () => {
                         {renderStars(review.rating)}
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <button
-                        onClick={() => handleApproveReview(review.id, true)}
+                        onClick={() => handleApproveReview(review.id, true, false)}
                         className="p-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-lg transition-colors"
                         title="Approve"
                       >
                         <CheckCircle2 className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => handleApproveReview(review.id, true, true)}
+                        className="p-2 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg transition-colors flex items-center gap-1"
+                        title="Approve & Feature"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        <Star className="w-4 h-4 fill-amber-400" />
                       </button>
                       <button
                         onClick={() => handleApproveReview(review.id, false)}

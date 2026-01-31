@@ -38,16 +38,28 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
     const loadFeaturedReviews = async () => {
       try {
         setLoadingReviews(true);
-        const { data, error } = await supabase
+        let { data, error } = await supabase
           .from('reviews')
           .select('id, reviewer_name, rating, review_text, pilot_ratings, created_at')
           .eq('approved', true)
-          .order('rating', { ascending: false })
+          .eq('featured', true)
           .order('created_at', { ascending: false })
           .limit(3);
 
-        if (error) throw error;
-        setFeaturedReviews(data || []);
+        if (error && (error.message?.includes('featured') || error.code === '42703')) {
+          const fallback = await supabase
+            .from('reviews')
+            .select('id, reviewer_name, rating, review_text, pilot_ratings, created_at')
+            .eq('approved', true)
+            .order('rating', { ascending: false })
+            .order('created_at', { ascending: false })
+            .limit(3);
+          if (fallback.error) throw fallback.error;
+          setFeaturedReviews(fallback.data || []);
+        } else {
+          if (error) throw error;
+          setFeaturedReviews(data || []);
+        }
       } catch (error) {
         console.error('Error loading featured reviews:', error);
       } finally {

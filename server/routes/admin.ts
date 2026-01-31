@@ -228,18 +228,21 @@ router.post(
   validateAndSanitizeBody({
     reviewId: { type: 'id', required: true },
     approve: { type: 'boolean', required: true },
+    feature: { type: 'boolean', required: false },
   }),
   async (req: AuthRequest, res) => {
     try {
       if (!(await checkIsAdmin(req))) {
         return res.status(403).json({ error: 'Unauthorized - Admin access required' });
       }
-      const { reviewId, approve } = req.body;
+      const { reviewId, approve, feature } = req.body;
 
       if (approve) {
+        const update: Record<string, unknown> = { approved: true, updated_at: new Date().toISOString() };
+        if (feature === true) update.featured = true;
         const { error } = await supabaseAdmin
           .from('reviews')
-          .update({ approved: true, updated_at: new Date().toISOString() })
+          .update(update)
           .eq('id', reviewId);
         if (error) {
           console.error('Error approving review:', error);
@@ -264,6 +267,55 @@ router.post(
       });
     } catch (error: any) {
       console.error('Admin approve review error:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        ...(process.env.NODE_ENV === 'development' && { details: error.message }),
+      });
+    }
+  }
+);
+
+/**
+ * POST /api/admin/reviews/:id/feature
+ * Toggle featured status of an approved review (admin only)
+ * Body: { featured: boolean }
+ */
+router.post(
+  '/reviews/:id/feature',
+  verifyAuth,
+  validateParams({ id: 'id' }),
+  validateAndSanitizeBody({
+    featured: { type: 'boolean', required: true },
+  }),
+  async (req: AuthRequest, res) => {
+    try {
+      if (!(await checkIsAdmin(req))) {
+        return res.status(403).json({ error: 'Unauthorized - Admin access required' });
+      }
+      const { id } = req.params;
+      const { featured } = req.body;
+
+      const { data, error } = await supabaseAdmin
+        .from('reviews')
+        .update({ featured: !!featured, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .eq('approved', true)
+        .select()
+        .single();
+
+      if (error) throw error;
+      if (!data) {
+        return res.status(404).json({ error: 'Review not found or not approved' });
+      }
+
+      res.json({
+        success: true,
+        reviewId: id,
+        featured: data.featured,
+        message: data.featured ? 'Review featured' : 'Review unfeatured',
+      });
+    } catch (error: any) {
+      console.error('Admin feature review error:', error);
       res.status(500).json({
         error: 'Internal server error',
         ...(process.env.NODE_ENV === 'development' && { details: error.message }),
