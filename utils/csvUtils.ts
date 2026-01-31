@@ -23,6 +23,51 @@ const formatNumeric = (value: string): string => {
   return num.toFixed(1);
 };
 
+/**
+ * Formats date to MM/DD/YYYY format required by ForeFlight
+ * Handles various input formats: YYYY-MM-DD, MM/DD/YYYY, DD/MM/YYYY, etc.
+ */
+const formatDateForForeFlight = (dateStr: string | undefined): string => {
+  if (!dateStr || !dateStr.trim()) return "";
+  
+  const trimmed = dateStr.trim();
+  
+  // If already in MM/DD/YYYY format, return as-is
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(trimmed)) {
+    const parts = trimmed.split('/');
+    const month = parts[0].padStart(2, '0');
+    const day = parts[1].padStart(2, '0');
+    const year = parts[2];
+    return `${month}/${day}/${year}`;
+  }
+  
+  // If in YYYY-MM-DD format (database format), convert to MM/DD/YYYY
+  if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(trimmed)) {
+    const parts = trimmed.split('-');
+    const year = parts[0];
+    const month = parts[1].padStart(2, '0');
+    const day = parts[2].padStart(2, '0');
+    return `${month}/${day}/${year}`;
+  }
+  
+  // If in DD/MM/YYYY or DD.MM.YYYY format, convert to MM/DD/YYYY
+  if (/^\d{1,2}[\/\.]\d{1,2}[\/\.]\d{4}$/.test(trimmed)) {
+    const parts = trimmed.split(/[\/\.]/);
+    const day = parts[0].padStart(2, '0');
+    const month = parts[1].padStart(2, '0');
+    const year = parts[2];
+    return `${month}/${day}/${year}`;
+  }
+  
+  // If in MM/DD format (no year), try to infer year or return as-is
+  if (/^\d{1,2}\/\d{1,2}$/.test(trimmed)) {
+    return trimmed; // ForeFlight might handle this, or user needs to fix
+  }
+  
+  // If we can't parse it, return as-is (might cause ForeFlight to reject, but better than empty)
+  return trimmed;
+};
+
 export const generateForeFlightCSV = (entries: LogbookEntry[], aircraftProfiles: AircraftProfile[] = []): string => {
   const csvRows: string[] = [];
 
@@ -107,9 +152,10 @@ export const generateForeFlightCSV = (entries: LogbookEntry[], aircraftProfiles:
   // The Data Rows
   entries.forEach(entry => {
     // Map existing LogbookEntry to the 71 columns of the Flights Table
+    // Ensure we always return exactly 71 values (one per header)
     const row = FOREFLIGHT_FLIGHT_HEADERS.map(header => {
       switch (header) {
-        case "Date": return entry.date;
+        case "Date": return formatDateForForeFlight(entry.date);
         case "AircraftID": return escapeCSV(entry.aircraftId);
         case "From": return escapeCSV(entry.from);
         case "To": return escapeCSV(entry.to);

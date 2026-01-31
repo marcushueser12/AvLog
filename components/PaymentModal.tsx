@@ -14,21 +14,27 @@ const PRICING_TIERS = {
   private: {
     name: 'Private Pack',
     price: 8,
+    originalPrice: 8, // Sale from $8 for 10 credits
     credits: 12,
+    originalCredits: 10, // Showing sale from 10 credits
     description: 'Perfect for personal logbook digitization',
     popular: false
   },
   commercial: {
     name: 'Commercial Pack',
     price: 12,
+    originalPrice: 16.25, // Sale from $16.25 for 25 credits
     credits: 25,
+    originalCredits: 25,
     description: 'Ideal for commercial pilots and flight schools',
     popular: true
   },
   atp: {
     name: 'ATP Pack',
     price: 30,
+    originalPrice: 50, // Sale from $50 for 100 credits
     credits: 100,
+    originalCredits: 100,
     description: 'Best value for ATP and professional pilots',
     popular: false
   }
@@ -144,10 +150,24 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSuccess 
               <div className="text-center mb-6">
                 <h3 className="text-xl font-black text-[#003366] mb-2">{tier.name}</h3>
                 <div className="mb-2">
+                  {tier.originalPrice > tier.price && (
+                    <div className="mb-1">
+                      <span className="text-sm text-[#003366]/60 line-through mr-2">${tier.originalPrice}</span>
+                      <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full font-bold">SALE</span>
+                    </div>
+                  )}
                   <span className="text-4xl font-black text-[#003366]">${tier.price}</span>
                 </div>
                 <p className="text-2xl font-bold text-[#007BFF] mb-1">{tier.credits} Credits</p>
-                <p className="text-xs text-[#003366]/60">${(tier.price / tier.credits).toFixed(2)} per credit</p>
+                {tier.originalPrice > tier.price && (
+                  <p className="text-xs text-[#003366]/60 mb-1">
+                    <span className="line-through">${(tier.originalPrice / tier.originalCredits).toFixed(2)}</span>
+                    {' '}→ ${(tier.price / tier.credits).toFixed(2)} per credit
+                  </p>
+                )}
+                {tier.originalPrice === tier.price && (
+                  <p className="text-xs text-[#003366]/60">${(tier.price / tier.credits).toFixed(2)} per credit</p>
+                )}
               </div>
 
               <p className="text-sm text-[#003366]/70 text-center mb-6 min-h-[40px]">

@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { AppTab } from '../types';
 import AuthModal from './AuthModal';
+import SupportRequestModal from './SupportRequestModal';
 import SoftwareApplicationSchema from './SoftwareApplicationSchema';
 import Logo from './Logo';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Plane, FileText, CloudUpload, Clock, Menu, X, ChevronRight, Shield, CheckCircle2, Grid3x3, MessageSquare, Star } from 'lucide-react';
+import { Plane, FileText, CloudUpload, Clock, Menu, X, ChevronRight, Shield, CheckCircle2, Grid3x3, MessageSquare, Star, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface Review {
@@ -27,6 +28,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
   const [featuredReviews, setFeaturedReviews] = useState<Review[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -579,6 +581,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             >
               Terms of Service
             </button>
+            <button 
+              onClick={() => setShowSupportModal(true)} 
+              className="hover:text-[#007BFF] transition-colors min-h-[48px] min-w-[48px] px-2 flex items-center gap-1.5"
+              aria-label="Contact support"
+            >
+              <HelpCircle className="w-4 h-4" />
+              Support
+            </button>
           </div>
           <p>© {new Date().getFullYear()} LogExtract Technologies. All rights reserved.</p>
         </div>
@@ -586,6 +596,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
 
       {/* Auth Modal */}
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+
+      {/* Support Request Modal */}
+      <SupportRequestModal isOpen={showSupportModal} onClose={() => setShowSupportModal(false)} />
 
       {/* Privacy Policy Modal */}
       {showPrivacyModal && (

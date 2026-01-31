@@ -1975,7 +1975,30 @@ const App: React.FC = () => {
             {/* Permanent log selection */}
             {user && permanentLogScans.length > 0 && (
               <div className="mb-6">
-                <h4 className="text-sm font-bold text-[#003366] mb-3">Select from Permanent Log:</h4>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-bold text-[#003366]">Select from Permanent Log:</h4>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        // Select all pages
+                        setSelectedScansForExport(new Set(permanentLogScans.map(scan => scan.id)));
+                      }}
+                      className="text-xs text-[#007BFF] hover:text-[#007BFF]/80 font-medium"
+                    >
+                      Select All
+                    </button>
+                    <span className="text-[#003366]/30">|</span>
+                    <button
+                      onClick={() => {
+                        // Deselect all
+                        setSelectedScansForExport(new Set());
+                      }}
+                      className="text-xs text-[#007BFF] hover:text-[#007BFF]/80 font-medium"
+                    >
+                      Deselect All
+                    </button>
+                  </div>
+                </div>
                 {loadingPermanentLog ? (
                   <div className="text-[#003366]/70 text-sm py-4">Loading saved entries...</div>
                 ) : (
