@@ -19,7 +19,11 @@ interface VerifiedScan {
   created_at: string;
 }
 
-const PermanentLogTab: React.FC = () => {
+interface PermanentLogTabProps {
+  onPermanentLogChange?: () => void;
+}
+
+const PermanentLogTab: React.FC<PermanentLogTabProps> = ({ onPermanentLogChange }) => {
   const { user, loading: authLoading, getAccessToken } = useAuth();
   const [scans, setScans] = useState<VerifiedScan[]>([]);
   const [selectedScan, setSelectedScan] = useState<string | null>(null);
@@ -468,6 +472,7 @@ const PermanentLogTab: React.FC = () => {
       });
 
       alert('Changes saved successfully!');
+      onPermanentLogChange?.(); // Refresh dashboard stats (Total hrs, cards)
     } catch (error: any) {
       console.error('Error saving scan:', error);
       alert(`Failed to save changes: ${error.message}. Please try again.`);
@@ -585,6 +590,7 @@ const PermanentLogTab: React.FC = () => {
       });
 
       alert('Scan deleted successfully');
+      onPermanentLogChange?.(); // Refresh dashboard stats (Total hrs, cards)
     } catch (error: any) {
       console.error('Error deleting scan:', error);
       alert(`Failed to delete scan: ${error.message}. Please try again.`);

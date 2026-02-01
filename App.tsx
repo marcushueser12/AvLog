@@ -310,7 +310,6 @@ const App: React.FC = () => {
       
       loadUserCredits();
       loadExistingAircraft();
-      loadPermanentLogForExport(); // Load permanent log to calculate dashboard stats
     } else {
       setUserCredits(0); // Show 0 credits when not logged in
       setExistingAircraftIds(new Set<string>());
@@ -322,6 +321,13 @@ const App: React.FC = () => {
       }
     }
   }, [user]);
+
+  // Refresh permanent log stats when switching to dashboard or permanent-log (so Total hrs and cards stay in sync)
+  useEffect(() => {
+    if (user && (activeTab === 'dashboard' || activeTab === 'permanent-log')) {
+      loadPermanentLogForExport();
+    }
+  }, [user, activeTab]);
 
   const loadUserCredits = async () => {
     if (!user) {
@@ -579,8 +585,7 @@ const App: React.FC = () => {
 
         const result = await response.json();
         console.log('Verified scan saved:', result);
-        
-        // Aircraft profiles will be created by users in the Aircraft Profiles tab after verification
+        loadPermanentLogForExport(); // Refresh dashboard stats (Total hrs, cards)
       } catch (error: any) {
         console.error('Error saving verified scan:', error);
         // Don't un-verify on error, just log it
@@ -688,7 +693,7 @@ const App: React.FC = () => {
   };
 
   // Load permanent log scans for export selection
-  const loadPermanentLogForExport = async (loadAllPages: boolean = false) => {
+  const loadPermanentLogForExport = async () => {
     if (!user) {
       setPermanentLogScans([]);
       setPermanentLogEntries({});
@@ -714,10 +719,8 @@ const App: React.FC = () => {
         const data = await response.json();
         setPermanentLogScans(data.scans || []);
         
-        // If loadAllPages is true (for export), load all pages. Otherwise, only load first 10 for dashboard
-        const scansToLoad = loadAllPages 
-          ? (data.scans || []) // Load all pages for export
-          : (data.scans || []).slice(0, 10); // Only load first 10 pages for dashboard
+        // Load all pages for accurate stats (dashboard) and export
+        const scansToLoad = data.scans || [];
         
         const entriesMap: Record<string, LogbookEntry[]> = {};
         
@@ -793,8 +796,7 @@ const App: React.FC = () => {
   const handleExportModalOpen = () => {
     setShowExportModal(true);
     if (user) {
-      // Load ALL pages when opening export modal (not just first 10)
-      loadPermanentLogForExport(true); // true = load all pages for export
+      loadPermanentLogForExport();
       loadAircraftForExport();
     }
     // Initialize selection with all current exportable entries' scan IDs
@@ -991,7 +993,10 @@ const App: React.FC = () => {
 
   const NavButton = ({ tab, label, icon: Icon }: { tab: AppTab, label: string, icon: React.FC }) => (
     <motion.button 
-      onClick={() => setActiveTab(tab)}
+      onClick={() => {
+        setActiveTab(tab);
+        if (tab === 'dashboard' && user) loadPermanentLogForExport(); // Refresh totals every time dashboard is opened
+      }}
       className={`flex items-center gap-3 px-4 py-3 sm:py-3 rounded-xl font-semibold text-sm transition-all border min-h-[44px] sm:min-h-0 ${activeTab === tab ? 'bg-[#007BFF]/10 text-[#007BFF] border-[#007BFF]/30 shadow-sm' : 'text-[#003366]/70 hover:text-[#003366] hover:bg-[#F4F7FA] border-transparent'}`}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
@@ -1062,7 +1067,10 @@ const App: React.FC = () => {
           {/* Tabs Navigation - Horizontal */}
           <nav className="flex items-center gap-0.5 sm:gap-1 min-w-0 flex-1">
             <button
-              onClick={() => setActiveTab('dashboard')}
+              onClick={() => {
+                setActiveTab('dashboard');
+                if (user) loadPermanentLogForExport();
+              }}
               className={`px-1 sm:px-2 py-0.5 sm:py-1 rounded transition-all text-[8px] sm:text-[9px] font-semibold whitespace-nowrap shrink-0 ${
                 activeTab === 'dashboard' 
                   ? 'bg-[#007BFF]/10 text-[#007BFF] border border-[#007BFF]/30' 
@@ -1197,7 +1205,7 @@ const App: React.FC = () => {
             ) : activeTab === 'tutorial' ? (
               <TutorialTab />
             ) : activeTab === 'permanent-log' ? (
-              <PermanentLogTab />
+              <PermanentLogTab onPermanentLogChange={loadPermanentLogForExport} />
             ) : activeTab === 'dashboard' ? (
               <div className="space-y-4">
                 {/* Bento Grid Stats - Mobile optimized */}
@@ -1613,7 +1621,7 @@ const App: React.FC = () => {
           ) : activeTab === 'tutorial' ? (
             <TutorialTab />
           ) : activeTab === 'permanent-log' ? (
-            <PermanentLogTab />
+            <PermanentLogTab onPermanentLogChange={loadPermanentLogForExport} />
           ) : activeTab === 'dashboard' ? (
             <div className="space-y-10">
               {/* Bento Grid Stats */}
@@ -1994,7 +2002,7 @@ const App: React.FC = () => {
                </div>
                <h2 className="text-2xl font-black text-white capitalize">{(activeTab as string).replace('-', ' ')}</h2>
                <p className="text-slate-500 max-w-sm">This module is currently being optimized for high-volume data visualization. Check back soon for your personalized pilot analytics.</p>
-               <button onClick={() => setActiveTab('dashboard')} className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-all">Back to Dashboard</button>
+               <button onClick={() => { setActiveTab('dashboard'); if (user) loadPermanentLogForExport(); }} className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-all">Back to Dashboard</button>
             </div>
           )}
         </div>
