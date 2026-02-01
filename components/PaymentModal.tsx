@@ -203,6 +203,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSuccess 
           <p className="text-xs text-[#003366]/60 text-center">
             Secure payment powered by Stripe. Your payment information is encrypted and secure.
           </p>
+          <p className="text-xs text-[#003366]/60 text-center mt-2">
+            Need a refund? Contact support and we&apos;ll be happy to help.
+          </p>
         </div>
       </div>
     </div>
