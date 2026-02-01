@@ -397,34 +397,13 @@ const App: React.FC = () => {
       setScans(prev => prev.map(s => s.id === scan.id ? { ...s, status: 'processing' } : s));
 
       try {
-        // Deduct 1 credit for this scan (before processing)
         const token = getAccessToken();
         if (!token) {
           setScans(prev => prev.map(s => s.id === scan.id ? { ...s, status: 'error', error: 'Authentication required' } : s));
           continue;
         }
 
-        const deductResponse = await fetch(`${API_URL}/api/verified/deduct-credits`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            amount: 1,
-            reason: `Scan extraction - ${scan.mode === 'single' ? 'single page' : 'spread pair'}`
-          })
-        });
-
-        if (!deductResponse.ok) {
-          const errorData = await deductResponse.json();
-          throw new Error(errorData.message || errorData.error || 'Failed to deduct credits');
-        }
-
-        const deductData = await deductResponse.json();
-        setUserCredits(deductData.newBalance);
-
-        // Now process the scan
+        // Process scan first - no credit deduction yet. Credit is deducted when user approves results.
         let result;
         if (scan.mode === 'single') {
           result = await extractLogbookEntriesSingle(scan.images[0], scan.expectedEntries);
@@ -432,35 +411,9 @@ const App: React.FC = () => {
           result = await extractLogbookEntriesFromPair(scan.images[0], scan.images[1], scan.expectedEntries);
         }
 
-        // Check if extraction returned any entries
+        // Check if extraction returned any entries (no credit was charged, so no refund needed)
         if (!result.entries || result.entries.length === 0) {
-          // No entries returned - refund the credit
-          console.warn('Extraction returned no entries, refunding credit');
-          try {
-            const refundResponse = await fetch(`${API_URL}/api/verified/refund-credits`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              },
-              body: JSON.stringify({
-                amount: 1,
-                reason: `Extraction returned no entries - ${scan.mode === 'single' ? 'single page' : 'spread pair'}`
-              })
-            });
-
-            if (refundResponse.ok) {
-              const refundData = await refundResponse.json();
-              setUserCredits(refundData.newBalance);
-              throw new Error('Extraction returned no entries. Credit has been refunded.');
-            } else {
-              console.error('Failed to refund credit');
-              throw new Error('Extraction returned no entries. Please contact support for a credit refund.');
-            }
-          } catch (refundError: any) {
-            // Re-throw the error to be caught by the outer catch block
-            throw refundError;
-          }
+          throw new Error('Extraction returned no entries. No credit was charged. Try again or use a clearer image.');
         }
 
         const entriesWithScanRef = result.entries.map((e: any) => {
@@ -519,7 +472,8 @@ const App: React.FC = () => {
             resultsCount: result.entries.length,
             extractedTotals: result.pageTotals,
             pageNumber,
-            isVerified: false
+            isVerified: false,
+            creditApproved: false // User must approve results before editing; credit deducted on approve
           } : s);
         });
       } catch (err: any) {
@@ -540,6 +494,40 @@ const App: React.FC = () => {
     // Reload credits after processing
     if (user) {
       loadUserCredits();
+    }
+  };
+
+  const handleApproveScan = async (scanId: string) => {
+    if (userCredits !== null && userCredits < 1) {
+      alert('No credits available. You need at least 1 credit to approve and edit this scan.');
+      return;
+    }
+    const token = getAccessToken();
+    if (!token) {
+      setShowAuthModal(true);
+      return;
+    }
+    try {
+      const deductResponse = await fetch(`${API_URL}/api/verified/deduct-credits`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          amount: 1,
+          reason: 'Scan approval - user approved extraction results',
+        }),
+      });
+      if (!deductResponse.ok) {
+        const err = await deductResponse.json().catch(() => ({}));
+        throw new Error(err.message || err.error || 'Failed to deduct credit');
+      }
+      const deductData = await deductResponse.json();
+      setUserCredits(deductData.newBalance);
+      setScans(prev => prev.map(s => s.id === scanId ? { ...s, creditApproved: true } : s));
+    } catch (err: any) {
+      alert(err.message || 'Failed to approve scan');
     }
   };
 
@@ -1275,7 +1263,7 @@ const App: React.FC = () => {
                       onClick={processPendingScans}
                       disabled={isBatchProcessing || !user || (userCredits !== null && userCredits < 1) || !scans.some(s => s.status === 'pending' && (s.mode === 'single' ? s.images.length >= 1 : s.images.length === 2))}
                       className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#003366] hover:bg-[#003366]/90 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-lg text-[11px] font-bold transition-all shadow-lg shadow-[#003366]/20 min-h-[44px] shiny-button w-full"
-                      title={!user ? 'Sign in required' : (userCredits !== null && userCredits < 1) ? 'Insufficient credits' : 'Start extraction (1 credit per scan)'}
+                      title={!user ? 'Sign in required' : (userCredits !== null && userCredits < 1) ? 'Insufficient credits' : 'Start extraction (1 credit when you approve results)'}
                       whileHover={{ scale: isBatchProcessing || !user || (userCredits !== null && userCredits < 1) ? 1 : 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -1408,8 +1396,11 @@ const App: React.FC = () => {
                                 totals={calculatedTotals}
                                 isExpanded={isExpanded}
                                 isVerified={isVerified}
+                                creditApproved={scan.creditApproved ?? true}
                                 onToggleExpand={() => toggleScanExpand(scan.id)}
                                 onToggleVerify={(checked) => handleVerifyScan(scan.id, checked)}
+                                onApprove={() => handleApproveScan(scan.id)}
+                                userCredits={userCredits}
                               />
                             )}
 
@@ -1418,6 +1409,7 @@ const App: React.FC = () => {
                                 <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden p-1">
                                   <EntryEditor 
                                     entries={scanEntries}
+                                    readOnly={!(scan.creditApproved ?? true)}
                                     images={scan.images}
                                     rotations={scan.imageRotations}
                                     onUpdate={handleUpdateEntry}
@@ -1470,7 +1462,8 @@ const App: React.FC = () => {
                                     onUpdateApproaches={handleUpdateApproaches}
                                   />
                                   <div className="p-2 bg-slate-950/50 flex justify-between items-center">
-                                      <label className="flex items-center gap-1.5 cursor-pointer">
+                                      {(scan.creditApproved ?? true) ? (
+                                    <label className="flex items-center gap-1.5 cursor-pointer">
                                       <input
                                         type="checkbox"
                                         checked={isVerified}
@@ -1482,6 +1475,19 @@ const App: React.FC = () => {
                                         {savingVerified.has(scan.id) ? 'Saving...' : 'Mark as Verified'}
                                       </span>
                                     </label>
+                                      ) : (
+                                    <button
+                                      onClick={() => handleApproveScan(scan.id)}
+                                      disabled={userCredits !== null && userCredits < 1}
+                                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                                        userCredits !== null && userCredits >= 1
+                                          ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                                          : 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                                      }`}
+                                    >
+                                      {userCredits !== null && userCredits < 1 ? 'Need 1 credit to edit' : 'Approve & start editing (1 credit)'}
+                                    </button>
+                                      )}
                                     <button 
                                       onClick={() => toggleScanExpand(scan.id)}
                                       className="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-[10px] font-bold transition-all"
@@ -1684,7 +1690,7 @@ const App: React.FC = () => {
                       onClick={processPendingScans}
                       disabled={isBatchProcessing || !user || (userCredits !== null && userCredits < 1) || !scans.some(s => s.status === 'pending' && (s.mode === 'single' ? s.images.length >= 1 : s.images.length === 2))}
                       className="flex items-center justify-center gap-2 px-6 py-3 bg-[#003366] hover:bg-[#003366]/90 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-[#003366]/20 min-h-[44px] shiny-button w-full sm:w-auto"
-                      title={!user ? 'Sign in required' : (userCredits !== null && userCredits < 1) ? 'Insufficient credits' : 'Start extraction (1 credit per scan)'}
+                      title={!user ? 'Sign in required' : (userCredits !== null && userCredits < 1) ? 'Insufficient credits' : 'Start extraction (1 credit when you approve results)'}
                       whileHover={{ scale: isBatchProcessing || !user || (userCredits !== null && userCredits < 1) ? 1 : 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -1836,8 +1842,11 @@ const App: React.FC = () => {
                               totals={calculatedTotals}
                               isExpanded={isExpanded}
                               isVerified={isVerified}
+                              creditApproved={scan.creditApproved ?? true}
                               onToggleExpand={() => toggleScanExpand(scan.id)}
                               onToggleVerify={(checked) => handleVerifyScan(scan.id, checked)}
+                              onApprove={() => handleApproveScan(scan.id)}
+                              userCredits={userCredits}
                             />
                           )}
 
@@ -1882,6 +1891,7 @@ const App: React.FC = () => {
                                   entries={scanEntries}
                                   images={scan.images}
                                   rotations={scan.imageRotations}
+                                  readOnly={!(scan.creditApproved ?? true)}
                                   onUpdate={handleUpdateEntry}
                                   onAircraftIdChange={handleAircraftIdChange}
                                   forceTableOnMobile={true}
@@ -1932,7 +1942,8 @@ const App: React.FC = () => {
                                   onUpdateApproaches={handleUpdateApproaches}
                                 />
                                 <div className="p-4 bg-slate-950/50 flex justify-between items-center">
-                                    <label className="flex items-center gap-2 cursor-pointer">
+                                    {(scan.creditApproved ?? true) ? (
+                                  <label className="flex items-center gap-2 cursor-pointer">
                                     <input
                                       type="checkbox"
                                       checked={isVerified}
@@ -1944,6 +1955,19 @@ const App: React.FC = () => {
                                       {savingVerified.has(scan.id) ? 'Saving...' : 'Mark as Verified'}
                                     </span>
                                   </label>
+                                    ) : (
+                                  <button
+                                    onClick={() => handleApproveScan(scan.id)}
+                                    disabled={userCredits !== null && userCredits < 1}
+                                    className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                                      userCredits !== null && userCredits >= 1
+                                        ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                                        : 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                                    }`}
+                                  >
+                                    {userCredits !== null && userCredits < 1 ? 'Need 1 credit to edit' : 'Approve & start editing (1 credit)'}
+                                  </button>
+                                    )}
                                   <button 
                                     onClick={() => toggleScanExpand(scan.id)}
                                     className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-sm font-bold transition-all flex items-center gap-2"
@@ -2240,7 +2264,7 @@ const App: React.FC = () => {
               <h3 className="text-lg font-bold text-[#003366] mt-6 mb-3">4. Billing & Credits</h3>
               <ul className="list-disc list-inside space-y-2 text-[#003366]/70 mb-6">
                 <li><strong>Credit System</strong>: Conversions are charged per page or per entry as specified at the time of purchase.</li>
-                <li><strong>Refunds</strong>: Credits are deducted upon successful scan. If a scan is illegible, please contact support for a credit reversal.</li>
+                <li><strong>Refunds</strong>: Credits are deducted only when you approve extraction results. If results are poor, discard and try again—no credit charged.</li>
               </ul>
 
               <h3 className="text-lg font-bold text-[#003366] mt-6 mb-3">5. Termination</h3>

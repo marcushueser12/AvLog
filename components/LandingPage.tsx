@@ -725,7 +725,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
               <h3 className="text-lg font-bold text-[#003366] mt-6 mb-3">4. Billing & Credits</h3>
               <ul className="list-disc list-inside space-y-2 text-[#003366]/70 mb-6">
                 <li><strong>Credit System</strong>: Conversions are charged per page or per entry as specified at the time of purchase.</li>
-                <li><strong>Refunds</strong>: Credits are deducted upon successful scan. If a scan is illegible, please contact support for a credit reversal.</li>
+                <li><strong>Refunds</strong>: Credits are deducted only when you approve extraction results. If results are poor, discard and try again—no credit charged.</li>
               </ul>
 
               <h3 className="text-lg font-bold text-[#003366] mt-6 mb-3">5. Termination</h3>

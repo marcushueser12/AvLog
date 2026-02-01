@@ -7,8 +7,11 @@ interface ScanReviewRowProps {
   totals: PageTotals;
   isExpanded: boolean;
   isVerified: boolean;
+  creditApproved?: boolean;
   onToggleExpand: () => void;
   onToggleVerify: (checked: boolean) => void;
+  onApprove?: () => void;
+  userCredits?: number | null;
 }
 
 const ScanReviewRow: React.FC<ScanReviewRowProps> = ({
@@ -16,12 +19,17 @@ const ScanReviewRow: React.FC<ScanReviewRowProps> = ({
   totals,
   isExpanded,
   isVerified,
+  creditApproved = true,
   onToggleExpand,
-  onToggleVerify
+  onToggleVerify,
+  onApprove,
+  userCredits
 }) => {
   if (isExpanded) {
     return null; // When expanded, EntryEditor will show
   }
+
+  const canApprove = creditApproved === false && onApprove && (userCredits === null || userCredits >= 1);
 
   return (
     <div 
@@ -29,18 +37,35 @@ const ScanReviewRow: React.FC<ScanReviewRowProps> = ({
       className="bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-xl overflow-hidden cursor-pointer hover:border-[#007BFF]/30 hover:shadow-md transition-all shadow-sm"
     >
       <div className="flex items-center border-b border-[#E2E8F0]">
-        {/* Verify checkbox and page number */}
+        {/* Approve button (when not yet approved) or Verify checkbox (when approved) */}
         <div className="flex items-center gap-3 px-4 py-3 border-r border-[#E2E8F0] bg-[#F4F7FA]/50">
-          <input
-            type="checkbox"
-            checked={isVerified}
-            onChange={(e) => {
-              e.stopPropagation();
-              onToggleVerify(e.target.checked);
-            }}
-            onClick={(e) => e.stopPropagation()}
-            className="w-5 h-5 rounded border-2 border-[#E2E8F0] bg-white text-[#007BFF] focus:ring-2 focus:ring-[#007BFF] focus:ring-offset-0 cursor-pointer accent-[#007BFF]"
-          />
+          {!creditApproved ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (canApprove) onApprove?.();
+              }}
+              disabled={!canApprove}
+              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all shrink-0 ${
+                canApprove
+                  ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                  : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+              }`}
+            >
+              {userCredits !== null && userCredits < 1 ? 'Need 1 credit' : 'Approve (1 credit)'}
+            </button>
+          ) : (
+            <input
+              type="checkbox"
+              checked={isVerified}
+              onChange={(e) => {
+                e.stopPropagation();
+                onToggleVerify(e.target.checked);
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-5 h-5 rounded border-2 border-[#E2E8F0] bg-white text-[#007BFF] focus:ring-2 focus:ring-[#007BFF] focus:ring-offset-0 cursor-pointer accent-[#007BFF]"
+            />
+          )}
           <span className="text-sm font-bold text-[#003366]/70 min-w-[2rem]">#{pageNumber}</span>
         </div>
 

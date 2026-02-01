@@ -96,6 +96,7 @@ export interface ScanDocument {
   imageRotations?: number[]; // Rotation in degrees for each image (e.g., [0, 0] or [90, -90]). Defaults to [0, 0]
   pageNumber?: number; // Page number for this extraction (starting at 1)
   isVerified?: boolean; // Whether this scan has been verified
+  creditApproved?: boolean; // If true, user approved results and 1 credit was deducted; enables editing
 }
 
 export interface AircraftProfile {
