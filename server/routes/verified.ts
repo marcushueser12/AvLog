@@ -372,6 +372,53 @@ router.put('/update-scan', verifyAuth, async (req: AuthRequest, res) => {
 );
 
 /**
+ * GET /api/verified/stats
+ * Get aggregate logbook stats (total time, PIC, etc.) from verified_entries.
+ * Single source of truth - computed in DB to match permanent log exactly.
+ */
+router.get('/stats', verifyAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!;
+
+    const { data: entries, error } = await supabaseAdmin
+      .from('verified_entries')
+      .select('total_time, day, night, pic, instrument, simulated_instrument, cross_country, aircraft_type')
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error fetching stats:', error);
+      return res.status(500).json({ error: 'Failed to fetch stats' });
+    }
+
+    const list = entries || [];
+    const totalTime = list.reduce((acc, e) => acc + (parseFloat(String(e.total_time)) || 0), 0);
+    const pic = list.reduce((acc, e) => acc + (parseFloat(String(e.pic)) || 0), 0);
+    const night = list.reduce((acc, e) => acc + (parseFloat(String(e.night)) || 0), 0);
+    const instrument = list.reduce((acc, e) => acc + (parseFloat(String(e.instrument)) || 0), 0);
+    const crossCountry = list.reduce((acc, e) => acc + (parseFloat(String(e.cross_country)) || 0), 0);
+    const multiEngine = list.filter((e: any) => {
+      const t = (e.aircraft_type || '').toLowerCase();
+      return t.includes('multi') || t.includes('twin');
+    }).length;
+
+    res.json({
+      totalTime,
+      pic,
+      night,
+      instrument,
+      crossCountry,
+      multiEngine,
+    });
+  } catch (error: any) {
+    console.error('Get stats error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      ...(process.env.NODE_ENV === 'development' && { details: error.message }),
+    });
+  }
+});
+
+/**
  * GET /api/verified/scans
  * Get all verified scans for the authenticated user
  */

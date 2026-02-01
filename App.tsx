@@ -64,6 +64,7 @@ const App: React.FC = () => {
   const [savingVerified, setSavingVerified] = useState<Set<string>>(new Set());
   const [permanentLogScans, setPermanentLogScans] = useState<any[]>([]);
   const [permanentLogEntries, setPermanentLogEntries] = useState<Record<string, LogbookEntry[]>>({});
+  const [logbookStats, setLogbookStats] = useState<{ totalTime: number; pic: number; night: number; instrument: number; crossCountry: number; multiEngine: number }>({ totalTime: 0, pic: 0, night: 0, instrument: 0, crossCountry: 0, multiEngine: 0 });
   const [selectedScansForExport, setSelectedScansForExport] = useState<Set<string>>(new Set());
   const [selectedAircraftForExport, setSelectedAircraftForExport] = useState<Set<string>>(new Set());
   const [loadingPermanentLog, setLoadingPermanentLog] = useState(false);
@@ -322,10 +323,39 @@ const App: React.FC = () => {
     }
   }, [user]);
 
-  // Refresh permanent log stats when switching to dashboard or permanent-log (so Total hrs and cards stay in sync)
+  // Load logbook stats from API (single source of truth - matches permanent log exactly)
+  const loadLogbookStats = async () => {
+    if (!user) {
+      setLogbookStats({ totalTime: 0, pic: 0, night: 0, instrument: 0, crossCountry: 0, multiEngine: 0 });
+      return;
+    }
+    const token = getAccessToken();
+    if (!token) return;
+    try {
+      const response = await fetch(`${API_URL}/api/verified/stats`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setLogbookStats({
+          totalTime: data.totalTime ?? 0,
+          pic: data.pic ?? 0,
+          night: data.night ?? 0,
+          instrument: data.instrument ?? 0,
+          crossCountry: data.crossCountry ?? 0,
+          multiEngine: data.multiEngine ?? 0,
+        });
+      }
+    } catch (err) {
+      console.error('Error loading logbook stats:', err);
+    }
+  };
+
+  // Refresh stats when switching to dashboard or permanent-log
   useEffect(() => {
     if (user && (activeTab === 'dashboard' || activeTab === 'permanent-log')) {
-      loadPermanentLogForExport();
+      loadLogbookStats();
+      loadPermanentLogForExport(); // Still load for export modal
     }
   }, [user, activeTab]);
 
@@ -585,7 +615,7 @@ const App: React.FC = () => {
 
         const result = await response.json();
         console.log('Verified scan saved:', result);
-        loadPermanentLogForExport(); // Refresh dashboard stats (Total hrs, cards)
+        loadLogbookStats(); // Refresh dashboard stats (Total hrs, cards)
       } catch (error: any) {
         console.error('Error saving verified scan:', error);
         // Don't un-verify on error, just log it
@@ -949,31 +979,9 @@ const App: React.FC = () => {
     return map;
   }, [entries]);
 
-  // Calculate stats for Bento Grid from permanent log entries - MUST be before early returns
-  const stats = useMemo(() => {
-    // Calculate totals from all permanent log entries (aggregate from entries, not scan metadata)
-    const allPermanentLogEntries = Object.values(permanentLogEntries).flat();
-    
-    const totalTime = allPermanentLogEntries.reduce((acc, curr) => acc + (parseFloat(curr.totalTime) || 0), 0);
-    const pic = allPermanentLogEntries.reduce((acc, curr) => acc + (parseFloat(curr.pic) || 0), 0);
-    const night = allPermanentLogEntries.reduce((acc, curr) => acc + (parseFloat(curr.night) || 0), 0);
-    const instrument = allPermanentLogEntries.reduce((acc, curr) => acc + (parseFloat(curr.instrument) || 0), 0);
-    const crossCountry = allPermanentLogEntries.reduce((acc, curr) => acc + (parseFloat(curr.crossCountry) || 0), 0);
-    
-    // Count multi-engine entries
-    const multiEngine = allPermanentLogEntries.filter(e => {
-      const type = e.aircraftType?.toLowerCase() || '';
-      return type.includes('multi') || type.includes('twin');
-    }).length;
-    
-    return { totalTime, pic, multiEngine, night, instrument, crossCountry };
-  }, [permanentLogEntries]);
-
-  const currentTotalTime = useMemo(() => {
-    // Sum total time from permanent log entries
-    const allPermanentLogEntries = Object.values(permanentLogEntries).flat();
-    return allPermanentLogEntries.reduce((acc, curr) => acc + (parseFloat(curr.totalTime) || 0), 0);
-  }, [permanentLogEntries]);
+  // Stats come from API (GET /api/verified/stats) - single source of truth matching permanent log
+  const stats = logbookStats;
+  const currentTotalTime = logbookStats.totalTime;
 
   // Show loading state while auth is loading
   if (authLoading) {
@@ -995,7 +1003,7 @@ const App: React.FC = () => {
     <motion.button 
       onClick={() => {
         setActiveTab(tab);
-        if (tab === 'dashboard' && user) loadPermanentLogForExport(); // Refresh totals every time dashboard is opened
+        if (tab === 'dashboard' && user) loadLogbookStats(); // Refresh totals every time dashboard is opened
       }}
       className={`flex items-center gap-3 px-4 py-3 sm:py-3 rounded-xl font-semibold text-sm transition-all border min-h-[44px] sm:min-h-0 ${activeTab === tab ? 'bg-[#007BFF]/10 text-[#007BFF] border-[#007BFF]/30 shadow-sm' : 'text-[#003366]/70 hover:text-[#003366] hover:bg-[#F4F7FA] border-transparent'}`}
       whileHover={{ scale: 1.02 }}
@@ -1069,7 +1077,7 @@ const App: React.FC = () => {
             <button
               onClick={() => {
                 setActiveTab('dashboard');
-                if (user) loadPermanentLogForExport();
+                if (user) loadLogbookStats();
               }}
               className={`px-1 sm:px-2 py-0.5 sm:py-1 rounded transition-all text-[8px] sm:text-[9px] font-semibold whitespace-nowrap shrink-0 ${
                 activeTab === 'dashboard' 
@@ -1205,7 +1213,7 @@ const App: React.FC = () => {
             ) : activeTab === 'tutorial' ? (
               <TutorialTab />
             ) : activeTab === 'permanent-log' ? (
-              <PermanentLogTab onPermanentLogChange={loadPermanentLogForExport} />
+              <PermanentLogTab onPermanentLogChange={() => { loadLogbookStats(); loadPermanentLogForExport(); }} />
             ) : activeTab === 'dashboard' ? (
               <div className="space-y-4">
                 {/* Bento Grid Stats - Mobile optimized */}
@@ -1621,7 +1629,7 @@ const App: React.FC = () => {
           ) : activeTab === 'tutorial' ? (
             <TutorialTab />
           ) : activeTab === 'permanent-log' ? (
-            <PermanentLogTab onPermanentLogChange={loadPermanentLogForExport} />
+            <PermanentLogTab onPermanentLogChange={() => { loadLogbookStats(); loadPermanentLogForExport(); }} />
           ) : activeTab === 'dashboard' ? (
             <div className="space-y-10">
               {/* Bento Grid Stats */}
@@ -2002,7 +2010,7 @@ const App: React.FC = () => {
                </div>
                <h2 className="text-2xl font-black text-white capitalize">{(activeTab as string).replace('-', ' ')}</h2>
                <p className="text-slate-500 max-w-sm">This module is currently being optimized for high-volume data visualization. Check back soon for your personalized pilot analytics.</p>
-               <button onClick={() => { setActiveTab('dashboard'); if (user) loadPermanentLogForExport(); }} className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-all">Back to Dashboard</button>
+               <button onClick={() => { setActiveTab('dashboard'); if (user) loadLogbookStats(); }} className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-all">Back to Dashboard</button>
             </div>
           )}
         </div>
