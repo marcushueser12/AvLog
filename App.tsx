@@ -77,20 +77,31 @@ const App: React.FC = () => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
+  const [orientationKey, setOrientationKey] = useState(0);
 
   // Fix white screen after rotation on mobile Safari/Chrome - force viewport recalculation
   useEffect(() => {
     const handleOrientationChange = () => {
-      // Safari needs a delay to recalculate viewport before we force reflow
-      setTimeout(() => {
+      // Safari needs delay to recalculate; use multiple passes for reliability
+      const run = () => {
+        const h = window.innerHeight;
+        const w = window.innerWidth;
+        document.documentElement.style.setProperty('--viewport-height', `${h}px`);
+        document.documentElement.style.setProperty('--viewport-width', `${w}px`);
         const root = document.getElementById('root');
-        if (root) {
-          root.style.height = '100%';
+        const body = document.body;
+        if (root && body) {
+          root.style.minHeight = `${h}px`;
+          body.style.minHeight = `${h}px`;
           root.offsetHeight; // Force reflow
-          root.style.height = '';
+          root.style.minHeight = '';
+          body.style.minHeight = '';
         }
         window.scrollTo(0, 0);
-      }, 150);
+        setOrientationKey(k => k + 1); // Force React re-render
+      };
+      setTimeout(run, 100);
+      setTimeout(run, 400);
     };
     window.addEventListener('orientationchange', handleOrientationChange);
     return () => window.removeEventListener('orientationchange', handleOrientationChange);
@@ -1035,7 +1046,7 @@ const App: React.FC = () => {
   return (
     <>
       <LandscapePrompt show={view === 'app'} />
-      <div className="min-h-screen bg-[#F4F7FA] flex flex-col overflow-hidden text-[#003366]">
+      <div key={orientationKey} className="min-h-screen min-h-[100dvh] bg-[#F4F7FA] flex flex-col overflow-hidden text-[#003366]">
       {/* Desktop Layout - Sidebar and Main Content side-by-side */}
       <div className="hidden lg:flex flex-1 min-w-0 overflow-hidden">
         {/* Desktop Sidebar - Only show on large screens (not mobile landscape) */}
