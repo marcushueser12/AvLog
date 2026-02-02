@@ -1067,7 +1067,7 @@ const App: React.FC = () => {
         onExtract={handleExtractFromCloud}
         userId={user?.id}
       />
-      <div className="min-h-screen bg-[#F4F7FA] flex flex-col overflow-hidden text-[#003366]">
+      <div className="min-h-screen flex-1 min-h-0 flex flex-col overflow-hidden bg-[#F4F7FA] text-[#003366]">
       {/* Desktop Layout - Sidebar and Main Content side-by-side */}
       <div className="hidden lg:flex flex-1 min-w-0 overflow-hidden">
         {/* Desktop Sidebar - Only show on large screens (not mobile landscape) */}
@@ -1255,8 +1255,8 @@ const App: React.FC = () => {
       </header>
 
       {/* Mobile Main Content - Full width, no sidebars */}
-      <main className="lg:hidden flex-1 flex flex-col min-w-0 bg-[#F4F7FA] overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-2 sm:p-4">
+      <main className="lg:hidden flex-1 min-h-0 flex flex-col min-w-0 bg-[#F4F7FA] overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-2 sm:p-4">
             {/* All tabs are now accessible without authentication */}
             {activeTab === 'reviews' ? (
               <ReviewsTab />

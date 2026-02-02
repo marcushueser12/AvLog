@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 
 export const useMobile = (): boolean => {
-  const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [isMobile, setIsMobile] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    const w = window.innerWidth;
+    const touch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    return w < 768 && (touch || w < 640);
+  });
 
   useEffect(() => {
     const checkMobile = () => {

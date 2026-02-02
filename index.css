@@ -53,6 +53,8 @@ body {
     height: calc(var(--vh, 1vh) * 100);
     min-height: 100dvh;
     overflow: auto;
+    display: flex;
+    flex-direction: column;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: none;
     overscroll-behavior-y: none;
