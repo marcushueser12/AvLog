@@ -34,10 +34,17 @@ const LandscapePrompt: React.FC<LandscapePromptProps> = ({ show }) => {
       <div className="bg-white rounded-2xl p-8 max-w-sm text-center shadow-2xl">
         <RotateCw className="w-16 h-16 mx-auto mb-4 text-[#007BFF]" />
         <h2 className="text-2xl font-black text-[#003366] mb-3">Rotate Your Device</h2>
-        <p className="text-[#003366]/70 mb-6">
+        <p className="text-[#003366]/70 mb-2">
           Please rotate your phone to landscape mode for the best experience.
         </p>
-        <div className="text-4xl">📱 ➡️ 📱</div>
+        <p className="text-[#003366]/60 text-sm mb-6">
+          LogExtract works best on desktop or tablet.
+        </p>
+        <div className="text-4xl flex items-center justify-center gap-2">
+          <span>📱</span>
+          <span>➡️</span>
+          <span className="inline-block" style={{ transform: 'rotate(90deg)' }}>📱</span>
+        </div>
       </div>
     </div>
   );

@@ -18,14 +18,15 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Mobile optimizations */
-@media (max-width: 768px) {
+/* Mobile optimizations - also apply in landscape (short height) so rotation doesn't break layout */
+@media (max-width: 768px), (orientation: landscape) and (max-height: 500px) {
   /* Scale down font size for more screen real estate */
   html {
     font-size: 85%;
     /* Prevent Safari from showing address bar on scroll */
     height: 100%;
     height: -webkit-fill-available;
+    min-height: 100dvh; /* Ensure fill on rotation */
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
   }
@@ -34,9 +35,10 @@ body {
   body {
     position: fixed;
     width: 100%;
+    min-width: 100%;
     height: 100%;
     height: -webkit-fill-available;
-    height: 100dvh; /* Dynamic viewport height - prevents address bar reveal */
+    min-height: 100dvh; /* Survives viewport recalculation during rotation */
     overflow: hidden;
     overscroll-behavior: none;
     overscroll-behavior-y: none;
@@ -46,9 +48,10 @@ body {
 
   #root {
     width: 100%;
+    min-width: 100%;
     height: 100%;
     height: -webkit-fill-available;
-    height: 100dvh; /* Dynamic viewport height */
+    min-height: 100dvh; /* Survives rotation - prevents white screen */
     overflow: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: none;

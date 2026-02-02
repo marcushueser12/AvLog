@@ -78,6 +78,24 @@ const App: React.FC = () => {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
 
+  // Fix white screen after rotation on mobile Safari/Chrome - force viewport recalculation
+  useEffect(() => {
+    const handleOrientationChange = () => {
+      // Safari needs a delay to recalculate viewport before we force reflow
+      setTimeout(() => {
+        const root = document.getElementById('root');
+        if (root) {
+          root.style.height = '100%';
+          root.offsetHeight; // Force reflow
+          root.style.height = '';
+        }
+        window.scrollTo(0, 0);
+      }, 150);
+    };
+    window.addEventListener('orientationchange', handleOrientationChange);
+    return () => window.removeEventListener('orientationchange', handleOrientationChange);
+  }, []);
+
   const handleSignIn = (tab: AppTab = 'dashboard') => {
     setView('app');
     setActiveTab(tab);
