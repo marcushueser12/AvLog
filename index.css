@@ -6,8 +6,6 @@
   --sky-blue: #007BFF;
   --atmospheric-tint: #F4F7FA;
   --aviation-slate: #E2E8F0;
-  --viewport-height: 100vh;
-  --viewport-width: 100vw;
 }
 
 body {
@@ -20,40 +18,41 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Mobile optimizations - also apply in landscape (short height) so rotation doesn't break layout */
-/* Avoid position:fixed on body - it causes white screen after rotation in Safari/Chrome */
-@media (max-width: 768px), (orientation: landscape) and (max-height: 600px) {
+/* Mobile optimizations - include landscape phones (width >768 but height short) */
+@media (max-width: 768px), (orientation: landscape) and (max-height: 500px) {
   /* Scale down font size for more screen real estate */
   html {
     font-size: 85%;
     height: 100%;
     height: -webkit-fill-available;
-    min-height: 100dvh;
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
   }
   
-  /* No position:fixed on body - it causes white screen after rotation in Safari/Chrome */
+  /* Prevent Safari address bar from showing on scroll */
   body {
+    position: fixed;
     width: 100%;
-    min-width: 100%;
     height: 100%;
-    min-height: 100dvh;
+    height: -webkit-fill-available;
+    height: 100dvh;
     overflow: hidden;
     overscroll-behavior: none;
+    overscroll-behavior-y: none;
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-y;
+    touch-action: manipulation; /* Allow both scroll directions */
   }
 
   #root {
     width: 100%;
-    min-width: 100%;
     height: 100%;
-    min-height: 100dvh;
+    height: -webkit-fill-available;
+    height: 100dvh;
     overflow: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: none;
-    touch-action: pan-y;
+    overscroll-behavior-y: none;
+    touch-action: manipulation; /* Allow both scroll directions */
   }
   
   /* Ensure all interactive elements are touch-friendly */
