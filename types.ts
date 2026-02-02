@@ -97,6 +97,15 @@ export interface ScanDocument {
   pageNumber?: number; // Page number for this extraction (starting at 1)
   isVerified?: boolean; // Whether this scan has been verified
   creditApproved?: boolean; // If true, user approved results and 1 credit was deducted; enables editing
+  sourceCloudUploadIds?: string[]; // UUIDs from cloud_uploads when scan was imported from cloud
+}
+
+export interface CloudUpload {
+  id: string;
+  user_id: string;
+  storage_path: string;
+  status: 'pending' | 'processed';
+  created_at: string;
 }
 
 export interface AircraftProfile {

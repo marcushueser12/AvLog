@@ -193,6 +193,15 @@ To let admins manually select which reviews appear in the Featured Reviews secti
 
 **Without this migration:** Featured Reviews will fall back to the top 3 highest-rated approved reviews.
 
+### Mobile Capture → Desktop Review (Cloud uploads)
+
+For the "Mobile Capture to Desktop Review" flow (capture on phone, extract on desktop):
+
+1. In SQL Editor, run **`supabase/migration_cloud_uploads.sql`** (creates `cloud_uploads` table, RLS, and storage bucket `logbook_scans` with RLS).
+2. In **Database → Replication**, add the `cloud_uploads` table to the **supabase_realtime** publication so the desktop app can show a badge when new photos are synced from mobile.
+
+**Without this:** Import from Cloud and mobile capture/sync will not work.
+
 ---
 
 ## Step 4: Configure Environment Variables

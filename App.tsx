@@ -14,6 +14,9 @@ import PaymentModal from './components/PaymentModal';
 import SupportRequestModal from './components/SupportRequestModal';
 import Logo from './components/Logo';
 import LandscapePrompt from './components/LandscapePrompt';
+import MobileCaptureView from './components/MobileCaptureView';
+import CloudSelectionModal from './components/CloudSelectionModal';
+import { useCloudUploads, markCloudUploadsProcessed } from './hooks/useCloudUploads';
 import { useAuth } from './contexts/AuthContext';
 import { extractLogbookEntriesFromPair, extractLogbookEntriesSingle } from './services/geminiService';
 import { generateForeFlightCSV, downloadCSV } from './utils/csvUtils';
@@ -22,7 +25,7 @@ import { fetchWithRetry, safeApiCall } from './utils/apiUtils';
 import { getExifOrientation } from './utils/exifUtils';
 import { useMobile } from './utils/useMobile';
 import { motion } from 'framer-motion';
-import { Plane, Grid3x3, FileText, Clock, Home, LogOut, Download, Plus, Trash2, Upload, X, MessageSquare, Headphones } from 'lucide-react';
+import { Plane, Grid3x3, FileText, Clock, Home, LogOut, Download, Plus, Trash2, Upload, X, MessageSquare, Headphones, Cloud } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -77,6 +80,9 @@ const App: React.FC = () => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
+  const [showCloudModal, setShowCloudModal] = useState(false);
+
+  const { pendingCount: cloudPendingCount } = useCloudUploads(user?.id);
 
   const handleSignIn = (tab: AppTab = 'dashboard') => {
     setView('app');
@@ -98,6 +104,37 @@ const App: React.FC = () => {
 
   const handleUpdateExpectedEntries = (scanId: string, count: number | undefined) => {
     setScans(prev => prev.map(s => s.id === scanId ? { ...s, expectedEntries: count } : s));
+  };
+
+  const handleExtractFromCloud = (
+    result: { entries: any[]; pageTotals?: any },
+    mode: 'single' | 'spread',
+    cloudUploadIds: string[]
+  ) => {
+    const scanId = Math.random().toString(36).substr(2, 9);
+    const entriesWithScanRef = (result.entries || []).map((e: any) => {
+      const normalizedDate = normalizeDateSeparator(e.date || '');
+      const normalizedAircraftId = normalizeAircraftId(e.aircraftId || '', false);
+      return { ...e, scanId, date: normalizedDate, aircraftId: normalizedAircraftId };
+    });
+    setEntries(prev => [...prev, ...entriesWithScanRef]);
+    setScans(prev => [
+      {
+        id: scanId,
+        images: [], // Cloud-origin: no local images
+        mode,
+        status: 'completed',
+        timestamp: Date.now(),
+        resultsCount: result.entries?.length ?? 0,
+        extractedTotals: result.pageTotals,
+        pageNumber: prev.filter(s => s.status === 'completed').length + 1,
+        isVerified: false,
+        creditApproved: false,
+        sourceCloudUploadIds: cloudUploadIds,
+      },
+      ...prev,
+    ]);
+    setActiveTab('dashboard');
   };
 
   // Lightweight clarity score estimation based on image dimensions
@@ -616,6 +653,13 @@ const App: React.FC = () => {
         const result = await response.json();
         console.log('Verified scan saved:', result);
         loadLogbookStats(); // Refresh dashboard stats (Total hrs, cards)
+        if (scan.sourceCloudUploadIds?.length) {
+          try {
+            await markCloudUploadsProcessed(scan.sourceCloudUploadIds);
+          } catch (e) {
+            console.warn('Failed to mark cloud uploads processed:', e);
+          }
+        }
       } catch (error: any) {
         console.error('Error saving verified scan:', error);
         // Don't un-verify on error, just log it
@@ -1017,6 +1061,12 @@ const App: React.FC = () => {
   return (
     <>
       <LandscapePrompt show={view === 'app'} />
+      <CloudSelectionModal
+        open={showCloudModal}
+        onClose={() => setShowCloudModal(false)}
+        onExtract={handleExtractFromCloud}
+        userId={user?.id}
+      />
       <div className="min-h-screen bg-[#F4F7FA] flex flex-col overflow-hidden text-[#003366]">
       {/* Desktop Layout - Sidebar and Main Content side-by-side */}
       <div className="hidden lg:flex flex-1 min-w-0 overflow-hidden">
@@ -1215,6 +1265,9 @@ const App: React.FC = () => {
             ) : activeTab === 'permanent-log' ? (
               <PermanentLogTab onPermanentLogChange={() => { loadLogbookStats(); loadPermanentLogForExport(); }} />
             ) : activeTab === 'dashboard' ? (
+              isMobile ? (
+                <MobileCaptureView />
+              ) : (
               <div className="space-y-4">
                 {/* Bento Grid Stats - Mobile optimized */}
                 <motion.section
@@ -1527,6 +1580,7 @@ const App: React.FC = () => {
                   </div>
                 )}
               </div>
+              )
             ) : activeTab === 'aircraft' ? (
               <AircraftProfilesTab />
             ) : null}
@@ -1680,9 +1734,9 @@ const App: React.FC = () => {
                     <h3 className="text-lg md:text-xl font-bold text-[#003366]">Staging Area</h3>
                     <p className="text-xs md:text-sm text-[#003366]/70">The software verifies row alignment and image clarity before extraction.</p>
                   </div>
-                  <div className="space-y-3">
+                    <div className="space-y-3">
                     <div className="flex flex-col sm:flex-row gap-3">
-                      <div className="flex gap-3">
+                      <div className="flex flex-wrap gap-3">
                         <motion.button 
                           onClick={() => addStagingSlot('single')}
                           className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-3 bg-white/80 hover:bg-white border border-[#E2E8F0] text-[#003366] rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md min-h-[44px]"
@@ -1698,6 +1752,19 @@ const App: React.FC = () => {
                           whileTap={{ scale: 0.98 }}
                         >
                           <Plus className="w-4 h-4" /> <span className="hidden sm:inline">New</span> Spread
+                        </motion.button>
+                        <motion.button 
+                          onClick={() => setShowCloudModal(true)}
+                          className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-3 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md min-h-[44px] relative"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <Cloud className="w-4 h-4" /> Import from Cloud
+                          {cloudPendingCount > 0 && (
+                            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-[#007BFF] text-white text-xs font-bold rounded-full">
+                              {cloudPendingCount > 99 ? '99+' : cloudPendingCount}
+                            </span>
+                          )}
                         </motion.button>
                       </div>
                     </div>

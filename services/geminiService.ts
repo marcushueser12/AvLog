@@ -82,3 +82,42 @@ export const extractLogbookEntriesSingle = async (
 
   return await response.json();
 };
+
+/** Extract from cloud: backend fetches image from signed URL and runs extraction. */
+export const extractFromCloudUrl = async (
+  imageUrl: string,
+  expectedCount?: number
+): Promise<any> => {
+  const response = await fetch(`${API_BASE_URL}/api/extract-from-url`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imageUrl, expectedCount }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Extraction failed');
+  }
+  return await response.json();
+};
+
+/** Extract pair from cloud: backend fetches both images from signed URLs. */
+export const extractPairFromCloudUrls = async (
+  leftImageUrl: string,
+  rightImageUrl: string,
+  expectedCount?: number
+): Promise<any> => {
+  const response = await fetch(`${API_BASE_URL}/api/extract-from-url`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      leftImageUrl,
+      rightImageUrl,
+      expectedCount,
+    }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Extraction failed');
+  }
+  return await response.json();
+};

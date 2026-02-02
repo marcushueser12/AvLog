@@ -211,6 +211,61 @@ app.post(
   }
 );
 
+// Helper: fetch image from signed URL and return base64 data URL
+async function fetchImageAsBase64(url: string): Promise<string> {
+  const res = await fetch(url, { method: 'GET' });
+  if (!res.ok) throw new Error(`Failed to fetch image: ${res.status}`);
+  const buf = Buffer.from(await res.arrayBuffer());
+  const base64 = buf.toString('base64');
+  const contentType = res.headers.get('content-type') || 'image/jpeg';
+  return `data:${contentType};base64,${base64}`;
+}
+
+// Extract from cloud: fetch image(s) from signed URL(s), then run extraction
+app.post(
+  '/api/extract-from-url',
+  extractionLimiter,
+  async (req, res) => {
+    try {
+      const { imageUrl, leftImageUrl, rightImageUrl, expectedCount } = req.body || {};
+      const isHttps = (u: string) => typeof u === 'string' && u.startsWith('https://');
+
+      if (imageUrl && isHttps(imageUrl)) {
+        const image = await fetchImageAsBase64(imageUrl);
+        const result = await extractLogbookEntriesSingle(image, expectedCount);
+        return res.json(result);
+      }
+      if (leftImageUrl && rightImageUrl && isHttps(leftImageUrl) && isHttps(rightImageUrl)) {
+        const [left, right] = await Promise.all([
+          fetchImageAsBase64(leftImageUrl),
+          fetchImageAsBase64(rightImageUrl),
+        ]);
+        const result = await extractLogbookEntriesFromPair(left, right, expectedCount);
+        return res.json(result);
+      }
+      return res.status(400).json({
+        error: 'Provide imageUrl (single) or leftImageUrl and rightImageUrl (pair). URLs must be HTTPS.',
+      });
+    } catch (error: any) {
+      console.error('Extract-from-URL error:', error);
+      if (error instanceof GeminiRetryableError || error.name === 'GeminiRetryableError') {
+        return res.status(503).json({
+          error: 'Server busy, retrying...',
+          message: error.message || 'Service temporarily unavailable',
+        });
+      }
+      const code = error?.statusCode ?? error?.status ?? error?.code;
+      if (code === 503 || code === 429) {
+        return res.status(503).json({
+          error: 'Server busy, retrying...',
+          message: error.message || 'Service temporarily unavailable',
+        });
+      }
+      res.status(500).json({ error: error.message || 'Extraction failed' });
+    }
+  }
+);
+
 // Import new routes
 import adminRoutes from './routes/admin.js';
 import verifiedRoutes from './routes/verified.js';
