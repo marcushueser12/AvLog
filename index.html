@@ -16,6 +16,21 @@
 </head>
 <body>
     <div id="root"></div>
+    <script>
+      (function() {
+        function setViewportHeight() {
+          var h = window.innerHeight;
+          document.documentElement.style.setProperty('--vh', (h * 0.01) + 'px');
+        }
+        setViewportHeight();
+        window.addEventListener('resize', setViewportHeight);
+        window.addEventListener('orientationchange', function() {
+          setTimeout(setViewportHeight, 100);
+          setTimeout(setViewportHeight, 400);
+          setTimeout(setViewportHeight, 700);
+        });
+      })();
+    </script>
     <script type="module" src="/index.tsx"></script>
 </body>
 </html>

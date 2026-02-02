@@ -6,6 +6,7 @@
   --sky-blue: #007BFF;
   --atmospheric-tint: #F4F7FA;
   --aviation-slate: #E2E8F0;
+  --vh: 1vh; /* Fallback until JS sets real value; fixes Safari landscape viewport bug */
 }
 
 body {
@@ -30,12 +31,14 @@ body {
   }
   
   /* Prevent Safari address bar from showing on scroll */
+  /* Use --vh (set by JS) to fix white screen in landscape - 100dvh is buggy on rotate */
   body {
     position: fixed;
     width: 100%;
     height: 100%;
     height: -webkit-fill-available;
-    height: 100dvh;
+    height: calc(var(--vh, 1vh) * 100);
+    min-height: 100dvh;
     overflow: hidden;
     overscroll-behavior: none;
     overscroll-behavior-y: none;
@@ -47,7 +50,8 @@ body {
     width: 100%;
     height: 100%;
     height: -webkit-fill-available;
-    height: 100dvh;
+    height: calc(var(--vh, 1vh) * 100);
+    min-height: 100dvh;
     overflow: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: none;
