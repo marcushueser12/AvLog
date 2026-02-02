@@ -66,6 +66,10 @@ END;
 $$;
 ```
 
+### For the support_requests function (search_path warning):
+
+Run `supabase/migration_fix_support_requests_search_path.sql` to fix the `update_support_requests_updated_at` function security warning.
+
 ### For the reviews migration (if you haven't run it yet):
 
 The `migration_reviews.sql` file also uses `update_updated_at_column()`, but since we're fixing the function itself, the trigger will automatically use the secure version.

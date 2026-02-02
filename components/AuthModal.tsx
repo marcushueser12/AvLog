@@ -11,6 +11,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [howDidYouHearAboutUs, setHowDidYouHearAboutUs] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -30,7 +31,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setLoading(true);
 
     try {
-      const result = isSignUp ? await signUp(email, password) : await signIn(email, password);
+      const result = isSignUp
+        ? await signUp(email, password, howDidYouHearAboutUs.trim() ? { howDidYouHearAboutUs: howDidYouHearAboutUs.trim() } : undefined)
+        : await signIn(email, password);
       
       if (result.error) {
         setError(result.error.message);
@@ -39,6 +42,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         onClose();
         setEmail('');
         setPassword('');
+        setHowDidYouHearAboutUs('');
         setAcceptedTerms(false);
       }
     } catch (err: any) {
@@ -96,8 +100,22 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </div>
 
           {isSignUp && (
-            <div className="flex items-start gap-2">
-              <input
+            <>
+              <div>
+                <label htmlFor="howDidYouHear" className="block text-sm font-semibold text-[#003366]/70 mb-2">
+                  How did you hear about us? <span className="text-[#003366]/50 font-normal">(optional)</span>
+                </label>
+                <input
+                  id="howDidYouHear"
+                  type="text"
+                  value={howDidYouHearAboutUs}
+                  onChange={(e) => setHowDidYouHearAboutUs(e.target.value)}
+                  className="w-full px-4 py-3 bg-white border border-[#E2E8F0] rounded-xl text-[#003366] placeholder-[#003366]/40 focus:outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF]"
+                  placeholder="e.g., Google, friend, ForeFlight forum..."
+                />
+              </div>
+              <div className="flex items-start gap-2">
+                <input
                 type="checkbox"
                 id="terms-checkbox"
                 checked={acceptedTerms}
@@ -116,6 +134,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 . I acknowledge that I am responsible for verifying the accuracy of all flight data.
               </label>
             </div>
+            </>
           )}
 
           {error && (
@@ -138,6 +157,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             onClick={() => {
               setIsSignUp(!isSignUp);
               setError(null);
+              setHowDidYouHearAboutUs('');
               setAcceptedTerms(false);
             }}
             className="text-sm text-[#003366]/70 hover:text-[#007BFF] transition-colors"
