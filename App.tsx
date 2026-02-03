@@ -1068,7 +1068,7 @@ const App: React.FC = () => {
 
   return (
     <>
-      <LandscapePrompt show={view === 'app' && activeTab !== 'dashboard' && activeTab !== 'reviews'} />
+      <LandscapePrompt show={view === 'app' && !showSupportModal && activeTab !== 'dashboard' && activeTab !== 'reviews' && activeTab !== 'tutorial'} />
       <CloudSelectionModal
         open={showCloudModal}
         onClose={() => setShowCloudModal(false)}

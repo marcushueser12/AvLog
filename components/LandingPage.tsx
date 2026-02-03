@@ -5,6 +5,7 @@ import SupportRequestModal from './SupportRequestModal';
 import SoftwareApplicationSchema from './SoftwareApplicationSchema';
 import Logo from './Logo';
 import { useAuth } from '../contexts/AuthContext';
+import { useMobile } from '../utils/useMobile';
 import { supabase } from '../lib/supabase';
 import { Plane, FileText, CloudUpload, Clock, Menu, X, ChevronRight, Shield, CheckCircle2, Grid3x3, MessageSquare, Star, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -24,6 +25,7 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
   const { user } = useAuth();
+  const isMobile = useMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
@@ -88,6 +90,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
     { id: 'tutorial', label: 'App Tutorial', icon: FileText, desc: 'Learn how to use LogExtract' },
     { id: 'reviews', label: 'Reviews', icon: MessageSquare, desc: 'See what pilots are saying' },
   ];
+  // On mobile only: hide Permanent Log and Aircraft Profiles from nav
+  const navItems = isMobile ? menuItems.filter((i) => i.id !== 'permanent-log' && i.id !== 'aircraft') : menuItems;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -145,10 +149,21 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
           </motion.div>
 
           <div className="flex items-center gap-4">
-            {user ? (
+            {/* My Log only on desktop (Permanent Log not on mobile); Sign In on both */}
+            {isMobile ? (
+              !user && (
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-xl font-semibold transition-all text-sm min-h-[48px] min-w-[48px]"
+                  aria-label="Sign in to your account"
+                >
+                  Sign In
+                </button>
+              )
+            ) : user ? (
               <button
                 onClick={() => onStart('permanent-log')}
-                className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-xl font-semibold transition-all text-sm min-h-[48px] min-w-[48px]"
+                className="flex items-center gap-2 px-5 py-2.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-xl font-semibold transition-all text-sm min-h-[48px] min-w-[48px]"
                 aria-label="View permanent log"
               >
                 <FileText className="w-4 h-4" aria-hidden="true" />
@@ -157,7 +172,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             ) : (
               <button
                 onClick={() => setShowAuthModal(true)}
-                className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-xl font-semibold transition-all text-sm min-h-[48px] min-w-[48px]"
+                className="flex items-center gap-2 px-5 py-2.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-xl font-semibold transition-all text-sm min-h-[48px] min-w-[48px]"
                 aria-label="Sign in to your account"
               >
                 Sign In
@@ -201,7 +216,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                       </div>
                     </button>
                     
-                    {menuItems.map((item) => {
+                    {navItems.map((item) => {
                       const ItemIcon = item.icon;
                       return (
                         <motion.button
