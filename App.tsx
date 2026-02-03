@@ -388,6 +388,14 @@ const App: React.FC = () => {
     }
   };
 
+  // On mobile, Permanent Log and Aircraft Profiles are hidden; redirect to dashboard if user lands on those tabs
+  useEffect(() => {
+    if (isMobile && (activeTab === 'permanent-log' || activeTab === 'aircraft')) {
+      setActiveTab('dashboard');
+      if (user) loadLogbookStats();
+    }
+  }, [isMobile, activeTab, user]);
+
   // Refresh stats when switching to dashboard or permanent-log
   useEffect(() => {
     if (user && (activeTab === 'dashboard' || activeTab === 'permanent-log')) {
@@ -1060,7 +1068,7 @@ const App: React.FC = () => {
 
   return (
     <>
-      <LandscapePrompt show={view === 'app' && activeTab !== 'dashboard'} />
+      <LandscapePrompt show={view === 'app' && activeTab !== 'dashboard' && activeTab !== 'reviews'} />
       <CloudSelectionModal
         open={showCloudModal}
         onClose={() => setShowCloudModal(false)}
@@ -1625,18 +1633,6 @@ const App: React.FC = () => {
               Scanner
             </button>
             <button
-              onClick={() => setActiveTab('permanent-log')}
-              className={`px-1 sm:px-2 py-0.5 sm:py-1 rounded transition-all text-[8px] sm:text-[9px] font-semibold whitespace-nowrap shrink-0 ${activeTab === 'permanent-log' ? 'bg-[#007BFF]/10 text-[#007BFF] border border-[#007BFF]/30' : 'text-[#003366]/70 hover:bg-[#F4F7FA]'}`}
-            >
-              Log
-            </button>
-            <button
-              onClick={() => setActiveTab('aircraft')}
-              className={`px-1 sm:px-2 py-0.5 sm:py-1 rounded transition-all text-[8px] sm:text-[9px] font-semibold whitespace-nowrap shrink-0 ${activeTab === 'aircraft' ? 'bg-[#007BFF]/10 text-[#007BFF] border border-[#007BFF]/30' : 'text-[#003366]/70 hover:bg-[#F4F7FA]'}`}
-            >
-              Aircraft
-            </button>
-            <button
               onClick={() => setActiveTab('tutorial')}
               className={`px-1 sm:px-2 py-0.5 sm:py-1 rounded transition-all text-[8px] sm:text-[9px] font-semibold whitespace-nowrap shrink-0 ${activeTab === 'tutorial' ? 'bg-[#007BFF]/10 text-[#007BFF] border border-[#007BFF]/30' : 'text-[#003366]/70 hover:bg-[#F4F7FA]'}`}
             >
@@ -1692,16 +1688,18 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Mobile Main Content */}
+      {/* Mobile Main Content - Permanent Log and Aircraft tabs hidden on mobile; show dashboard for those */}
       <main className="lg:hidden flex-1 min-h-0 flex flex-col min-w-0 bg-[#F4F7FA] overflow-hidden">
-        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-2 sm:p-4">
-          {activeTab === 'reviews' ? (
-            <ReviewsTab />
-          ) : activeTab === 'tutorial' ? (
-            <TutorialTab />
-          ) : activeTab === 'permanent-log' ? (
-            <PermanentLogTab onPermanentLogChange={() => { loadLogbookStats(); loadPermanentLogForExport(); }} />
-          ) : activeTab === 'dashboard' ? (
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-2 sm:p-4 overscroll-contain touch-pan-y">
+          {(() => {
+            const mobileTab = isMobile && (activeTab === 'permanent-log' || activeTab === 'aircraft') ? 'dashboard' : activeTab;
+            return mobileTab === 'reviews' ? (
+              <ReviewsTab />
+            ) : mobileTab === 'tutorial' ? (
+              <TutorialTab />
+            ) : mobileTab === 'permanent-log' ? (
+              <PermanentLogTab onPermanentLogChange={() => { loadLogbookStats(); loadPermanentLogForExport(); }} />
+            ) : mobileTab === 'dashboard' ? (
             isMobile ? (
               <MobileCaptureView />
             ) : (
@@ -1824,9 +1822,10 @@ const App: React.FC = () => {
                 )}
               </div>
             )
-          ) : activeTab === 'aircraft' ? (
+          ) : mobileTab === 'aircraft' ? (
             <AircraftProfilesTab />
-          ) : null}
+          ) : null;
+          })()}
         </div>
       </main>
 

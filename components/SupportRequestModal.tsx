@@ -137,9 +137,10 @@ const SupportRequestModal: React.FC<SupportRequestModalProps> = ({ isOpen, onClo
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-md">
       <div 
-        className="bg-white/90 backdrop-blur-md border border-[#E2E8F0] rounded-2xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl"
+        className="bg-white/90 backdrop-blur-md border border-[#E2E8F0] rounded-2xl p-6 sm:p-8 w-full max-w-2xl max-h-[90vh] min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain shadow-2xl touch-pan-y my-auto"
+        style={{ WebkitOverflowScrolling: 'touch' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">

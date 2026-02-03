@@ -10,19 +10,24 @@ const HEIC_EXT = /\.(heic|heif)$/i;
 
 /** Convert HEIC/HEIF (e.g. from iPhone) to JPEG before upload. No HEIC is stored. */
 async function normalizeImageFile(file: File): Promise<File> {
-  const isHeic =
-    HEIC_TYPES.includes(file.type) || HEIC_EXT.test(file.name);
+  if (!file || typeof file !== 'object' || !(file instanceof Blob)) return file;
+  const type = typeof file.type === 'string' ? file.type : '';
+  const isHeic = HEIC_TYPES.includes(type) || HEIC_EXT.test(file.name || '');
   if (!isHeic) return file;
 
-  const result = await heic2any({
-    blob: file,
-    toType: 'image/jpeg',
-    quality: 0.92,
-  });
-  const blob = Array.isArray(result) ? result[0] : result;
-  if (!blob || !(blob instanceof Blob)) throw new Error('HEIC conversion failed. Try saving as JPG or use a different photo.');
-  const name = file.name.replace(HEIC_EXT, '.jpg');
-  return new File([blob], name, { type: 'image/jpeg' });
+  try {
+    const result = await heic2any({
+      blob: file,
+      toType: 'image/jpeg',
+      quality: 0.92,
+    });
+    const blob = Array.isArray(result) ? result[0] : result;
+    if (!blob || !(blob instanceof Blob)) throw new Error('HEIC conversion failed.');
+    const name = (file.name || 'photo').replace(HEIC_EXT, '.jpg');
+    return new File([blob], name, { type: 'image/jpeg' });
+  } catch (e) {
+    throw new Error('Photo format not supported. Try saving as JPG or use a different photo.');
+  }
 }
 
 /**
@@ -109,12 +114,19 @@ export async function getSignedUrl(storagePath: string, expiresIn = 3600): Promi
  * Converts HEIC/HEIF (e.g. from iPhone) to JPEG before upload; only JPEG is stored, never HEIC.
  */
 export async function uploadToCloud(userId: string, file: File): Promise<CloudUpload> {
+  if (!file || !(file instanceof Blob)) {
+    throw new Error('Invalid photo. Please try again.');
+  }
   const normalized = await normalizeImageFile(file);
-  const ext = normalized.name.split('.').pop() || 'jpg';
+  if (!normalized || !(normalized instanceof Blob)) {
+    throw new Error('Invalid photo. Please try again.');
+  }
+  const ext = (normalized.name || 'photo').split('.').pop() || 'jpg';
   const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+  const contentType = normalized.type || 'image/jpeg';
 
   const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, normalized, {
-    contentType: normalized.type,
+    contentType,
     upsert: false,
   });
 
