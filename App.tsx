@@ -1292,7 +1292,7 @@ const App: React.FC = () => {
                 <div className="flex flex-col gap-4">
                   <div>
                     <h3 className="text-lg md:text-xl font-bold text-[#003366]">Staging Area</h3>
-                    <p className="text-xs md:text-sm text-[#003366]/70">The software verifies row alignment and image clarity before extraction.</p>
+                    <p className="text-xs md:text-sm text-[#003366]/70">The software verifies row alignment and image clarity before extraction. You can also upload logbook photos from your phone to the cloud, then import them here to extract.</p>
                   </div>
                     <div className="space-y-3">
                     <div className="flex flex-col sm:flex-row gap-3">
@@ -1318,6 +1318,7 @@ const App: React.FC = () => {
                           className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-3 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md min-h-[44px] relative"
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
+                          title="Import pages you photographed on your phone"
                         >
                           <Cloud className="w-4 h-4" /> Import from Cloud
                           {cloudPendingCount > 0 && (
@@ -1328,6 +1329,7 @@ const App: React.FC = () => {
                         </motion.button>
                       </div>
                     </div>
+                    <p className="text-xs text-[#003366]/60">Tip: Use your phone to photograph logbook pages—they sync to the cloud. Click Import from Cloud to bring them here, then Start Extraction.</p>
                     
                     <motion.button 
                       onClick={processPendingScans}

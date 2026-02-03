@@ -273,9 +273,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.2 }}
-          className="text-[#003366]/70 text-lg md:text-xl max-w-2xl mb-12 leading-relaxed"
+          className="text-[#003366]/70 text-lg md:text-xl max-w-2xl mb-4 leading-relaxed"
         >
           The most advanced pilot paper logbook converter. Scan your handwritten pages and export perfectly formatted CSVs for ForeFlight, Logbook Pro, and more.
+        </motion.p>
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.25 }}
+          className="text-[#003366]/60 text-sm md:text-base max-w-2xl mb-12 leading-relaxed flex items-center justify-center gap-2 flex-wrap"
+        >
+          <CloudUpload className="w-4 h-4 shrink-0" aria-hidden="true" />
+          Use your phone to photograph logbook pages—they sync to the cloud. Open LogExtract on desktop to import and extract.
         </motion.p>
 
         <motion.div
@@ -384,9 +393,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             <div className="w-12 h-12 bg-[#007BFF]/10 text-[#007BFF] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
               <CloudUpload className="w-6 h-6" />
             </div>
-            <h3 className="text-xl font-bold text-[#003366] mb-3 tracking-tight">Spread Support</h3>
+            <h3 className="text-xl font-bold text-[#003366] mb-3 tracking-tight">Phone to Cloud</h3>
             <p className="text-[#003366]/70 text-sm leading-relaxed">
-              Upload left and right pages together. LogExtract correlates the columns across the spine to stitch entries into a single flight.
+              On the go? Photograph logbook pages on your phone and they sync to the cloud. Import them on desktop in the Scanner Dashboard and extract as usual.
             </p>
           </motion.div>
         </motion.div>
