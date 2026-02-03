@@ -106,6 +106,8 @@ export interface CloudUpload {
   storage_path: string;
   status: 'pending' | 'processed';
   created_at: string;
+  /** When set, rows with the same id form a spread pair for import on desktop. */
+  upload_group_id?: string | null;
 }
 
 export interface AircraftProfile {

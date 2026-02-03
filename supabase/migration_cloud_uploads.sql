@@ -7,14 +7,17 @@ CREATE TABLE IF NOT EXISTS public.cloud_uploads (
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   storage_path TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processed')),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  upload_group_id UUID NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_cloud_uploads_user_id ON public.cloud_uploads(user_id);
 CREATE INDEX IF NOT EXISTS idx_cloud_uploads_status ON public.cloud_uploads(status);
 CREATE INDEX IF NOT EXISTS idx_cloud_uploads_created_at ON public.cloud_uploads(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_cloud_uploads_upload_group_id ON public.cloud_uploads(upload_group_id) WHERE upload_group_id IS NOT NULL;
 
 COMMENT ON TABLE public.cloud_uploads IS 'Logbook scan images uploaded from mobile for desktop extraction';
+COMMENT ON COLUMN public.cloud_uploads.upload_group_id IS 'When set, rows with the same id form a spread pair for import on desktop.';
 
 -- 2. RLS
 ALTER TABLE public.cloud_uploads ENABLE ROW LEVEL SECURITY;

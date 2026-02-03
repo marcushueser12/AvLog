@@ -24,9 +24,10 @@ const MobileCaptureView: React.FC = () => {
     try {
       const file = files[0];
       if (!file) return;
-      await uploadToCloud(user.id, file);
+      const groupId = mode === 'spread' && files[1] ? crypto.randomUUID() : undefined;
+      await uploadToCloud(user.id, file, groupId);
       if (mode === 'spread' && files[1]) {
-        await uploadToCloud(user.id, files[1]);
+        await uploadToCloud(user.id, files[1], groupId);
       }
       setLastSync(true);
     } catch (err: any) {

@@ -1,14 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { X, Cloud, Loader2 } from 'lucide-react';
 import { useCloudUploads, getSignedUrl } from '../hooks/useCloudUploads';
 import { extractFromCloudUrl, extractPairFromCloudUrls } from '../services/geminiService';
 import type { CloudUpload } from '../types';
+
+/** One importable unit: either a single page (1 upload) or a spread pair (2 uploads). */
+type CloudUnit = { mode: 'single' | 'spread'; uploads: CloudUpload[] };
 
 interface CloudSelectionModalProps {
   open: boolean;
   onClose: () => void;
   onExtract: (result: { entries: any[]; pageTotals?: any }, mode: 'single' | 'spread', cloudUploadIds: string[]) => void;
   userId: string | undefined;
+}
+
+/** Build units from pending uploads: group by upload_group_id; each single (null group) is one unit, each pair (same id) is one spread unit. */
+function buildUnits(pending: CloudUpload[]): CloudUnit[] {
+  const units: CloudUnit[] = [];
+  const seenGroupIds = new Set<string>();
+  const sorted = [...pending].sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  );
+  for (const u of sorted) {
+    const gid = u.upload_group_id ?? null;
+    if (gid !== null) {
+      if (seenGroupIds.has(gid)) continue;
+      seenGroupIds.add(gid);
+      const pair = sorted.filter((p) => p.upload_group_id === gid);
+      const uploads = pair.slice(0, 2);
+      units.push({ mode: uploads.length === 2 ? 'spread' : 'single', uploads });
+    } else {
+      units.push({ mode: 'single', uploads: [u] });
+    }
+  }
+  return units;
 }
 
 const CloudSelectionModal: React.FC<CloudSelectionModalProps> = ({
@@ -18,17 +43,19 @@ const CloudSelectionModal: React.FC<CloudSelectionModalProps> = ({
   userId,
 }) => {
   const { uploads, pendingCount, loading, error, refetch } = useCloudUploads(userId);
-  const [selected, setSelected] = useState<string[]>([]);
+  /** Selected unit key: upload ids joined (stable for comparison). */
+  const [selectedUnitKey, setSelectedUnitKey] = useState<string | null>(null);
   const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
   const [extracting, setExtracting] = useState(false);
   const [extractError, setExtractError] = useState<string | null>(null);
 
   const pending = uploads.filter((u) => u.status === 'pending');
+  const units = useMemo(() => buildUnits(pending), [pending]);
 
   useEffect(() => {
     if (!open) return;
     refetch();
-    setSelected([]);
+    setSelectedUnitKey(null);
     setExtractError(null);
   }, [open, refetch]);
 
@@ -52,29 +79,25 @@ const CloudSelectionModal: React.FC<CloudSelectionModalProps> = ({
     return () => { cancelled = true; };
   }, [open, pending.map((u) => u.id).join(',')]);
 
-  const toggle = (id: string) => {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : prev.length < 2 ? [...prev, id] : prev
-    );
-  };
+  const selectedUnit = useMemo(
+    () => (selectedUnitKey ? units.find((u) => u.uploads.map((x) => x.id).join(',') === selectedUnitKey) ?? null : null),
+    [units, selectedUnitKey]
+  );
 
   const handleExtract = async () => {
-    if (selected.length === 0 || !userId) return;
+    if (!selectedUnit || selectedUnit.uploads.length === 0 || !userId) return;
     setExtracting(true);
     setExtractError(null);
     try {
       const urls = await Promise.all(
-        selected.map((id) => {
-          const u = pending.find((x) => x.id === id);
-          return u ? getSignedUrl(u.storage_path, 3600) : Promise.reject(new Error('Upload not found'));
-        })
+        selectedUnit.uploads.map((u) => getSignedUrl(u.storage_path, 3600))
       );
-      const mode: 'single' | 'spread' = selected.length === 2 ? 'spread' : 'single';
+      const mode = selectedUnit.mode;
       const result =
         mode === 'single'
           ? await extractFromCloudUrl(urls[0])
           : await extractPairFromCloudUrls(urls[0], urls[1]);
-      onExtract(result, mode, selected);
+      onExtract(result, mode, selectedUnit.uploads.map((u) => u.id));
       onClose();
     } catch (err: any) {
       setExtractError(err?.message || 'Extraction failed');
@@ -88,18 +111,21 @@ const CloudSelectionModal: React.FC<CloudSelectionModalProps> = ({
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b border-[#E2E8F0]">
-          <h3 className="text-lg font-bold text-[#003366] flex items-center gap-2">
-            <Cloud className="w-5 h-5 text-[#007BFF]" />
-            Import from Cloud
-          </h3>
-          <button
+        <div className="p-4 border-b border-[#E2E8F0]">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold text-[#003366] flex items-center gap-2">
+              <Cloud className="w-5 h-5 text-[#007BFF]" />
+              Import from Cloud
+            </h3>
+            <button
             onClick={onClose}
             className="p-2 text-[#003366]/70 hover:text-[#003366] rounded-lg transition-colors"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
+          </div>
+          <p className="text-sm text-[#003366]/70 mt-2">Select a page or pages to import.</p>
         </div>
 
         <div className="p-4 overflow-y-auto flex-1">
@@ -118,39 +144,52 @@ const CloudSelectionModal: React.FC<CloudSelectionModalProps> = ({
           )}
           {!loading && pending.length > 0 && (
             <>
-              <p className="text-sm text-[#003366]/70 mb-3">
-                Select 1 for single page or 2 for spread, then Extract.
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {pending.map((u) => (
-                  <button
-                    key={u.id}
-                    type="button"
-                    onClick={() => toggle(u.id)}
-                    className={`relative rounded-xl border-2 overflow-hidden aspect-[3/4] transition-all ${
-                      selected.includes(u.id)
-                        ? 'border-[#007BFF] ring-2 ring-[#007BFF]/30'
-                        : 'border-[#E2E8F0] hover:border-[#007BFF]/50'
-                    }`}
-                  >
-                    {thumbnails[u.id] ? (
-                      <img
-                        src={thumbnails[u.id]}
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-[#F4F7FA] flex items-center justify-center">
-                        <Cloud className="w-8 h-8 text-[#003366]/40" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {units.map((unit) => {
+                  const unitKey = unit.uploads.map((u) => u.id).join(',');
+                  const isSelected = selectedUnitKey === unitKey;
+                  return (
+                    <button
+                      key={unitKey}
+                      type="button"
+                      onClick={() => setSelectedUnitKey(isSelected ? null : unitKey)}
+                      className={`relative rounded-xl border-2 overflow-hidden transition-all text-left ${
+                        isSelected ? 'border-[#007BFF] ring-2 ring-[#007BFF]/30' : 'border-[#E2E8F0] hover:border-[#007BFF]/50'
+                      } ${unit.mode === 'spread' ? 'aspect-[3/2]' : 'aspect-[3/4]'}`}
+                    >
+                      <div className={`absolute inset-0 flex ${unit.mode === 'spread' ? 'flex-row' : ''}`}>
+                        {unit.uploads.map((u) => (
+                          <div
+                            key={u.id}
+                            className={unit.mode === 'spread' ? 'flex-1 min-w-0' : 'w-full h-full'}
+                          >
+                            {thumbnails[u.id] ? (
+                              <img
+                                src={thumbnails[u.id]}
+                                alt=""
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-[#F4F7FA] flex items-center justify-center">
+                                <Cloud className="w-8 h-8 text-[#003366]/40" />
+                              </div>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    )}
-                    {selected.includes(u.id) && (
-                      <span className="absolute top-1 right-1 w-6 h-6 bg-[#007BFF] text-white rounded-full flex items-center justify-center text-xs font-bold">
-                        {selected.indexOf(u.id) + 1}
-                      </span>
-                    )}
-                  </button>
-                ))}
+                      {isSelected && (
+                        <span className="absolute top-1 right-1 w-6 h-6 bg-[#007BFF] text-white rounded-full flex items-center justify-center">
+                          <span className="text-xs font-bold">✓</span>
+                        </span>
+                      )}
+                      {unit.mode === 'spread' && (
+                        <span className="absolute bottom-1 left-1 text-[10px] font-medium text-white bg-black/50 px-1.5 py-0.5 rounded">
+                          Spread
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
               {extractError && (
                 <p className="text-red-600 text-sm mt-3">{extractError}</p>
@@ -171,7 +210,7 @@ const CloudSelectionModal: React.FC<CloudSelectionModalProps> = ({
             <button
               type="button"
               onClick={handleExtract}
-              disabled={selected.length === 0 || extracting}
+              disabled={!selectedUnit || extracting}
               className="flex-1 px-4 py-2.5 rounded-xl bg-[#003366] text-white font-semibold hover:bg-[#003366]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               {extracting ? (
@@ -180,7 +219,7 @@ const CloudSelectionModal: React.FC<CloudSelectionModalProps> = ({
                   Extracting…
                 </>
               ) : (
-                `Extract ${selected.length === 2 ? 'Spread' : selected.length === 1 ? 'Single' : ''}`
+                {selectedUnit ? `Extract ${selectedUnit.mode === 'spread' ? 'Spread' : 'Single'}` : 'Extract'}
               )}
             </button>
           </div>

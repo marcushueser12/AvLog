@@ -101,9 +101,10 @@ const App: React.FC = () => {
     setUploadingToCloud(true);
     try {
       for (const scan of toUpload) {
+        const groupId = scan.mode === 'spread' && scan.images.length === 2 ? crypto.randomUUID() : undefined;
         for (let i = 0; i < scan.images.length; i++) {
           const file = await dataUrlToFile(scan.images[i], `page-${i + 1}.jpg`);
-          await uploadToCloud(user.id, file);
+          await uploadToCloud(user.id, file, groupId);
         }
         deleteScan(scan.id);
       }

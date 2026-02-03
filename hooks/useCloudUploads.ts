@@ -58,7 +58,7 @@ export function useCloudUploads(userId: string | undefined) {
     try {
       const { data, error: e } = await supabase
         .from('cloud_uploads')
-        .select('id, user_id, storage_path, status, created_at')
+        .select('id, user_id, storage_path, status, created_at, upload_group_id')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
@@ -120,8 +120,9 @@ export async function getSignedUrl(storagePath: string, expiresIn = 3600): Promi
 /**
  * Upload a file to logbook_scans and insert a cloud_uploads row.
  * Converts HEIC/HEIF (e.g. from iPhone) to JPEG before upload; only JPEG is stored, never HEIC.
+ * When uploading a spread pair, pass the same uploadGroupId for both files so desktop shows one unit to import.
  */
-export async function uploadToCloud(userId: string, file: File | Blob): Promise<CloudUpload> {
+export async function uploadToCloud(userId: string, file: File | Blob, uploadGroupId?: string | null): Promise<CloudUpload> {
   if (!file || !isFileLike(file)) {
     throw new Error('Invalid photo. Please try again.');
   }
@@ -161,8 +162,9 @@ export async function uploadToCloud(userId: string, file: File | Blob): Promise<
       user_id: userId,
       storage_path: path,
       status: 'pending',
+      ...(uploadGroupId != null && { upload_group_id: uploadGroupId }),
     })
-    .select('id, user_id, storage_path, status, created_at')
+    .select('id, user_id, storage_path, status, created_at, upload_group_id')
     .single();
 
   if (insertError) throw insertError;
