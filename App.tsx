@@ -1696,19 +1696,6 @@ const App: React.FC = () => {
             <button onClick={() => setShowSupportModal(true)} className="flex items-center justify-center min-h-[48px] min-w-[44px] p-2 bg-[#007BFF]/10 active:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-lg transition-all shrink-0" title={user ? "Support & My Tickets" : "Support"}>
               <Headphones className="w-5 h-5" />
             </button>
-            {user && (
-              <button onClick={handleExportModalOpen} className="flex items-center justify-center min-h-[48px] min-w-[44px] p-2 bg-[#003366]/10 active:bg-[#003366]/20 border border-[#003366]/30 text-[#003366] rounded-lg transition-all relative shrink-0" title="Export">
-                <Download className="w-5 h-5" />
-                {exportableEntries.length > 0 && (
-                  <span className="absolute top-1 right-1 bg-[#007BFF] text-white text-[10px] font-bold px-1 rounded-full min-w-[18px] h-[18px] flex items-center justify-center">{exportableEntries.length}</span>
-                )}
-              </button>
-            )}
-            {user && (
-              <div className="hidden sm:flex items-center gap-1 px-2 py-2 min-h-[48px] bg-white/80 rounded-lg border border-[#E2E8F0] shrink-0 min-w-0 max-w-[80px]">
-                <span className="text-xs text-[#003366]/70 font-medium truncate">{user.email?.split('@')[0]}</span>
-              </div>
-            )}
             {user ? (
               <button onClick={handleSignOut} className="flex items-center justify-center min-h-[48px] min-w-[44px] p-2 bg-[#F4F7FA] active:bg-[#E2E8F0] text-[#003366]/70 rounded-lg shrink-0" title="Sign Out">
                 <LogOut className="w-5 h-5" />
