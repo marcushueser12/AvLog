@@ -84,6 +84,13 @@ const CloudSelectionModal: React.FC<CloudSelectionModalProps> = ({
     [units, selectedUnitKey]
   );
 
+  const extractButtonLabel =
+    selectedUnit === null
+      ? 'Extract'
+      : selectedUnit.mode === 'spread'
+        ? 'Extract Spread'
+        : 'Extract Single';
+
   const handleExtract = async () => {
     if (!selectedUnit || selectedUnit.uploads.length === 0 || !userId) return;
     setExtracting(true);
@@ -219,11 +226,7 @@ const CloudSelectionModal: React.FC<CloudSelectionModalProps> = ({
                   Extracting…
                 </>
               ) : (
-                {selectedUnit
-                  ? selectedUnit.mode === 'spread'
-                    ? 'Extract Spread'
-                    : 'Extract Single'
-                  : 'Extract'}
+                extractButtonLabel
               )}
             </button>
           </div>
