@@ -24,7 +24,7 @@ import { fetchWithRetry, safeApiCall } from './utils/apiUtils';
 import { getExifOrientation } from './utils/exifUtils';
 import { useMobile } from './utils/useMobile';
 import { motion } from 'framer-motion';
-import { Plane, Grid3x3, FileText, Clock, Home, LogOut, Download, Plus, Trash2, Upload, X, MessageSquare, Headphones, Cloud } from 'lucide-react';
+import { Plane, Grid3x3, FileText, Clock, Home, LogOut, Download, Plus, Trash2, Upload, X, MessageSquare, Headphones, Cloud, ChevronDown } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -81,6 +81,7 @@ const App: React.FC = () => {
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [showCloudModal, setShowCloudModal] = useState(false);
   const [uploadingToCloud, setUploadingToCloud] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const { pendingCount: cloudPendingCount, refetch: refetchCloudUploads } = useCloudUploads(user?.id);
 
@@ -1658,26 +1659,49 @@ const App: React.FC = () => {
             </div>
             <span className="text-sm font-black text-[#003366] truncate max-w-[100px] sm:max-w-[120px]">LogExtract</span>
           </button>
-          <nav className="flex items-center gap-1 shrink-0 min-w-0">
+          <div className="relative shrink-0">
             <button
-              onClick={() => { setActiveTab('dashboard'); if (user) loadLogbookStats(); }}
-              className={`min-h-[48px] px-2 sm:px-2.5 py-2 rounded-lg transition-all text-xs font-semibold whitespace-nowrap shrink-0 ${activeTab === 'dashboard' ? 'bg-[#007BFF]/10 text-[#007BFF] border border-[#007BFF]/30' : 'text-[#003366]/70 active:bg-[#F4F7FA]'}`}
+              type="button"
+              onClick={() => setMobileMenuOpen((o) => !o)}
+              className="flex items-center gap-1 min-h-[48px] px-3 py-2 rounded-lg border border-[#007BFF]/30 bg-[#007BFF]/10 text-[#007BFF] text-xs font-semibold whitespace-nowrap"
+              aria-expanded={mobileMenuOpen}
+              aria-haspopup="listbox"
             >
-              Scanner
+              {activeTab === 'dashboard' ? 'Scanner' : activeTab === 'tutorial' ? 'Help' : 'Reviews'}
+              <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${mobileMenuOpen ? 'rotate-180' : ''}`} />
             </button>
-            <button
-              onClick={() => setActiveTab('tutorial')}
-              className={`min-h-[48px] px-2 sm:px-2.5 py-2 rounded-lg transition-all text-xs font-semibold whitespace-nowrap shrink-0 ${activeTab === 'tutorial' ? 'bg-[#007BFF]/10 text-[#007BFF] border border-[#007BFF]/30' : 'text-[#003366]/70 active:bg-[#F4F7FA]'}`}
-            >
-              Help
-            </button>
-            <button
-              onClick={() => setActiveTab('reviews')}
-              className={`min-h-[48px] px-2 sm:px-2.5 py-2 rounded-lg transition-all text-xs font-semibold whitespace-nowrap shrink-0 ${activeTab === 'reviews' ? 'bg-[#007BFF]/10 text-[#007BFF] border border-[#007BFF]/30' : 'text-[#003366]/70 active:bg-[#F4F7FA]'}`}
-            >
-              Reviews
-            </button>
-          </nav>
+            {mobileMenuOpen && (
+              <>
+                <div className="fixed inset-0 z-40" aria-hidden="true" onClick={() => setMobileMenuOpen(false)} />
+                <div className="absolute left-0 top-full mt-1 z-50 min-w-[140px] py-1 bg-white rounded-xl border border-[#E2E8F0] shadow-lg" role="listbox">
+                  <button
+                    type="button"
+                    role="option"
+                    onClick={() => { setActiveTab('dashboard'); if (user) loadLogbookStats(); setMobileMenuOpen(false); }}
+                    className={`w-full text-left px-4 py-2.5 text-sm font-semibold ${activeTab === 'dashboard' ? 'bg-[#007BFF]/10 text-[#007BFF]' : 'text-[#003366]'}`}
+                  >
+                    Scanner
+                  </button>
+                  <button
+                    type="button"
+                    role="option"
+                    onClick={() => { setActiveTab('tutorial'); setMobileMenuOpen(false); }}
+                    className={`w-full text-left px-4 py-2.5 text-sm font-semibold ${activeTab === 'tutorial' ? 'bg-[#007BFF]/10 text-[#007BFF]' : 'text-[#003366]'}`}
+                  >
+                    Help
+                  </button>
+                  <button
+                    type="button"
+                    role="option"
+                    onClick={() => { setActiveTab('reviews'); setMobileMenuOpen(false); }}
+                    className={`w-full text-left px-4 py-2.5 text-sm font-semibold ${activeTab === 'reviews' ? 'bg-[#007BFF]/10 text-[#007BFF]' : 'text-[#003366]'}`}
+                  >
+                    Reviews
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
           <div className="flex-1 min-w-0 shrink min-h-0" aria-hidden="true" />
           <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             <button
