@@ -14,6 +14,8 @@ const MobileCaptureView: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const [lastSync, setLastSync] = useState<boolean | null>(null); // true = success, false = error
 
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const handleCapture = async (e: React.ChangeEvent<HTMLInputElement>, mode: 'single' | 'spread') => {
     const files = e.target.files;
     if (!files?.length || !user) return;
@@ -21,6 +23,7 @@ const MobileCaptureView: React.FC = () => {
 
     setUploading(true);
     setLastSync(null);
+    setErrorMessage(null);
     try {
       const file = files[0];
       await uploadToCloud(user.id, file);
@@ -28,9 +31,19 @@ const MobileCaptureView: React.FC = () => {
         await uploadToCloud(user.id, files[1]);
       }
       setLastSync(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Cloud upload failed:', err);
       setLastSync(false);
+      const msg = err?.message || '';
+      if (msg.includes('Permission denied') || msg.includes('sign in')) {
+        setErrorMessage('Session expired. Please sign in again and try again.');
+      } else if (msg.includes('too large') || msg.includes('10 MB')) {
+        setErrorMessage('Photo is too large. Use a photo under 10 MB.');
+      } else if (msg.includes('format not supported') || msg.includes('JPG or PNG')) {
+        setErrorMessage('Photo format not supported. Use JPG or PNG.');
+      } else {
+        setErrorMessage(msg || 'Upload failed. Check connection and try again.');
+      }
     } finally {
       setUploading(false);
     }
@@ -97,8 +110,11 @@ const MobileCaptureView: React.FC = () => {
         </div>
       )}
 
-      {lastSync === false && !uploading && (
-        <p className="text-sm text-red-600">Upload failed. Check connection and try again.</p>
+      {lastSync === false && !uploading && errorMessage && (
+        <div className="text-center space-y-1">
+          <p className="text-sm text-red-600 font-medium">{errorMessage}</p>
+          <p className="text-xs text-[#003366]/60">Try again or use a different photo (JPG/PNG under 10 MB).</p>
+        </div>
       )}
 
       <div className="flex items-center gap-2 text-[#003366]/60 text-xs mt-4">

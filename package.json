@@ -28,6 +28,7 @@
     "express-rate-limit": "^7.1.5",
     "express-validator": "^7.0.1",
     "framer-motion": "^12.29.0",
+    "heic2any": "^0.0.4",
     "helmet": "^7.1.0",
     "lucide-react": "^0.563.0",
     "p-retry": "^7.1.1",

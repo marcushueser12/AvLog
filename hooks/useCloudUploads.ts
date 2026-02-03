@@ -1,8 +1,29 @@
 import { useState, useEffect, useCallback } from 'react';
+import heic2any from 'heic2any';
 import { supabase } from '../lib/supabase';
 import type { CloudUpload } from '../types';
 
 const BUCKET = 'logbook_scans';
+
+const HEIC_TYPES = ['image/heic', 'image/heif'];
+const HEIC_EXT = /\.(heic|heif)$/i;
+
+/** Convert HEIC/HEIF (e.g. from iPhone) to JPEG before upload. No HEIC is stored. */
+async function normalizeImageFile(file: File): Promise<File> {
+  const isHeic =
+    HEIC_TYPES.includes(file.type) || HEIC_EXT.test(file.name);
+  if (!isHeic) return file;
+
+  const result = await heic2any({
+    blob: file,
+    toType: 'image/jpeg',
+    quality: 0.92,
+  });
+  const blob = Array.isArray(result) ? result[0] : result;
+  if (!blob || !(blob instanceof Blob)) throw new Error('HEIC conversion failed. Try saving as JPG or use a different photo.');
+  const name = file.name.replace(HEIC_EXT, '.jpg');
+  return new File([blob], name, { type: 'image/jpeg' });
+}
 
 /**
  * Fetch pending cloud uploads for the current user.
@@ -85,17 +106,31 @@ export async function getSignedUrl(storagePath: string, expiresIn = 3600): Promi
 
 /**
  * Upload a file to logbook_scans and insert a cloud_uploads row.
+ * Converts HEIC/HEIF (e.g. from iPhone) to JPEG before upload; only JPEG is stored, never HEIC.
  */
 export async function uploadToCloud(userId: string, file: File): Promise<CloudUpload> {
-  const ext = file.name.split('.').pop() || 'jpg';
+  const normalized = await normalizeImageFile(file);
+  const ext = normalized.name.split('.').pop() || 'jpg';
   const path = `${userId}/${crypto.randomUUID()}.${ext}`;
 
-  const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, file, {
-    contentType: file.type,
+  const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, normalized, {
+    contentType: normalized.type,
     upsert: false,
   });
 
-  if (uploadError) throw uploadError;
+  if (uploadError) {
+    const msg = uploadError.message || '';
+    if (msg.includes('new row violates row-level security') || msg.includes('policy')) {
+      throw new Error('Permission denied. Please sign in again and try again.');
+    }
+    if (msg.includes('Payload too large') || msg.includes('file_size_limit')) {
+      throw new Error('Photo is too large. Use a photo under 10 MB.');
+    }
+    if (msg.includes('Unsupported Media Type') || msg.includes('allowed_mime')) {
+      throw new Error('Photo format not supported. Use JPG or PNG.');
+    }
+    throw uploadError;
+  }
 
   const { data: row, error: insertError } = await supabase
     .from('cloud_uploads')
