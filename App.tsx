@@ -1644,59 +1644,60 @@ const App: React.FC = () => {
       </div>
       {/* End Desktop Layout */}
 
-      {/* Mobile Top Bar - Full width, show on all screens below lg (1024px); larger tap targets, logo/name go to landing */}
-      <header className="lg:hidden sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-[#E2E8F0] shadow-sm min-h-[52px] flex items-center">
-        <div className="px-3 py-2.5 flex items-center justify-between gap-3 min-w-0 w-full">
+      {/* Mobile Top Bar - Single row, logo | tabs | spacer | actions; taller buttons (lg:hidden only) */}
+      <header className="lg:hidden sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-[#E2E8F0] shadow-sm min-h-[56px] flex items-center">
+        <div className="px-2 sm:px-3 py-2 flex items-center gap-1 sm:gap-2 min-w-0 w-full">
           <button
             type="button"
             onClick={() => setView('landing')}
-            className="flex items-center gap-2 shrink-0 min-h-[44px] min-w-[44px] -ml-1 pl-1 rounded-lg active:bg-[#F4F7FA] transition-colors"
+            className="flex items-center gap-1.5 shrink-0 min-h-[48px] min-w-[44px] pl-1 pr-1 rounded-lg active:bg-[#F4F7FA] transition-colors"
             aria-label="Back to home"
           >
             <div className="w-8 h-8 flex items-center justify-center shrink-0">
               <Logo size={24} />
             </div>
-            <span className="text-sm font-black text-[#003366] truncate max-w-[120px]">LogExtract</span>
+            <span className="text-sm font-black text-[#003366] truncate max-w-[100px] sm:max-w-[120px]">LogExtract</span>
           </button>
-          <nav className="flex items-center justify-center gap-1 sm:gap-2 flex-1 min-w-0">
+          <nav className="flex items-center gap-1 shrink-0 min-w-0">
             <button
               onClick={() => { setActiveTab('dashboard'); if (user) loadLogbookStats(); }}
-              className={`min-h-[40px] px-3 py-2 rounded-lg transition-all text-xs font-semibold whitespace-nowrap shrink-0 ${activeTab === 'dashboard' ? 'bg-[#007BFF]/10 text-[#007BFF] border border-[#007BFF]/30' : 'text-[#003366]/70 active:bg-[#F4F7FA]'}`}
+              className={`min-h-[48px] px-2 sm:px-2.5 py-2 rounded-lg transition-all text-xs font-semibold whitespace-nowrap shrink-0 ${activeTab === 'dashboard' ? 'bg-[#007BFF]/10 text-[#007BFF] border border-[#007BFF]/30' : 'text-[#003366]/70 active:bg-[#F4F7FA]'}`}
             >
               Scanner
             </button>
             <button
               onClick={() => setActiveTab('tutorial')}
-              className={`min-h-[40px] px-3 py-2 rounded-lg transition-all text-xs font-semibold whitespace-nowrap shrink-0 ${activeTab === 'tutorial' ? 'bg-[#007BFF]/10 text-[#007BFF] border border-[#007BFF]/30' : 'text-[#003366]/70 active:bg-[#F4F7FA]'}`}
+              className={`min-h-[48px] px-2 sm:px-2.5 py-2 rounded-lg transition-all text-xs font-semibold whitespace-nowrap shrink-0 ${activeTab === 'tutorial' ? 'bg-[#007BFF]/10 text-[#007BFF] border border-[#007BFF]/30' : 'text-[#003366]/70 active:bg-[#F4F7FA]'}`}
             >
               Help
             </button>
             <button
               onClick={() => setActiveTab('reviews')}
-              className={`min-h-[40px] px-3 py-2 rounded-lg transition-all text-xs font-semibold whitespace-nowrap shrink-0 ${activeTab === 'reviews' ? 'bg-[#007BFF]/10 text-[#007BFF] border border-[#007BFF]/30' : 'text-[#003366]/70 active:bg-[#F4F7FA]'}`}
+              className={`min-h-[48px] px-2 sm:px-2.5 py-2 rounded-lg transition-all text-xs font-semibold whitespace-nowrap shrink-0 ${activeTab === 'reviews' ? 'bg-[#007BFF]/10 text-[#007BFF] border border-[#007BFF]/30' : 'text-[#003366]/70 active:bg-[#F4F7FA]'}`}
             >
               Reviews
             </button>
           </nav>
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 min-w-0">
+          <div className="flex-1 min-w-0 shrink min-h-0" aria-hidden="true" />
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             <button
               onClick={() => { if (!user) setShowAuthModal(true); else if (userCredits === 0) setShowPaymentModal(true); }}
-              className={`flex items-center gap-1 min-h-[40px] px-2.5 py-2 rounded-lg border transition-all text-xs font-semibold shrink-0 ${!user || userCredits === 0 ? 'bg-red-100 border-red-300 text-red-600' : 'bg-[#007BFF]/10 border-[#007BFF]/30 text-[#007BFF]'}`}
+              className={`flex items-center gap-1 min-h-[48px] px-2 py-2 rounded-lg border transition-all text-xs font-semibold shrink-0 ${!user || userCredits === 0 ? 'bg-red-100 border-red-300 text-red-600' : 'bg-[#007BFF]/10 border-[#007BFF]/30 text-[#007BFF]'}`}
               title={!user ? 'Create an account to get 3 free credits' : userCredits === 0 ? 'Buy credits' : `${userCredits} credit${userCredits !== 1 ? 's' : ''} available`}
             >
               <span className="text-[10px]">C:</span>
               <span>{loadingCredits ? '...' : `${userCredits ?? 0}`}</span>
             </button>
             {user && (
-              <button onClick={() => setShowPaymentModal(true)} className="flex items-center justify-center min-h-[40px] min-w-[40px] p-2 bg-[#007BFF]/10 active:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-lg transition-all shrink-0" title="Buy more credits">
+              <button onClick={() => setShowPaymentModal(true)} className="flex items-center justify-center min-h-[48px] min-w-[44px] p-2 bg-[#007BFF]/10 active:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-lg transition-all shrink-0" title="Buy more credits">
                 <Plus className="w-5 h-5" />
               </button>
             )}
-            <button onClick={() => setShowSupportModal(true)} className="flex items-center justify-center min-h-[40px] min-w-[40px] p-2 bg-[#007BFF]/10 active:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-lg transition-all shrink-0" title={user ? "Support & My Tickets" : "Support"}>
+            <button onClick={() => setShowSupportModal(true)} className="flex items-center justify-center min-h-[48px] min-w-[44px] p-2 bg-[#007BFF]/10 active:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-lg transition-all shrink-0" title={user ? "Support & My Tickets" : "Support"}>
               <Headphones className="w-5 h-5" />
             </button>
             {user && (
-              <button onClick={handleExportModalOpen} className="flex items-center justify-center min-h-[40px] min-w-[40px] p-2 bg-[#003366]/10 active:bg-[#003366]/20 border border-[#003366]/30 text-[#003366] rounded-lg transition-all relative shrink-0" title="Export">
+              <button onClick={handleExportModalOpen} className="flex items-center justify-center min-h-[48px] min-w-[44px] p-2 bg-[#003366]/10 active:bg-[#003366]/20 border border-[#003366]/30 text-[#003366] rounded-lg transition-all relative shrink-0" title="Export">
                 <Download className="w-5 h-5" />
                 {exportableEntries.length > 0 && (
                   <span className="absolute top-1 right-1 bg-[#007BFF] text-white text-[10px] font-bold px-1 rounded-full min-w-[18px] h-[18px] flex items-center justify-center">{exportableEntries.length}</span>
@@ -1704,16 +1705,16 @@ const App: React.FC = () => {
               </button>
             )}
             {user && (
-              <div className="hidden sm:flex items-center gap-1 px-2 py-2 min-h-[40px] bg-white/80 rounded-lg border border-[#E2E8F0] shrink-0 min-w-0 max-w-[80px]">
+              <div className="hidden sm:flex items-center gap-1 px-2 py-2 min-h-[48px] bg-white/80 rounded-lg border border-[#E2E8F0] shrink-0 min-w-0 max-w-[80px]">
                 <span className="text-xs text-[#003366]/70 font-medium truncate">{user.email?.split('@')[0]}</span>
               </div>
             )}
             {user ? (
-              <button onClick={handleSignOut} className="flex items-center justify-center min-h-[40px] min-w-[40px] p-2 bg-[#F4F7FA] active:bg-[#E2E8F0] text-[#003366]/70 rounded-lg shrink-0" title="Sign Out">
+              <button onClick={handleSignOut} className="flex items-center justify-center min-h-[48px] min-w-[44px] p-2 bg-[#F4F7FA] active:bg-[#E2E8F0] text-[#003366]/70 rounded-lg shrink-0" title="Sign Out">
                 <LogOut className="w-5 h-5" />
               </button>
             ) : (
-              <button onClick={() => setShowAuthModal(true)} className="min-h-[40px] px-3 py-2 bg-[#003366] active:bg-[#003366]/90 text-white rounded-lg text-xs font-semibold shrink-0">
+              <button onClick={() => setShowAuthModal(true)} className="min-h-[48px] px-2.5 py-2 bg-[#003366] active:bg-[#003366]/90 text-white rounded-lg text-xs font-semibold shrink-0">
                 Sign In
               </button>
             )}
