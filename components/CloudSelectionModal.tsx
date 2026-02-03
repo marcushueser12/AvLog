@@ -219,7 +219,11 @@ const CloudSelectionModal: React.FC<CloudSelectionModalProps> = ({
                   Extracting…
                 </>
               ) : (
-                {selectedUnit ? `Extract ${selectedUnit.mode === 'spread' ? 'Spread' : 'Single'}` : 'Extract'}
+                {selectedUnit
+                  ? selectedUnit.mode === 'spread'
+                    ? 'Extract Spread'
+                    : 'Extract Single'
+                  : 'Extract'}
               )}
             </button>
           </div>
