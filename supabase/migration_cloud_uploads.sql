@@ -41,6 +41,12 @@ CREATE POLICY "Users can update own cloud_uploads"
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
+-- Users can only DELETE their own rows (remove from cloud)
+CREATE POLICY "Users can delete own cloud_uploads"
+  ON public.cloud_uploads FOR DELETE
+  TO authenticated
+  USING (auth.uid() = user_id);
+
 -- 3. Storage bucket: logbook_scans
 -- Create bucket via Dashboard: Storage → New bucket → name: logbook_scans, Public: OFF
 -- Or via SQL (Supabase creates bucket):

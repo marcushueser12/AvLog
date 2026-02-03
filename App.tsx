@@ -15,7 +15,7 @@ import SupportRequestModal from './components/SupportRequestModal';
 import Logo from './components/Logo';
 import LandscapePrompt from './components/LandscapePrompt';
 import CloudSelectionModal from './components/CloudSelectionModal';
-import { useCloudUploads, markCloudUploadsProcessed, uploadToCloud } from './hooks/useCloudUploads';
+import { useCloudUploads, markCloudUploadsProcessed, uploadToCloud, deleteStorageAndMarkProcessed } from './hooks/useCloudUploads';
 import { useAuth } from './contexts/AuthContext';
 import { extractLogbookEntriesFromPair, extractLogbookEntriesSingle } from './services/geminiService';
 import { generateForeFlightCSV, downloadCSV } from './utils/csvUtils';
@@ -684,11 +684,11 @@ const App: React.FC = () => {
         const result = await response.json();
         console.log('Verified scan saved:', result);
         loadLogbookStats(); // Refresh dashboard stats (Total hrs, cards)
-        if (scan.sourceCloudUploadIds?.length) {
+        if (scan.sourceCloudUploadIds?.length && user?.id) {
           try {
-            await markCloudUploadsProcessed(scan.sourceCloudUploadIds);
+            await deleteStorageAndMarkProcessed(user.id, scan.sourceCloudUploadIds);
           } catch (e) {
-            console.warn('Failed to mark cloud uploads processed:', e);
+            console.warn('Failed to delete cloud storage and mark processed:', e);
           }
         }
       } catch (error: any) {

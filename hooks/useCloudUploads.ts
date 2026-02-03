@@ -233,3 +233,46 @@ export async function markCloudUploadsProcessed(ids: string[]): Promise<void> {
     .in('id', ids);
   if (error) throw error;
 }
+
+/**
+ * Fetch storage paths for cloud_uploads belonging to the user (for delete).
+ */
+async function getStoragePathsForUserUploads(userId: string, ids: string[]): Promise<string[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase
+    .from('cloud_uploads')
+    .select('storage_path')
+    .eq('user_id', userId)
+    .in('id', ids);
+  if (error) throw error;
+  return (data || []).map((r) => r.storage_path).filter(Boolean);
+}
+
+/**
+ * Delete uploads from cloud: remove files from storage and delete cloud_uploads rows.
+ * Use for manual "Remove from cloud" in the Import modal.
+ */
+export async function deleteFromCloud(userId: string, ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  const paths = await getStoragePathsForUserUploads(userId, ids);
+  if (paths.length > 0) {
+    const { error: storageError } = await supabase.storage.from(BUCKET).remove(paths);
+    if (storageError) console.warn('Storage delete:', storageError);
+  }
+  const { error } = await supabase.from('cloud_uploads').delete().in('id', ids);
+  if (error) throw error;
+}
+
+/**
+ * Delete storage files for the given uploads and mark them processed.
+ * Call after user approves (verifies) extraction so pictures are removed from the cloud.
+ */
+export async function deleteStorageAndMarkProcessed(userId: string, ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  const paths = await getStoragePathsForUserUploads(userId, ids);
+  if (paths.length > 0) {
+    const { error: storageError } = await supabase.storage.from(BUCKET).remove(paths);
+    if (storageError) console.warn('Storage delete after approve:', storageError);
+  }
+  await markCloudUploadsProcessed(ids);
+}

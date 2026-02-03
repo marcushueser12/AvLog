@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Cloud, Loader2 } from 'lucide-react';
-import { useCloudUploads, getSignedUrl } from '../hooks/useCloudUploads';
+import { X, Cloud, Loader2, Trash2 } from 'lucide-react';
+import { useCloudUploads, getSignedUrl, deleteFromCloud } from '../hooks/useCloudUploads';
 import type { CloudUpload } from '../types';
 
 /** One importable unit: either a single page (1 upload) or a spread pair (2 uploads). */
@@ -48,6 +48,7 @@ const CloudSelectionModal: React.FC<CloudSelectionModalProps> = ({
   const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
+  const [deletingUnitKey, setDeletingUnitKey] = useState<string | null>(null);
 
   const pending = uploads.filter((u) => u.status === 'pending');
   const units = useMemo(() => buildUnits(pending), [pending]);
@@ -90,6 +91,23 @@ const CloudSelectionModal: React.FC<CloudSelectionModalProps> = ({
       : selectedUnit.mode === 'spread'
         ? 'Import spread'
         : 'Import page';
+
+  const handleDeleteFromCloud = async (unit: CloudUnit) => {
+    if (!userId) return;
+    const ids = unit.uploads.map((u) => u.id);
+    if (!confirm('Remove this from the cloud? The images will be deleted and cannot be recovered.')) return;
+    setDeletingUnitKey(unit.uploads.map((u) => u.id).join(','));
+    setImportError(null);
+    try {
+      await deleteFromCloud(userId, ids);
+      refetch();
+      setSelectedUnitKey(null);
+    } catch (err: any) {
+      setImportError(err?.message || 'Failed to remove from cloud');
+    } finally {
+      setDeletingUnitKey(null);
+    }
+  };
 
   const handleImport = async () => {
     if (!selectedUnit || selectedUnit.uploads.length === 0 || !userId) return;
@@ -163,46 +181,68 @@ const CloudSelectionModal: React.FC<CloudSelectionModalProps> = ({
                 {units.map((unit) => {
                   const unitKey = unit.uploads.map((u) => u.id).join(',');
                   const isSelected = selectedUnitKey === unitKey;
+                  const isDeleting = deletingUnitKey === unitKey;
                   return (
-                    <button
+                    <div
                       key={unitKey}
-                      type="button"
-                      onClick={() => setSelectedUnitKey(isSelected ? null : unitKey)}
-                      className={`relative rounded-xl border-2 overflow-hidden transition-all text-left ${
-                        isSelected ? 'border-[#007BFF] ring-2 ring-[#007BFF]/30' : 'border-[#E2E8F0] hover:border-[#007BFF]/50'
+                      className={`relative rounded-xl border-2 overflow-hidden transition-all ${
+                        isSelected ? 'border-[#007BFF] ring-2 ring-[#007BFF]/30' : 'border-[#E2E8F0]'
                       } ${unit.mode === 'spread' ? 'aspect-[3/2]' : 'aspect-[3/4]'}`}
                     >
-                      <div className={`absolute inset-0 flex ${unit.mode === 'spread' ? 'flex-row' : ''}`}>
-                        {unit.uploads.map((u) => (
-                          <div
-                            key={u.id}
-                            className={unit.mode === 'spread' ? 'flex-1 min-w-0' : 'w-full h-full'}
-                          >
-                            {thumbnails[u.id] ? (
-                              <img
-                                src={thumbnails[u.id]}
-                                alt=""
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-[#F4F7FA] flex items-center justify-center">
-                                <Cloud className="w-8 h-8 text-[#003366]/40" />
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                      {isSelected && (
-                        <span className="absolute top-1 right-1 w-6 h-6 bg-[#007BFF] text-white rounded-full flex items-center justify-center">
-                          <span className="text-xs font-bold">✓</span>
-                        </span>
-                      )}
-                      {unit.mode === 'spread' && (
-                        <span className="absolute bottom-1 left-1 text-[10px] font-medium text-white bg-black/50 px-1.5 py-0.5 rounded">
-                          Spread
-                        </span>
-                      )}
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => !isDeleting && setSelectedUnitKey(isSelected ? null : unitKey)}
+                        disabled={isDeleting}
+                        className="absolute inset-0 w-full h-full text-left hover:bg-[#007BFF]/5 transition-colors disabled:opacity-70"
+                      >
+                        <div className={`absolute inset-0 flex ${unit.mode === 'spread' ? 'flex-row' : ''}`}>
+                          {unit.uploads.map((u) => (
+                            <div
+                              key={u.id}
+                              className={unit.mode === 'spread' ? 'flex-1 min-w-0' : 'w-full h-full'}
+                            >
+                              {thumbnails[u.id] ? (
+                                <img
+                                  src={thumbnails[u.id]}
+                                  alt=""
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-[#F4F7FA] flex items-center justify-center">
+                                  <Cloud className="w-8 h-8 text-[#003366]/40" />
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        {isSelected && (
+                          <span className="absolute top-1 right-10 w-6 h-6 bg-[#007BFF] text-white rounded-full flex items-center justify-center pointer-events-none">
+                            <span className="text-xs font-bold">✓</span>
+                          </span>
+                        )}
+                        {unit.mode === 'spread' && (
+                          <span className="absolute bottom-1 left-1 text-[10px] font-medium text-white bg-black/50 px-1.5 py-0.5 rounded pointer-events-none">
+                            Spread
+                          </span>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!isDeleting && userId) handleDeleteFromCloud(unit);
+                        }}
+                        disabled={isDeleting}
+                        className="absolute top-1 right-1 w-7 h-7 rounded-lg bg-red-500/90 hover:bg-red-600 text-white flex items-center justify-center shadow transition-colors disabled:opacity-70"
+                        aria-label="Remove from cloud"
+                      >
+                        {isDeleting ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
                   );
                 })}
               </div>
