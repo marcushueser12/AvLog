@@ -102,10 +102,10 @@ const App: React.FC = () => {
     try {
       for (const scan of toUpload) {
         const groupId = scan.mode === 'spread' && scan.images.length === 2 ? crypto.randomUUID() : undefined;
-        for (let i = 0; i < scan.images.length; i++) {
-          const file = await dataUrlToFile(scan.images[i], `page-${i + 1}.jpg`);
-          await uploadToCloud(user.id, file, groupId);
-        }
+        const uploads = scan.images.map((img, i) =>
+          dataUrlToFile(img, `page-${i + 1}.jpg`).then((file) => uploadToCloud(user.id, file, groupId))
+        );
+        await Promise.all(uploads);
         deleteScan(scan.id);
       }
     } catch (err) {
@@ -137,35 +137,27 @@ const App: React.FC = () => {
     setScans(prev => prev.map(s => s.id === scanId ? { ...s, expectedEntries: count } : s));
   };
 
-  const handleExtractFromCloud = (
-    result: { entries: any[]; pageTotals?: any },
+  /** Download cloud pages to dashboard as a pending scan; user then clicks Extract. */
+  const handleImportFromCloud = (
+    images: string[],
     mode: 'single' | 'spread',
     cloudUploadIds: string[]
   ) => {
     const scanId = Math.random().toString(36).substr(2, 9);
-    const entriesWithScanRef = (result.entries || []).map((e: any) => {
-      const normalizedDate = normalizeDateSeparator(e.date || '');
-      const normalizedAircraftId = normalizeAircraftId(e.aircraftId || '', false);
-      return { ...e, scanId, date: normalizedDate, aircraftId: normalizedAircraftId };
-    });
-    setEntries(prev => [...prev, ...entriesWithScanRef]);
-    setScans(prev => [
-      {
-        id: scanId,
-        images: [], // Cloud-origin: no local images
-        mode,
-        status: 'completed',
-        timestamp: Date.now(),
-        resultsCount: result.entries?.length ?? 0,
-        extractedTotals: result.pageTotals,
-        pageNumber: prev.filter(s => s.status === 'completed').length + 1,
-        isVerified: false,
-        creditApproved: false,
-        sourceCloudUploadIds: cloudUploadIds,
-      },
-      ...prev,
-    ]);
+    const newScan: ScanDocument = {
+      id: scanId,
+      images,
+      mode,
+      status: 'pending',
+      timestamp: Date.now(),
+      imageRotations: images.map(() => 0),
+      sourceCloudUploadIds: cloudUploadIds,
+    };
+    setScans((prev) => [newScan, ...prev]);
     setActiveTab('dashboard');
+    if (cloudUploadIds.length > 0) {
+      markCloudUploadsProcessed(cloudUploadIds).catch((e) => console.warn('Mark cloud processed:', e));
+    }
   };
 
   // Lightweight clarity score estimation based on image dimensions
@@ -1103,7 +1095,7 @@ const App: React.FC = () => {
       <CloudSelectionModal
         open={showCloudModal}
         onClose={() => setShowCloudModal(false)}
-        onExtract={handleExtractFromCloud}
+        onImport={handleImportFromCloud}
         userId={user?.id}
       />
       <div className="min-h-screen flex-1 min-h-0 flex flex-col overflow-hidden bg-[#F4F7FA] text-[#003366]">
@@ -1812,7 +1804,7 @@ const App: React.FC = () => {
                 )}
                 <div className="flex items-center gap-2 text-[#003366]/60 text-xs">
                   <Cloud className="w-4 h-4 shrink-0" />
-                  <span>Photos upload to the cloud. Open LogExtract on desktop → Import from Cloud to extract.</span>
+                  <span>Photos upload to the cloud. Open LogExtract on desktop → Import from Cloud, then click Extract on the dashboard.</span>
                 </div>
                 {!user && (
                   <div className="text-center p-3 bg-white/80 rounded-xl border border-[#E2E8F0]">

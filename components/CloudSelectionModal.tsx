@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Cloud, Loader2 } from 'lucide-react';
 import { useCloudUploads, getSignedUrl } from '../hooks/useCloudUploads';
-import { extractFromCloudUrl, extractPairFromCloudUrls } from '../services/geminiService';
 import type { CloudUpload } from '../types';
 
 /** One importable unit: either a single page (1 upload) or a spread pair (2 uploads). */
@@ -10,7 +9,8 @@ type CloudUnit = { mode: 'single' | 'spread'; uploads: CloudUpload[] };
 interface CloudSelectionModalProps {
   open: boolean;
   onClose: () => void;
-  onExtract: (result: { entries: any[]; pageTotals?: any }, mode: 'single' | 'spread', cloudUploadIds: string[]) => void;
+  /** Called with downloaded image data URLs; app adds a pending scan and user clicks Extract on dashboard. */
+  onImport: (images: string[], mode: 'single' | 'spread', cloudUploadIds: string[]) => void;
   userId: string | undefined;
 }
 
@@ -39,15 +39,15 @@ function buildUnits(pending: CloudUpload[]): CloudUnit[] {
 const CloudSelectionModal: React.FC<CloudSelectionModalProps> = ({
   open,
   onClose,
-  onExtract,
+  onImport,
   userId,
 }) => {
-  const { uploads, pendingCount, loading, error, refetch } = useCloudUploads(userId);
+  const { uploads, loading, error, refetch } = useCloudUploads(userId);
   /** Selected unit key: upload ids joined (stable for comparison). */
   const [selectedUnitKey, setSelectedUnitKey] = useState<string | null>(null);
   const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
-  const [extracting, setExtracting] = useState(false);
-  const [extractError, setExtractError] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
 
   const pending = uploads.filter((u) => u.status === 'pending');
   const units = useMemo(() => buildUnits(pending), [pending]);
@@ -56,7 +56,7 @@ const CloudSelectionModal: React.FC<CloudSelectionModalProps> = ({
     if (!open) return;
     refetch();
     setSelectedUnitKey(null);
-    setExtractError(null);
+    setImportError(null);
   }, [open, refetch]);
 
   useEffect(() => {
@@ -84,32 +84,40 @@ const CloudSelectionModal: React.FC<CloudSelectionModalProps> = ({
     [units, selectedUnitKey]
   );
 
-  const extractButtonLabel =
+  const importButtonLabel =
     selectedUnit === null
-      ? 'Extract'
+      ? 'Import to dashboard'
       : selectedUnit.mode === 'spread'
-        ? 'Extract Spread'
-        : 'Extract Single';
+        ? 'Import spread'
+        : 'Import page';
 
-  const handleExtract = async () => {
+  const handleImport = async () => {
     if (!selectedUnit || selectedUnit.uploads.length === 0 || !userId) return;
-    setExtracting(true);
-    setExtractError(null);
+    setImporting(true);
+    setImportError(null);
     try {
       const urls = await Promise.all(
         selectedUnit.uploads.map((u) => getSignedUrl(u.storage_path, 3600))
       );
-      const mode = selectedUnit.mode;
-      const result =
-        mode === 'single'
-          ? await extractFromCloudUrl(urls[0])
-          : await extractPairFromCloudUrls(urls[0], urls[1]);
-      onExtract(result, mode, selectedUnit.uploads.map((u) => u.id));
+      const dataUrls = await Promise.all(
+        urls.map(async (url) => {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error('Failed to download image');
+          const blob = await res.blob();
+          return new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = () => reject(new Error('Failed to read image'));
+            reader.readAsDataURL(blob);
+          });
+        })
+      );
+      onImport(dataUrls, selectedUnit.mode, selectedUnit.uploads.map((u) => u.id));
       onClose();
     } catch (err: any) {
-      setExtractError(err?.message || 'Extraction failed');
+      setImportError(err?.message || 'Download failed');
     } finally {
-      setExtracting(false);
+      setImporting(false);
     }
   };
 
@@ -198,8 +206,8 @@ const CloudSelectionModal: React.FC<CloudSelectionModalProps> = ({
                   );
                 })}
               </div>
-              {extractError && (
-                <p className="text-red-600 text-sm mt-3">{extractError}</p>
+              {importError && (
+                <p className="text-red-600 text-sm mt-3">{importError}</p>
               )}
             </>
           )}
@@ -216,17 +224,17 @@ const CloudSelectionModal: React.FC<CloudSelectionModalProps> = ({
             </button>
             <button
               type="button"
-              onClick={handleExtract}
-              disabled={!selectedUnit || extracting}
+              onClick={handleImport}
+              disabled={!selectedUnit || importing}
               className="flex-1 px-4 py-2.5 rounded-xl bg-[#003366] text-white font-semibold hover:bg-[#003366]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
-              {extracting ? (
+              {importing ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Extracting…
+                  Downloading…
                 </>
               ) : (
-                extractButtonLabel
+                importButtonLabel
               )}
             </button>
           </div>

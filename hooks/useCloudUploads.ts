@@ -8,6 +8,10 @@ const BUCKET = 'logbook_scans';
 const HEIC_TYPES = ['image/heic', 'image/heif'];
 const HEIC_EXT = /\.(heic|heif)$/i;
 
+const MAX_UPLOAD_DIM = 2048;
+const UPLOAD_JPEG_QUALITY = 0.88;
+const LARGE_FILE_BYTES = 1.2 * 1024 * 1024; // 1.2MB – resize if larger
+
 /** True if value looks like a File/Blob (some mobile contexts don't pass instanceof Blob). */
 function isFileLike(value: unknown): value is File | Blob {
   if (!value || typeof value !== 'object') return false;
@@ -36,6 +40,52 @@ async function normalizeImageFile(file: File | Blob): Promise<File> {
   } catch (e) {
     throw new Error('Photo format not supported. Try saving as JPG or use a different photo.');
   }
+}
+
+/** Resize image to max dimension and re-encode as JPEG to reduce upload size. Returns original file if skip or error. */
+async function resizeIfLarge(file: File): Promise<File> {
+  if (!file.type.startsWith('image/') || file.size <= LARGE_FILE_BYTES) return file;
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const w = img.width;
+      const h = img.height;
+      if (w <= MAX_UPLOAD_DIM && h <= MAX_UPLOAD_DIM) {
+        resolve(file);
+        return;
+      }
+      const scale = Math.min(1, MAX_UPLOAD_DIM / w, MAX_UPLOAD_DIM / h);
+      const cw = Math.round(w * scale);
+      const ch = Math.round(h * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = cw;
+      canvas.height = ch;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(file);
+        return;
+      }
+      ctx.drawImage(img, 0, 0, cw, ch);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            resolve(file);
+            return;
+          }
+          resolve(new File([blob], file.name.replace(/\.[a-z]+$/i, '.jpg'), { type: 'image/jpeg' }));
+        },
+        'image/jpeg',
+        UPLOAD_JPEG_QUALITY
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(file);
+    };
+    img.src = url;
+  });
 }
 
 /**
@@ -132,7 +182,8 @@ export async function uploadToCloud(userId: string, file: File | Blob, uploadGro
   if (!normalized || !isFileLike(normalized)) {
     throw new Error('Invalid photo. Please try again.');
   }
-  const normFile = normalized instanceof File ? normalized : new File([normalized], 'photo', { type: 'image/jpeg' });
+  let normFile = normalized instanceof File ? normalized : new File([normalized], 'photo', { type: 'image/jpeg' });
+  normFile = await resizeIfLarge(normFile);
   const ext = (normFile.name || 'photo').split('.').pop() || 'jpg';
   const path = `${userId}/${crypto.randomUUID()}.${ext}`;
   const contentType = normFile.type || 'image/jpeg';

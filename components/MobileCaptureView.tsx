@@ -25,9 +25,13 @@ const MobileCaptureView: React.FC = () => {
       const file = files[0];
       if (!file) return;
       const groupId = mode === 'spread' && files[1] ? crypto.randomUUID() : undefined;
-      await uploadToCloud(user.id, file, groupId);
       if (mode === 'spread' && files[1]) {
-        await uploadToCloud(user.id, files[1], groupId);
+        await Promise.all([
+          uploadToCloud(user.id, file, groupId),
+          uploadToCloud(user.id, files[1], groupId),
+        ]);
+      } else {
+        await uploadToCloud(user.id, file, groupId);
       }
       setLastSync(true);
     } catch (err: any) {
@@ -151,7 +155,7 @@ const MobileCaptureView: React.FC = () => {
 
       <div className="flex items-center gap-2 text-[#003366]/60 text-xs mt-4">
         <Cloud className="w-4 h-4" />
-        <span>Open LogExtract on desktop → Import from Cloud to extract.</span>
+        <span>Open LogExtract on desktop → Import from Cloud, then click Extract on the dashboard.</span>
       </div>
     </div>
   );
