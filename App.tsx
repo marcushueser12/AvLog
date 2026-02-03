@@ -82,7 +82,7 @@ const App: React.FC = () => {
   const [showCloudModal, setShowCloudModal] = useState(false);
   const [uploadingToCloud, setUploadingToCloud] = useState(false);
 
-  const { pendingCount: cloudPendingCount } = useCloudUploads(user?.id);
+  const { pendingCount: cloudPendingCount, refetch: refetchCloudUploads } = useCloudUploads(user?.id);
 
   /** Convert data URL (base64) to File for cloud upload (mobile only). */
   const dataUrlToFile = async (dataUrl: string, filename: string): Promise<File> => {
@@ -157,6 +157,7 @@ const App: React.FC = () => {
     setActiveTab('dashboard');
     if (cloudUploadIds.length > 0) {
       markCloudUploadsProcessed(cloudUploadIds).catch((e) => console.warn('Mark cloud processed:', e));
+      refetchCloudUploads();
     }
   };
 
@@ -1094,8 +1095,12 @@ const App: React.FC = () => {
       <LandscapePrompt show={view === 'app' && !showSupportModal && activeTab !== 'dashboard' && activeTab !== 'reviews' && activeTab !== 'tutorial'} />
       <CloudSelectionModal
         open={showCloudModal}
-        onClose={() => setShowCloudModal(false)}
+        onClose={() => {
+          setShowCloudModal(false);
+          refetchCloudUploads();
+        }}
         onImport={handleImportFromCloud}
+        onRefetchCloud={refetchCloudUploads}
         userId={user?.id}
       />
       <div className="min-h-screen flex-1 min-h-0 flex flex-col overflow-hidden bg-[#F4F7FA] text-[#003366]">

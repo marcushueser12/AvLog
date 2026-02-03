@@ -11,6 +11,8 @@ interface CloudSelectionModalProps {
   onClose: () => void;
   /** Called with downloaded image data URLs; app adds a pending scan and user clicks Extract on dashboard. */
   onImport: (images: string[], mode: 'single' | 'spread', cloudUploadIds: string[]) => void;
+  /** Called when cloud list changes (e.g. after delete) so parent badge count updates. */
+  onRefetchCloud?: () => void;
   userId: string | undefined;
 }
 
@@ -40,6 +42,7 @@ const CloudSelectionModal: React.FC<CloudSelectionModalProps> = ({
   open,
   onClose,
   onImport,
+  onRefetchCloud,
   userId,
 }) => {
   const { uploads, loading, error, refetch } = useCloudUploads(userId);
@@ -101,6 +104,7 @@ const CloudSelectionModal: React.FC<CloudSelectionModalProps> = ({
     try {
       await deleteFromCloud(userId, ids);
       refetch();
+      onRefetchCloud?.();
       setSelectedUnitKey(null);
     } catch (err: any) {
       setImportError(err?.message || 'Failed to remove from cloud');
