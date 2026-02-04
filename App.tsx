@@ -1111,7 +1111,7 @@ const App: React.FC = () => {
 
   return (
     <>
-      <LandscapePrompt show={view === 'app' && !showSupportModal && activeTab !== 'dashboard' && activeTab !== 'reviews' && activeTab !== 'tutorial'} />
+      <LandscapePrompt show={view === 'app' && !showSupportModal && activeTab !== 'reviews'} />
       <CloudSelectionModal
         open={showCloudModal}
         onClose={() => {

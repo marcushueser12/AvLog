@@ -21,6 +21,9 @@ const LandscapePrompt: React.FC<LandscapePromptProps> = ({ show }) => {
         <p className="text-[#003366]/70">
           LogExtract works best on desktop or tablet for the full experience.
         </p>
+        <p className="text-sm text-[#003366]/60 mt-3">
+          Mobile update coming soon.
+        </p>
         <div className="text-4xl mt-6">💻</div>
       </div>
     </div>
