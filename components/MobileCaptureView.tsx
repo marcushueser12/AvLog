@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Camera, Cloud, CheckCircle2, Upload } from 'lucide-react';
-import { uploadToCloud } from '../hooks/useCloudUploads';
+import { prepareImageForCloud, uploadToCloud } from '../hooks/useCloudUploads';
 import { useAuth } from '../contexts/AuthContext';
 
 /**
@@ -28,9 +28,11 @@ const MobileCaptureView: React.FC = () => {
       if (!file) return;
       const groupId = mode === 'spread' && files[1] ? crypto.randomUUID() : undefined;
       if (mode === 'spread' && files[1]) {
+        const prepared1 = await prepareImageForCloud(file);
+        const prepared2 = await prepareImageForCloud(files[1]);
         await Promise.all([
-          uploadToCloud(user.id, file, groupId),
-          uploadToCloud(user.id, files[1], groupId),
+          uploadToCloud(user.id, prepared1, groupId, { skipPrepare: true }),
+          uploadToCloud(user.id, prepared2, groupId, { skipPrepare: true }),
         ]);
       } else {
         await uploadToCloud(user.id, file, groupId);

@@ -15,7 +15,7 @@ import SupportRequestModal from './components/SupportRequestModal';
 import Logo from './components/Logo';
 import LandscapePrompt from './components/LandscapePrompt';
 import CloudSelectionModal from './components/CloudSelectionModal';
-import { useCloudUploads, markCloudUploadsProcessed, uploadToCloud, deleteStorageAndMarkProcessed } from './hooks/useCloudUploads';
+import { useCloudUploads, markCloudUploadsProcessed, uploadToCloud, prepareImageForCloud, deleteStorageAndMarkProcessed } from './hooks/useCloudUploads';
 import { useAuth } from './contexts/AuthContext';
 import { extractLogbookEntriesFromPair, extractLogbookEntriesSingle } from './services/geminiService';
 import { generateForeFlightCSV, downloadCSV } from './utils/csvUtils';
@@ -93,7 +93,7 @@ const App: React.FC = () => {
     return new File([blob], filename, { type: blob.type || 'image/jpeg' });
   };
 
-  /** Mobile: upload all pending scan images to cloud (spread pairs get same groupId), then show cards green and remove after delay. */
+  /** Mobile: upload all pending scan images to cloud (spread pairs get same groupId), then show cards green and remove after delay. Spread: sequential prepare, parallel upload. */
   const handleUploadScansToCloud = async () => {
     if (!user) return;
     const toUpload = scans.filter(
@@ -105,10 +105,21 @@ const App: React.FC = () => {
     try {
       for (const scan of toUpload) {
         const groupId = scan.mode === 'spread' && scan.images.length === 2 ? crypto.randomUUID() : undefined;
-        const uploads = scan.images.map((img, i) =>
-          dataUrlToFile(img, `page-${i + 1}.jpg`).then((file) => uploadToCloud(user.id, file, groupId))
-        );
-        await Promise.all(uploads);
+        if (scan.mode === 'spread' && scan.images.length === 2) {
+          const file1 = await dataUrlToFile(scan.images[0], 'page-1.jpg');
+          const file2 = await dataUrlToFile(scan.images[1], 'page-2.jpg');
+          const prepared1 = await prepareImageForCloud(file1);
+          const prepared2 = await prepareImageForCloud(file2);
+          await Promise.all([
+            uploadToCloud(user.id, prepared1, groupId, { skipPrepare: true }),
+            uploadToCloud(user.id, prepared2, groupId, { skipPrepare: true }),
+          ]);
+        } else {
+          const uploads = scan.images.map((img, i) =>
+            dataUrlToFile(img, `page-${i + 1}.jpg`).then((file) => uploadToCloud(user.id, file, groupId))
+          );
+          await Promise.all(uploads);
+        }
         setUploadedToCloudIds((prev) => new Set([...prev, scan.id]));
       }
       const idsToRemove = toUpload.map((s) => s.id);

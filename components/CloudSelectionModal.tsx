@@ -16,6 +16,13 @@ interface CloudSelectionModalProps {
   userId: string | undefined;
 }
 
+/** Normalize group id for stable comparison (API may return string UUID in different forms). */
+function normGid(u: CloudUpload): string | null {
+  const raw = u.upload_group_id ?? (u as { uploadGroupId?: string | null }).uploadGroupId ?? null;
+  if (raw == null || raw === '') return null;
+  return String(raw).trim().toLowerCase();
+}
+
 /** Build units from pending uploads: group by upload_group_id; each single (null group) is one unit, each pair (same id) is one spread unit. */
 function buildUnits(pending: CloudUpload[]): CloudUnit[] {
   const units: CloudUnit[] = [];
@@ -24,11 +31,11 @@ function buildUnits(pending: CloudUpload[]): CloudUnit[] {
     (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   );
   for (const u of sorted) {
-    const gid = u.upload_group_id ?? null;
+    const gid = normGid(u);
     if (gid !== null) {
       if (seenGroupIds.has(gid)) continue;
       seenGroupIds.add(gid);
-      const pair = sorted.filter((p) => p.upload_group_id === gid);
+      const pair = sorted.filter((p) => normGid(p) === gid);
       const uploads = pair.slice(0, 2);
       units.push({ mode: uploads.length === 2 ? 'spread' : 'single', uploads });
     } else {

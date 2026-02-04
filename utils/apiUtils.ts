@@ -115,3 +115,25 @@ export const safeApiCall = async <T>(
     return fallback;
   }
 };
+
+/**
+ * Returns a fetch function that applies a timeout. Used by Supabase client so
+ * storage/API requests don't hang indefinitely on slow or stalled mobile networks.
+ */
+export function createFetchWithTimeout(timeoutMs: number): typeof fetch {
+  return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(input, { ...init, signal: controller.signal });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (error: unknown) {
+      clearTimeout(timeoutId);
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error(`Request timeout after ${timeoutMs}ms`);
+      }
+      throw error;
+    }
+  };
+}
