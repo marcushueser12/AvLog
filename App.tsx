@@ -1331,23 +1331,8 @@ const App: React.FC = () => {
                         >
                           <Plus className="w-4 h-4" /> <span className="hidden sm:inline">New</span> Spread
                         </motion.button>
-                        <motion.button 
-                          onClick={() => setShowCloudModal(true)}
-                          className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-3 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md min-h-[44px] relative"
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          title="Import pages you photographed on your phone"
-                        >
-                          <Cloud className="w-4 h-4" /> Import from Cloud
-                          {cloudPendingCount > 0 && (
-                            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-[#007BFF] text-white text-xs font-bold rounded-full">
-                              {cloudPendingCount > 99 ? '99+' : cloudPendingCount}
-                            </span>
-                          )}
-                        </motion.button>
                       </div>
                     </div>
-                    <p className="text-xs text-[#003366]/60">Tip: Use your phone to photograph logbook pages—they sync to the cloud. Click Import from Cloud to bring them here, then Start Extraction.</p>
                     
                     <motion.button 
                       onClick={processPendingScans}
