@@ -11,6 +11,7 @@ const MobileCaptureView: React.FC = () => {
   const { user } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [lastSync, setLastSync] = useState<boolean | null>(null); // true = success, false = error
+  const [lastSyncMode, setLastSyncMode] = useState<'single' | 'spread' | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleFiles = async (e: React.ChangeEvent<HTMLInputElement>, mode: 'single' | 'spread') => {
@@ -20,6 +21,7 @@ const MobileCaptureView: React.FC = () => {
 
     setUploading(true);
     setLastSync(null);
+    setLastSyncMode(null);
     setErrorMessage(null);
     try {
       const file = files[0];
@@ -34,6 +36,7 @@ const MobileCaptureView: React.FC = () => {
         await uploadToCloud(user.id, file, groupId);
       }
       setLastSync(true);
+      setLastSyncMode(mode);
     } catch (err: any) {
       console.error('Cloud upload failed:', err);
       setLastSync(false);
@@ -71,10 +74,10 @@ const MobileCaptureView: React.FC = () => {
       </div>
 
       {/* Single page */}
-      <div className="w-full max-w-xs space-y-3">
+      <div className={`w-full max-w-xs space-y-3 rounded-2xl p-3 transition-colors ${lastSync === true && lastSyncMode === 'single' ? 'bg-emerald-50 border-2 border-emerald-500' : ''}`}>
         <p className="text-xs font-semibold text-[#003366]/70 uppercase tracking-wide">Single page</p>
         <div className="grid grid-cols-2 gap-3">
-          <label className="flex flex-col items-center justify-center gap-2 p-4 bg-white/80 border-2 border-[#007BFF]/30 rounded-xl shadow-sm hover:bg-[#007BFF]/5 transition-all cursor-pointer min-h-[100px]">
+          <label className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl shadow-sm transition-all cursor-pointer min-h-[100px] ${lastSync === true && lastSyncMode === 'single' ? 'bg-emerald-100/80 border-2 border-emerald-500' : 'bg-white/80 border-2 border-[#007BFF]/30 hover:bg-[#007BFF]/5'}`}>
             <Camera className="w-7 h-7 text-[#007BFF]" />
             <span className="text-xs font-semibold text-[#003366] text-center">Take photo</span>
             <input
@@ -86,7 +89,7 @@ const MobileCaptureView: React.FC = () => {
               onChange={(e) => handleFiles(e, 'single')}
             />
           </label>
-          <label className="flex flex-col items-center justify-center gap-2 p-4 bg-white/80 border-2 border-[#007BFF]/30 rounded-xl shadow-sm hover:bg-[#007BFF]/5 transition-all cursor-pointer min-h-[100px]">
+          <label className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl shadow-sm transition-all cursor-pointer min-h-[100px] ${lastSync === true && lastSyncMode === 'single' ? 'bg-emerald-100/80 border-2 border-emerald-500' : 'bg-white/80 border-2 border-[#007BFF]/30 hover:bg-[#007BFF]/5'}`}>
             <Upload className="w-7 h-7 text-[#007BFF]" />
             <span className="text-xs font-semibold text-[#003366] text-center">Choose from gallery</span>
             <input
@@ -100,11 +103,11 @@ const MobileCaptureView: React.FC = () => {
         </div>
       </div>
 
-      {/* Spread (2 photos) */}
-      <div className="w-full max-w-xs space-y-3">
+      {/* Spread (2 photos) - paired as spread in cloud */}
+      <div className={`w-full max-w-xs space-y-3 rounded-2xl p-3 transition-colors ${lastSync === true && lastSyncMode === 'spread' ? 'bg-emerald-50 border-2 border-emerald-500' : ''}`}>
         <p className="text-xs font-semibold text-[#003366]/70 uppercase tracking-wide">Spread (2 pages)</p>
         <div className="grid grid-cols-2 gap-3">
-          <label className="flex flex-col items-center justify-center gap-2 p-4 bg-white/80 border-2 border-[#007BFF]/30 rounded-xl shadow-sm hover:bg-[#007BFF]/5 transition-all cursor-pointer min-h-[100px]">
+          <label className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl shadow-sm transition-all cursor-pointer min-h-[100px] ${lastSync === true && lastSyncMode === 'spread' ? 'bg-emerald-100/80 border-2 border-emerald-500' : 'bg-white/80 border-2 border-[#007BFF]/30 hover:bg-[#007BFF]/5'}`}>
             <Camera className="w-7 h-7 text-[#007BFF]" />
             <span className="text-xs font-semibold text-[#003366] text-center">Take 2 photos</span>
             <input
@@ -117,7 +120,7 @@ const MobileCaptureView: React.FC = () => {
               onChange={(e) => handleFiles(e, 'spread')}
             />
           </label>
-          <label className="flex flex-col items-center justify-center gap-2 p-4 bg-white/80 border-2 border-[#007BFF]/30 rounded-xl shadow-sm hover:bg-[#007BFF]/5 transition-all cursor-pointer min-h-[100px]">
+          <label className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl shadow-sm transition-all cursor-pointer min-h-[100px] ${lastSync === true && lastSyncMode === 'spread' ? 'bg-emerald-100/80 border-2 border-emerald-500' : 'bg-white/80 border-2 border-[#007BFF]/30 hover:bg-[#007BFF]/5'}`}>
             <Upload className="w-7 h-7 text-[#007BFF]" />
             <span className="text-xs font-semibold text-[#003366] text-center">Choose 2 from gallery</span>
             <input

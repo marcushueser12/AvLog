@@ -81,6 +81,7 @@ const App: React.FC = () => {
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [showCloudModal, setShowCloudModal] = useState(false);
   const [uploadingToCloud, setUploadingToCloud] = useState(false);
+  const [uploadedToCloudIds, setUploadedToCloudIds] = useState<Set<string>>(new Set());
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const { pendingCount: cloudPendingCount, refetch: refetchCloudUploads } = useCloudUploads(user?.id);
@@ -92,7 +93,7 @@ const App: React.FC = () => {
     return new File([blob], filename, { type: blob.type || 'image/jpeg' });
   };
 
-  /** Mobile: upload all pending scan images to cloud, then remove those scans. */
+  /** Mobile: upload all pending scan images to cloud (spread pairs get same groupId), then show cards green and remove after delay. */
   const handleUploadScansToCloud = async () => {
     if (!user) return;
     const toUpload = scans.filter(
@@ -100,6 +101,7 @@ const App: React.FC = () => {
     );
     if (toUpload.length === 0) return;
     setUploadingToCloud(true);
+    setUploadedToCloudIds(new Set());
     try {
       for (const scan of toUpload) {
         const groupId = scan.mode === 'spread' && scan.images.length === 2 ? crypto.randomUUID() : undefined;
@@ -107,8 +109,13 @@ const App: React.FC = () => {
           dataUrlToFile(img, `page-${i + 1}.jpg`).then((file) => uploadToCloud(user.id, file, groupId))
         );
         await Promise.all(uploads);
-        deleteScan(scan.id);
+        setUploadedToCloudIds((prev) => new Set([...prev, scan.id]));
       }
+      const idsToRemove = toUpload.map((s) => s.id);
+      setTimeout(() => {
+        setScans((prev) => prev.filter((s) => !idsToRemove.includes(s.id)));
+        setUploadedToCloudIds(new Set());
+      }, 1800);
     } catch (err) {
       console.error('Cloud upload failed:', err);
     } finally {
@@ -1292,7 +1299,7 @@ const App: React.FC = () => {
                 <div className="flex flex-col gap-4">
                   <div>
                     <h3 className="text-lg md:text-xl font-bold text-[#003366]">Staging Area</h3>
-                    <p className="text-xs md:text-sm text-[#003366]/70">The software verifies row alignment and image clarity before extraction. You can also upload logbook photos from your phone to the cloud, then import them here to extract.</p>
+                    <p className="text-xs md:text-sm text-[#003366]/70">The software verifies row alignment and image clarity before extraction.</p>
                   </div>
                     <div className="space-y-3">
                     <div className="flex flex-col sm:flex-row gap-3">
@@ -1798,14 +1805,18 @@ const App: React.FC = () => {
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-3">
-                    {scans.filter(s => s.status !== 'verified').map(scan => (
-                      <motion.div key={scan.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative flex flex-col bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-xl overflow-hidden group hover:border-[#007BFF]/30 hover:shadow-lg transition-all shadow-sm">
-                        <div className="p-2 border-b border-[#E2E8F0] flex items-center justify-between bg-[#F4F7FA]/50">
+                    {scans.filter(s => s.status !== 'verified').map(scan => {
+                      const justUploaded = uploadedToCloudIds.has(scan.id);
+                      return (
+                      <motion.div key={scan.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`relative flex flex-col backdrop-blur-sm rounded-xl overflow-hidden group transition-all shadow-sm ${justUploaded ? 'bg-emerald-50 border-2 border-emerald-500 shadow-emerald-200' : 'bg-white/80 border border-[#E2E8F0] hover:border-[#007BFF]/30 hover:shadow-lg'}`}>
+                        <div className={`p-2 border-b flex items-center justify-between ${justUploaded ? 'border-emerald-300 bg-emerald-100/50' : 'border-[#E2E8F0] bg-[#F4F7FA]/50'}`}>
                           <div className="flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                            <span className="text-[8px] font-bold uppercase tracking-widest text-[#003366]/70">{scan.mode === 'single' ? 'Single' : 'Spread'}</span>
+                            <div className={`w-1.5 h-1.5 rounded-full ${justUploaded ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                            <span className="text-[8px] font-bold uppercase tracking-widest text-[#003366]/70">{justUploaded ? 'Uploaded' : (scan.mode === 'single' ? 'Single' : 'Spread')}</span>
                           </div>
-                          <button onClick={() => deleteScan(scan.id)} className="p-0.5 text-[#003366]/60 hover:text-red-500 transition-colors"><Trash2 className="w-3 h-3" /></button>
+                          {!justUploaded && (
+                            <button onClick={() => deleteScan(scan.id)} className="p-0.5 text-[#003366]/60 hover:text-red-500 transition-colors"><Trash2 className="w-3 h-3" /></button>
+                          )}
                         </div>
                         <div className="flex-1 p-2 grid gap-2" style={{ gridTemplateColumns: scan.mode === 'spread' ? '1fr 1fr' : '1fr' }}>
                           {[...Array(scan.mode === 'spread' ? 2 : 1)].map((_, i) => (
@@ -1823,7 +1834,7 @@ const App: React.FC = () => {
                           ))}
                         </div>
                       </motion.div>
-                    ))}
+                    );})}
                   </div>
                 )}
                 <div className="flex items-center gap-2 text-[#003366]/60 text-xs">
@@ -1874,14 +1885,18 @@ const App: React.FC = () => {
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-3">
-                    {scans.filter(s => s.status !== 'verified').map(scan => (
-                      <motion.div key={scan.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative flex flex-col bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-xl overflow-hidden group hover:border-[#007BFF]/30 hover:shadow-lg transition-all shadow-sm">
-                        <div className="p-2 border-b border-[#E2E8F0] flex items-center justify-between bg-[#F4F7FA]/50">
+                    {scans.filter(s => s.status !== 'verified').map(scan => {
+                      const justUploaded = uploadedToCloudIds.has(scan.id);
+                      return (
+                      <motion.div key={scan.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`relative flex flex-col backdrop-blur-sm rounded-xl overflow-hidden group transition-all shadow-sm ${justUploaded ? 'bg-emerald-50 border-2 border-emerald-500 shadow-emerald-200' : 'bg-white/80 border border-[#E2E8F0] hover:border-[#007BFF]/30 hover:shadow-lg'}`}>
+                        <div className={`p-2 border-b flex items-center justify-between ${justUploaded ? 'border-emerald-300 bg-emerald-100/50' : 'border-[#E2E8F0] bg-[#F4F7FA]/50'}`}>
                           <div className="flex items-center gap-1.5">
-                            <div className={`w-1.5 h-1.5 rounded-full ${scan.status === 'completed' ? 'bg-emerald-500' : scan.status === 'processing' ? 'bg-[#007BFF] animate-pulse' : 'bg-amber-500'}`}></div>
-                            <span className="text-[8px] font-bold uppercase tracking-widest text-[#003366]/70">{scan.mode === 'single' ? 'Single' : 'Spread'}</span>
+                            <div className={`w-1.5 h-1.5 rounded-full ${justUploaded ? 'bg-emerald-500' : scan.status === 'completed' ? 'bg-emerald-500' : scan.status === 'processing' ? 'bg-[#007BFF] animate-pulse' : 'bg-amber-500'}`}></div>
+                            <span className="text-[8px] font-bold uppercase tracking-widest text-[#003366]/70">{justUploaded ? 'Uploaded' : (scan.mode === 'single' ? 'Single' : 'Spread')}</span>
                           </div>
-                          <button onClick={() => deleteScan(scan.id)} className="p-0.5 text-[#003366]/60 hover:text-red-500 transition-colors"><Trash2 className="w-3 h-3" /></button>
+                          {!justUploaded && (
+                            <button onClick={() => deleteScan(scan.id)} className="p-0.5 text-[#003366]/60 hover:text-red-500 transition-colors"><Trash2 className="w-3 h-3" /></button>
+                          )}
                         </div>
                         <div className="flex-1 p-2 grid gap-2" style={{ gridTemplateColumns: scan.mode === 'spread' ? '1fr 1fr' : '1fr' }}>
                           {[...Array(scan.mode === 'spread' ? 2 : 1)].map((_, i) => (
@@ -1906,7 +1921,7 @@ const App: React.FC = () => {
                           </div>
                         )}
                       </motion.div>
-                    ))}
+                    );})}
                   </div>
                 )}
                 {entries.filter(e => !e.isVerified).length > 0 && (
