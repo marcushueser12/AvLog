@@ -1,9 +1,11 @@
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
+import { ClerkProvider } from '@clerk/clerk-react';
 import { AuthProvider } from './contexts/AuthContext';
+
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 // Error boundary for mount errors - sanitize error messages to prevent XSS
 window.addEventListener('error', (event) => {
@@ -41,12 +43,21 @@ if (!rootElement) {
 
 try {
   const root = ReactDOM.createRoot(rootElement);
-  root.render(
+  const app = (
     <React.StrictMode>
       <AuthProvider>
         <App />
       </AuthProvider>
     </React.StrictMode>
+  );
+  root.render(
+    PUBLISHABLE_KEY ? (
+      <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+        {app}
+      </ClerkProvider>
+    ) : (
+      app
+    )
   );
 } catch (error) {
   console.error('Failed to mount React app:', error);
