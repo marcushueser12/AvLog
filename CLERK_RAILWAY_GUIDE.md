@@ -127,13 +127,27 @@ If the **script** loads but requests to `clerk.logextract.co/v1/client` or `.../
    - If you use a custom domain (e.g. `clerk.logextract.co`), remove it so the instance uses Clerk’s default, or note the **default** instance URL shown (e.g. `https://<slug>.clerk.accounts.dev`).
    - That default URL is your Frontend API base (e.g. `https://pleasant-dog-12.clerk.accounts.dev`).
 
-2. **Set it in your app**
-   - Add this env var where the frontend is built (Vercel/Railway):
-     - **Name:** `VITE_CLERK_FAPI_URL`
-     - **Value:** your default Clerk Frontend API URL (e.g. `https://YOUR-SLUG.clerk.accounts.dev`).
-   - Redeploy the frontend so the new build is used.
+2. **Set it in your app** (use **one** of these):
 
-The app will then send `/v1/client` and `/v1/environment` to Clerk’s default host instead of your custom domain. You can leave the custom domain removed in the Dashboard, or re-add it later once the proxy for `clerk.logextract.co` is working.
+   **Option A – Env var (recommended)**  
+   Add the variable **where the frontend is built** (e.g. Vercel → your project → Settings → Environment Variables), **not** only on the backend (Railway):
+   - **Name:** `VITE_CLERK_FAPI_URL`
+   - **Value:** your default Clerk Frontend API URL (e.g. `https://YOUR-SLUG.clerk.accounts.dev`).  
+   Then trigger a **new build** (e.g. Redeploy on Vercel). Vite bakes `VITE_*` in at build time, so a new deploy is required.
+
+   **Option B – In-code fallback (if env var doesn’t work)**  
+   If requests still go to `clerk.logextract.co`, the build may not see the env var (e.g. wrong project, cache, or backend-only env). Use the fallback in code:
+   - Open **`index.tsx`** and find:  
+     `const CLERK_FAPI_FALLBACK_IN_CODE: string | undefined = undefined;`
+   - Set it to your default Clerk URL, e.g.:  
+     `const CLERK_FAPI_FALLBACK_IN_CODE = 'https://YOUR-SLUG.clerk.accounts.dev';`  
+     (replace `YOUR-SLUG` with the slug from Clerk Dashboard → Configure → Domains.)
+   - Commit and push, then redeploy the frontend. Requests will go to Clerk’s default host instead of `clerk.logextract.co`.
+
+3. **Where to get the slug**  
+   In Clerk Dashboard → **Configure** → **Domains**, check the **Frontend API** section. If only the custom domain is shown, try **Support** (support@clerk.com) to remove or reset the custom domain so the default `https://<slug>.clerk.accounts.dev` is available or shown.
+
+The app will then send `/v1/client` and `/v1/environment` to Clerk’s default host instead of your custom domain.
 
 ---
 

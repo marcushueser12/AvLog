@@ -62,7 +62,65 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here
 
 Use the same URL and anon key for both backend and frontend; use the service role key only on the backend. Never commit real keys; use placeholders in examples.
 
-### 2.3 Database and RLS
+### 2.3 Add Clerk as a Third-Party Auth provider in Supabase (so Clerk and Supabase work together)
+
+The **URL** Supabase asks for is your **Clerk domain** (the Frontend API host), not a redirect or callback URL.
+
+**Step 1 – Get the Clerk domain**
+
+1. In **Clerk Dashboard** go to the **Supabase integration** page:  
+   [dashboard.clerk.com/setup/supabase](https://dashboard.clerk.com/setup/supabase)
+2. Click **Activate Supabase integration** (or follow the steps there).
+3. The page will show a **Clerk domain** (e.g. `something.clerk.accounts.dev`). **Copy it.**  
+   - If it shows a custom domain like `clerk.logextract.co` and that domain doesn’t work, use the **default** Clerk domain for your instance if you have it (or ask Clerk support). Supabase must be able to reach this domain to verify Clerk JWTs.
+
+**Step 2 – Add Clerk in Supabase**
+
+1. In **Supabase Dashboard** go to **Authentication** → **Third-party** (or **Sign In / Up** → third-party).
+2. Click **Add provider** and choose **Clerk**.
+3. In the **URL** (or **Clerk domain**) field, paste the **Clerk domain** from Step 1 (e.g. `something.clerk.accounts.dev`).  
+   - Use the **host only**, no `https://` or path (e.g. `pleasant-dog-12.clerk.accounts.dev`).
+4. Save.
+
+After this, Supabase will accept **Clerk session tokens** as valid auth.
+
+**Using Supabase with Clerk’s token (seamless use from the frontend)**  
+When Clerk is added as a third-party provider in Supabase, you can create a Supabase client that sends the Clerk session token on each request. Supabase will then treat the request as authenticated and apply RLS using the Clerk JWT claims (e.g. `auth.jwt() ->> 'sub'` is the Clerk user ID). Example:
+
+```ts
+import { createClient } from '@supabase/supabase-js';
+import { useSession } from '@clerk/clerk-react';
+
+// Inside a component (React):
+const { session } = useSession();
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY,
+  {
+    global: {
+      fetch: (url, options = {}) => {
+        return session?.getToken().then((token) => {
+          return fetch(url, {
+            ...options,
+            headers: {
+              ...options.headers,
+              Authorization: token ? `Bearer ${token}` : '',
+            },
+          });
+        }) ?? fetch(url, options);
+      },
+    },
+  }
+);
+```
+
+Or use Supabase’s `accessToken` option if your `@supabase/supabase-js` version supports it (see [Supabase third-party Clerk docs](https://supabase.com/docs/guides/auth/third-party/clerk)).  
+
+**Note:** Your Express backend currently expects a **Supabase** access token (from Supabase Auth). If you only use Clerk + Supabase third-party auth and the client above, API calls that go to your **Express** backend still need a token it understands. To make the backend work with Clerk, you’d either implement a **Clerk → Supabase session exchange** (backend issues a Supabase session when given a Clerk JWT) or change the backend to verify **Clerk** JWTs and use Clerk user IDs for authorization.
+
+---
+
+### 2.4 Database and RLS
 
 - Run your existing Supabase migrations so tables and RLS policies are in place.
 - Backend auth middleware expects a **Supabase JWT** in the `Authorization: Bearer <token>` header. That token comes from either:

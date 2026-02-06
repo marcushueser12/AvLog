@@ -10,10 +10,13 @@ const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 const CLERK_JS_URL =
   import.meta.env.VITE_CLERK_JS_URL ||
   'https://unpkg.com/@clerk/clerk-js@5/dist/clerk.browser.js';
-// When your Clerk instance uses a custom domain (e.g. clerk.logextract.co) that isn't reachable,
-// set this to your default Clerk Frontend API URL so /v1/client and /v1/environment go to Clerk's servers.
-// Get it from Clerk Dashboard → Configure → Domains (default instance URL) or after removing the custom domain.
-const CLERK_FAPI_URL = import.meta.env.VITE_CLERK_FAPI_URL;
+// When your Clerk instance uses a custom domain (e.g. clerk.logextract.co) that isn't reachable:
+// 1) Set VITE_CLERK_FAPI_URL in your *frontend* build env (Vercel/Railway) to your default Clerk URL, then redeploy.
+// 2) Or set the fallback below to your default Clerk Frontend API URL (Dashboard → Configure → Domains), then redeploy.
+//    Example: 'https://pleasant-dog-12.clerk.accounts.dev' (replace with your instance slug).
+const CLERK_FAPI_FALLBACK_IN_CODE: string | undefined = undefined;
+const CLERK_FAPI_URL =
+  import.meta.env.VITE_CLERK_FAPI_URL || CLERK_FAPI_FALLBACK_IN_CODE || undefined;
 
 // Error boundary for mount errors - sanitize error messages to prevent XSS
 window.addEventListener('error', (event) => {
