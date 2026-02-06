@@ -17,13 +17,6 @@ import LandscapePrompt from './components/LandscapePrompt';
 import CloudSelectionModal from './components/CloudSelectionModal';
 import { useCloudUploads, markCloudUploadsProcessed, uploadToCloud, prepareImageForCloud, deleteStorageAndMarkProcessed } from './hooks/useCloudUploads';
 import { useAuth } from './contexts/AuthContext';
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  SignUpButton,
-  UserButton,
-} from '@clerk/clerk-react';
 import { extractLogbookEntriesFromPair, extractLogbookEntriesSingle } from './services/geminiService';
 import { generateForeFlightCSV, downloadCSV } from './utils/csvUtils';
 import { reconcileFlightTimes, reconcileIFRData, normalizeDateSeparator, normalizeAircraftId } from './utils/logbookUtils';
@@ -35,7 +28,6 @@ import { Plane, Grid3x3, FileText, Clock, Home, LogOut, Download, Plus, Trash2, 
 import { Analytics } from '@vercel/analytics/react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-const HAS_CLERK = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 const App: React.FC = () => {
   const { user, loading: authLoading, getAccessToken, signOut } = useAuth();
@@ -1240,41 +1232,12 @@ const App: React.FC = () => {
                 </button>
               </>
             ) : (
-              <>
-                {HAS_CLERK ? (
-                  <>
-                    <SignedOut>
-                      <SignInButton mode="modal">
-                        <button className="px-3 py-2 sm:py-1.5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-lg text-sm font-semibold transition-all border border-[#003366] min-h-[44px] sm:min-h-0">
-                          Sign In
-                        </button>
-                      </SignInButton>
-                      <SignUpButton mode="modal">
-                        <button className="px-3 py-2 sm:py-1.5 bg-[#007BFF] hover:bg-[#007BFF]/90 text-white rounded-lg text-sm font-semibold transition-all border border-[#007BFF] min-h-[44px] sm:min-h-0">
-                          Sign Up
-                        </button>
-                      </SignUpButton>
-                      <button
-                        onClick={() => setShowAuthModal(true)}
-                        className="px-2 py-1.5 text-xs text-[#003366]/70 hover:text-[#003366] underline"
-                        title="Sign in with existing Supabase account"
-                      >
-                        Existing account?
-                      </button>
-                    </SignedOut>
-                    <SignedIn>
-                      <UserButton afterSignOutUrl="/" />
-                    </SignedIn>
-                  </>
-                ) : (
-                  <button
-                    onClick={() => setShowAuthModal(true)}
-                    className="px-3 py-2 sm:py-1.5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-lg text-sm font-semibold transition-all border border-[#003366] min-h-[44px] sm:min-h-0"
-                  >
-                    Sign In
-                  </button>
-                )}
-              </>
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="px-3 py-2 sm:py-1.5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-lg text-sm font-semibold transition-all border border-[#003366] min-h-[44px] sm:min-h-0"
+              >
+                Sign In
+              </button>
             )}
             <motion.button 
               onClick={handleExportModalOpen}

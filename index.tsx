@@ -2,21 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
-import { ClerkProvider } from '@clerk/clerk-react';
 import { AuthProvider } from './contexts/AuthContext';
-
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-// Force Clerk to load its script from a working CDN (avoids custom domain proxy failures)
-const CLERK_JS_URL =
-  import.meta.env.VITE_CLERK_JS_URL ||
-  'https://unpkg.com/@clerk/clerk-js@5/dist/clerk.browser.js';
-// When your Clerk instance uses a custom domain (e.g. clerk.logextract.co) that isn't reachable:
-// 1) Set VITE_CLERK_FAPI_URL in your *frontend* build env (Vercel/Railway) to your default Clerk URL, then redeploy.
-// 2) Or set the fallback below to your default Clerk Frontend API URL (Dashboard → Configure → Domains), then redeploy.
-//    Example: 'https://pleasant-dog-12.clerk.accounts.dev' (replace with your instance slug).
-const CLERK_FAPI_FALLBACK_IN_CODE: string | undefined = undefined;
-const CLERK_FAPI_URL =
-  import.meta.env.VITE_CLERK_FAPI_URL || CLERK_FAPI_FALLBACK_IN_CODE || undefined;
 
 // Error boundary for mount errors - sanitize error messages to prevent XSS
 window.addEventListener('error', (event) => {
@@ -54,26 +40,12 @@ if (!rootElement) {
 
 try {
   const root = ReactDOM.createRoot(rootElement);
-  const app = (
+  root.render(
     <React.StrictMode>
       <AuthProvider>
         <App />
       </AuthProvider>
     </React.StrictMode>
-  );
-  root.render(
-    PUBLISHABLE_KEY ? (
-      <ClerkProvider
-        publishableKey={PUBLISHABLE_KEY}
-        clerkJSUrl={CLERK_JS_URL}
-        proxyUrl={CLERK_FAPI_URL || undefined}
-        afterSignOutUrl="/"
-      >
-        {app}
-      </ClerkProvider>
-    ) : (
-      app
-    )
   );
 } catch (error) {
   console.error('Failed to mount React app:', error);
