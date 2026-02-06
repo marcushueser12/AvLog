@@ -116,7 +116,24 @@ If you see errors like:
 2. If you see a custom Frontend API domain (e.g. `clerk.logextract.co`), remove it or fix the proxy so it forwards to Clerk’s servers.
 3. After that, you can remove the `clerkJSUrl` override in code if you prefer to use Clerk’s default script URL.
 
-**Override script URL yourself:** You can set `VITE_CLERK_JS_URL` (e.g. in Vercel/Railway) to any URL that serves `@clerk/clerk-js` (e.g. `https://unpkg.com/@clerk/clerk-js@5/dist/clerk.browser.js`). The app uses this when set; otherwise it uses the same unpkg URL by default.
+**Override script URL yourself:** Set `VITE_CLERK_JS_URL` to any URL that serves `@clerk/clerk-js` if needed.
+
+### Fix: `/v1/client` and `/v1/environment` calling clerk.logextract.co (ERR_CONNECTION_RESET)
+
+If the **script** loads but requests to `clerk.logextract.co/v1/client` or `.../v1/environment` fail with **ERR_CONNECTION_RESET**, your publishable key is tied to that custom domain and the SDK is using it for API calls. Override the Frontend API URL:
+
+1. **Get your default Clerk Frontend API URL**
+   - In **Clerk Dashboard** go to **Configure** → **Domains**.
+   - If you use a custom domain (e.g. `clerk.logextract.co`), remove it so the instance uses Clerk’s default, or note the **default** instance URL shown (e.g. `https://<slug>.clerk.accounts.dev`).
+   - That default URL is your Frontend API base (e.g. `https://pleasant-dog-12.clerk.accounts.dev`).
+
+2. **Set it in your app**
+   - Add this env var where the frontend is built (Vercel/Railway):
+     - **Name:** `VITE_CLERK_FAPI_URL`
+     - **Value:** your default Clerk Frontend API URL (e.g. `https://YOUR-SLUG.clerk.accounts.dev`).
+   - Redeploy the frontend so the new build is used.
+
+The app will then send `/v1/client` and `/v1/environment` to Clerk’s default host instead of your custom domain. You can leave the custom domain removed in the Dashboard, or re-add it later once the proxy for `clerk.logextract.co` is working.
 
 ---
 
