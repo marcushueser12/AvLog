@@ -99,8 +99,30 @@ If you still see only the old “Sign In” button, the frontend was built witho
 
 ---
 
-## 7. References
+## 7. Troubleshooting: "Failed to load Clerk" / ERR_CONNECTION_RESET
+
+If you see errors like:
+
+- `GET https://clerk.logextract.co/npm/@clerk/clerk-js@5/dist/clerk.browser.js net::ERR_CONNECTION_RESET`
+- `Clerk: Failed to load Clerk, failed to load script` (`failed_to_load_clerk_js`)
+
+**Cause:** Your Clerk instance is set to use a **custom domain** (e.g. `clerk.logextract.co`) for the Frontend API. The SDK then tries to load the Clerk script from that domain. If that host isn’t correctly proxying to Clerk (or DNS/SSL is broken), the request fails.
+
+**Fix (already in code):** The app now forces the Clerk script to load from a working CDN (unpkg) via `clerkJSUrl`. Redeploy the frontend so the new build is live; the error should stop.
+
+**Optional – fix in Clerk Dashboard:** To use Clerk’s default domain instead of a custom one:
+
+1. In **Clerk Dashboard** go to **Configure** → **Domains** (or **Paths**).
+2. If you see a custom Frontend API domain (e.g. `clerk.logextract.co`), remove it or fix the proxy so it forwards to Clerk’s servers.
+3. After that, you can remove the `clerkJSUrl` override in code if you prefer to use Clerk’s default script URL.
+
+**Override script URL yourself:** You can set `VITE_CLERK_JS_URL` (e.g. in Vercel/Railway) to any URL that serves `@clerk/clerk-js` (e.g. `https://unpkg.com/@clerk/clerk-js@5/dist/clerk.browser.js`). The app uses this when set; otherwise it uses the same unpkg URL by default.
+
+---
+
+## 8. References
 
 - [Clerk React Quickstart](https://clerk.com/docs/quickstarts/react)
 - [Clerk environment variables](https://clerk.com/docs/guides/development/clerk-environment-variables)
 - Full Clerk + Supabase + user migration: **`CLERK_SUPABASE_SETUP.md`**
+- Script loading: [Clerk troubleshooting](https://clerk.com/docs/guides/development/troubleshooting/script-loading)

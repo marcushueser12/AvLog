@@ -6,6 +6,10 @@ import { ClerkProvider } from '@clerk/clerk-react';
 import { AuthProvider } from './contexts/AuthContext';
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+// Force Clerk to load its script from a working CDN (avoids custom domain proxy failures, e.g. clerk.logextract.co)
+const CLERK_JS_URL =
+  import.meta.env.VITE_CLERK_JS_URL ||
+  'https://unpkg.com/@clerk/clerk-js@5/dist/clerk.browser.js';
 
 // Error boundary for mount errors - sanitize error messages to prevent XSS
 window.addEventListener('error', (event) => {
@@ -52,7 +56,11 @@ try {
   );
   root.render(
     PUBLISHABLE_KEY ? (
-      <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+      <ClerkProvider
+        publishableKey={PUBLISHABLE_KEY}
+        clerkJSUrl={CLERK_JS_URL}
+        afterSignOutUrl="/"
+      >
         {app}
       </ClerkProvider>
     ) : (
