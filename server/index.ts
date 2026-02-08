@@ -272,7 +272,11 @@ import verifiedRoutes from './routes/verified.js';
 import paymentRoutes from './routes/payments.js';
 import aircraftRoutes from './routes/aircraft.js';
 import supportRoutes from './routes/support.js';
+import cronRoutes from './routes/cron.js';
 import { adminLimiter, webhookLimiter, authenticatedLimiter } from './middleware/security.js';
+
+// Cron routes (protected by CRON_SECRET; call from Vercel Cron or Railway cron)
+app.use('/api/cron', cronRoutes);
 
 // Admin routes (protected by secret token + rate limiting)
 app.use('/api/admin', adminLimiter, adminRoutes);
