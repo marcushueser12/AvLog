@@ -112,4 +112,31 @@ router.post('/no-logbook-reminder', verifyCronSecret, async (req, res) => {
   }
 });
 
+/**
+ * POST /api/cron/no-logbook-reminder-test
+ *
+ * One-time test: send the no-logbook reminder email to a specific address.
+ * No eligibility checks, no DB updates. Same CRON_SECRET as the real cron.
+ * Query or body: to=your@email.com
+ */
+router.post('/no-logbook-reminder-test', verifyCronSecret, async (req, res) => {
+  try {
+    if (!isResendConfigured()) {
+      return res.status(503).json({ ok: false, error: 'Resend not configured (RESEND_API_KEY)' });
+    }
+    const to = (req.query.to as string) || (req.body?.to as string);
+    if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+      return res.status(400).json({ error: 'Provide to=your@email.com in query or body' });
+    }
+    const result = await sendNoLogbookReminderEmail(to);
+    if (!result.success) {
+      return res.status(500).json({ ok: false, error: result.error });
+    }
+    res.json({ ok: true, message: `Test email sent to ${to}` });
+  } catch (e: any) {
+    console.error('Cron no-logbook-reminder-test:', e);
+    res.status(500).json({ ok: false, error: e?.message || 'Internal error' });
+  }
+});
+
 export default router;
