@@ -1849,24 +1849,25 @@ const App: React.FC = () => {
                             )}
                             {isExpanded && (
                               <>
-                                <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden p-1">
-                                  <EntryEditor entries={scanEntries} readOnly={!(scan.creditApproved ?? true)} images={scan.images} rotations={scan.imageRotations} onUpdate={handleUpdateEntry} onAircraftIdChange={handleAircraftIdChange} forceTableOnMobile={false} twoColumnCards={isMobile} onRotationChange={(imageIndex, newRotation) => { setScans(prev => prev.map(s => { if (s.id === scan.id) { const newRotations = [...(s.imageRotations || [0, 0])]; newRotations[imageIndex] = newRotation; return { ...s, imageRotations: newRotations }; } return s; })); }} onDelete={(id) => { setEntries(prev => prev.filter(e => e.id !== id)); }} onAdd={() => { const newEntry: LogbookEntry = { id: `manual-${Date.now()}`, scanId: scan.id, date: scanEntries.length > 0 ? scanEntries[scanEntries.length - 1].date : new Date().toISOString().slice(0, 10), aircraftId: "", aircraftType: "", from: "", to: "", route: "", totalTime: "0.0", day: "0.0", night: "0.0", crossCountry: "", pic: "", solo: "", sic: "", dualReceived: "", dualGiven: "", instrument: "", simulatedInstrument: "", approaches: "", landingsDay: "", landingsNight: "", groundReceived: "", groundGiven: "", comments: "", isVerified: false }; setEntries(prev => [...prev, newEntry]); }} onUpdateApproaches={handleUpdateApproaches} />
-                                  <div className="p-2 bg-slate-950/50 flex flex-wrap items-center justify-between gap-2">
+                                <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                                  <div className="px-2 py-1.5 bg-slate-950/80 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2">
                                     {(scan.creditApproved ?? true) ? (
-                                      <label className="flex items-center gap-1.5 cursor-pointer">
+                                      <label className="flex items-center gap-1.5 cursor-pointer shrink-0">
                                         <input type="checkbox" checked={isVerified} onChange={(e) => handleVerifyScan(scan.id, e.target.checked)} disabled={savingVerified.has(scan.id)} className="w-4 h-4 rounded border-2 border-slate-600 bg-slate-800 text-emerald-600 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-0 disabled:opacity-50" />
-                                        <span className="text-[10px] font-bold text-slate-400">{savingVerified.has(scan.id) ? 'Saving...' : 'Mark as Verified'}</span>
+                                        <span className="text-[10px] font-bold text-slate-400">{savingVerified.has(scan.id) ? 'Saving...' : 'Verify'}</span>
                                       </label>
                                     ) : (
-                                      <button onClick={() => handleApproveScan(scan.id)} disabled={userCredits !== null && userCredits < 1} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${userCredits !== null && userCredits >= 1 ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-slate-600 text-slate-400 cursor-not-allowed'}`}>{userCredits !== null && userCredits < 1 ? 'Need 1 credit to edit' : 'Approve & start editing (1 credit)'}</button>
+                                      <button onClick={() => handleApproveScan(scan.id)} disabled={userCredits !== null && userCredits < 1} className={`px-2 py-1 rounded-lg text-[10px] font-bold shrink-0 ${userCredits !== null && userCredits >= 1 ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-slate-600 text-slate-400 cursor-not-allowed'}`}>{userCredits !== null && userCredits < 1 ? 'Need 1 credit' : 'Approve (1)'}</button>
                                     )}
-                                    <div className="flex items-center gap-1.5">
-                                      <button onClick={() => deleteScan(scan.id)} className="px-2 py-1 text-red-400/90 hover:text-red-400 hover:bg-red-500/10 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1" title="Remove this page from the queue">
-                                        <Trash2 className="w-3 h-3" />
-                                        Delete page
-                                      </button>
+                                    <div className="flex items-center gap-1.5 shrink-0">
                                       <button onClick={() => toggleScanExpand(scan.id)} className="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-[10px] font-bold transition-all">Collapse</button>
+                                      <button onClick={() => deleteScan(scan.id)} className="p-1.5 text-red-400/90 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all" title="Remove this page">
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
                                     </div>
+                                  </div>
+                                  <div className="p-1">
+                                    <EntryEditor entries={scanEntries} readOnly={!(scan.creditApproved ?? true)} images={scan.images} rotations={scan.imageRotations} onUpdate={handleUpdateEntry} onAircraftIdChange={handleAircraftIdChange} forceTableOnMobile={false} twoColumnCards={isMobile} onRotationChange={(imageIndex, newRotation) => { setScans(prev => prev.map(s => { if (s.id === scan.id) { const newRotations = [...(s.imageRotations || [0, 0])]; newRotations[imageIndex] = newRotation; return { ...s, imageRotations: newRotations }; } return s; })); }} onDelete={(id) => { setEntries(prev => prev.filter(e => e.id !== id)); }} onAdd={() => { const newEntry: LogbookEntry = { id: `manual-${Date.now()}`, scanId: scan.id, date: scanEntries.length > 0 ? scanEntries[scanEntries.length - 1].date : new Date().toISOString().slice(0, 10), aircraftId: "", aircraftType: "", from: "", to: "", route: "", totalTime: "0.0", day: "0.0", night: "0.0", crossCountry: "", pic: "", solo: "", sic: "", dualReceived: "", dualGiven: "", instrument: "", simulatedInstrument: "", approaches: "", landingsDay: "", landingsNight: "", groundReceived: "", groundGiven: "", comments: "", isVerified: false }; setEntries(prev => [...prev, newEntry]); }} onUpdateApproaches={handleUpdateApproaches} />
                                   </div>
                                 </div>
                               </>
