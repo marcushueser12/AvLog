@@ -7,6 +7,7 @@ import EntryEditor from './EntryEditor';
 import NewAircraftModal from './NewAircraftModal';
 import { reconcileFlightTimes, reconcileIFRData, normalizeAircraftId } from '../utils/logbookUtils';
 import { fetchWithRetry } from '../utils/apiUtils';
+import { useMobile } from '../utils/useMobile';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -25,6 +26,7 @@ interface PermanentLogTabProps {
 
 const PermanentLogTab: React.FC<PermanentLogTabProps> = ({ onPermanentLogChange }) => {
   const { user, loading: authLoading, getAccessToken } = useAuth();
+  const isMobile = useMobile();
   const [scans, setScans] = useState<VerifiedScan[]>([]);
   const [selectedScan, setSelectedScan] = useState<string | null>(null);
   const [entries, setEntries] = useState<Record<string, LogbookEntry[]>>({});
@@ -903,7 +905,8 @@ const PermanentLogTab: React.FC<PermanentLogTabProps> = ({ onPermanentLogChange 
                         entries={currentEntries}
                         images={[]} // No images stored - just data
                         rotations={[0, 0]}
-                        forceTableOnMobile={true}
+                        forceTableOnMobile={false}
+                        twoColumnCards={isMobile}
                         readOnly={!isEditingScan}
                         onAircraftIdChange={handleAircraftIdChange}
                         onUpdate={(entryId, field, value) => {
