@@ -11,8 +11,22 @@ export function isResendConfigured(): boolean {
   return Boolean(apiKey && resend);
 }
 
+const RESEND_RATE_LIMIT_RPS = 2;
+const MIN_DELAY_MS = Math.ceil(1000 / RESEND_RATE_LIMIT_RPS); // 500ms between sends
+let lastSendTime = 0;
+
+async function throttleResend(): Promise<void> {
+  const now = Date.now();
+  const elapsed = now - lastSendTime;
+  if (elapsed < MIN_DELAY_MS) {
+    await new Promise((r) => setTimeout(r, MIN_DELAY_MS - elapsed));
+  }
+  lastSendTime = Date.now();
+}
+
 /**
  * Send a single email. Use for transactional and campaign emails.
+ * Throttles to stay within Resend's 2 requests/second limit.
  */
 export async function sendEmail(params: {
   to: string | string[];
@@ -25,19 +39,30 @@ export async function sendEmail(params: {
     console.warn('Resend not configured (RESEND_API_KEY missing). Skipping send.');
     return { success: false, error: 'Resend not configured' };
   }
+  await throttleResend();
   const to = Array.isArray(params.to) ? params.to : [params.to];
-  const { data, error } = await resend.emails.send({
+  const sendPayload = {
     from: params.from || fromEmail,
     to,
     subject: params.subject,
     html: params.html,
     replyTo: params.replyTo,
-  });
-  if (error) {
+  };
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const { data, error } = await resend.emails.send(sendPayload);
+    if (!error) {
+      return { success: true, id: data?.id };
+    }
+    const is429 = (error as { statusCode?: number })?.statusCode === 429;
+    if (is429 && attempt < 2) {
+      await new Promise((r) => setTimeout(r, 1000));
+      continue;
+    }
     console.error('Resend send error:', error);
     return { success: false, error: error.message };
   }
-  return { success: true, id: data?.id };
+  return { success: false, error: 'Unexpected' };
 }
 
 /**

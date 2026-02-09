@@ -77,6 +77,11 @@ router.post('/no-logbook-reminder', verifyCronSecret, async (req, res) => {
     let sent = 0;
     const errors: string[] = [];
 
+    // Resend allows 2 requests/second. Throttling is handled in resendService,
+    // but add extra spacing for batch cron to avoid transient bursts.
+    const delayBetweenSends = 600; // ms
+    const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
     for (const userId of eligibleIds) {
       const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId);
       if (authError || !authUser?.user?.email) {
@@ -98,6 +103,7 @@ router.post('/no-logbook-reminder', verifyCronSecret, async (req, res) => {
       } else {
         errors.push(`${userId}: ${result.error || 'send failed'}`);
       }
+      await delay(delayBetweenSends);
     }
 
     res.json({
