@@ -5,6 +5,7 @@ import SupportRequestModal from './SupportRequestModal';
 import SoftwareApplicationSchema from './SoftwareApplicationSchema';
 import Logo from './Logo';
 import { useAuth } from '../contexts/AuthContext';
+import { useMobile } from '../utils/useMobile';
 import { supabase } from '../lib/supabase';
 import { Plane, FileText, CloudUpload, Clock, Menu, X, ChevronRight, Shield, CheckCircle2, Grid3x3, MessageSquare, Star, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -24,6 +25,7 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
   const { user } = useAuth();
+  const isMobile = useMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
@@ -148,7 +150,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
               >
                 Sign In
               </button>
-            ) : (
+            ) : !isMobile ? (
               <button
                 onClick={() => onStart('permanent-log')}
                 className="flex items-center gap-2 px-5 py-2.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-xl font-semibold transition-all text-sm min-h-[48px] min-w-[48px]"
@@ -157,7 +159,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                 <FileText className="w-4 h-4" aria-hidden="true" />
                 My Log
               </button>
-            )}
+            ) : null}
             
             <div className="relative" ref={menuRef}>
               <button 
