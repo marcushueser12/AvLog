@@ -13,7 +13,6 @@ import AuthModal from './components/AuthModal';
 import PaymentModal from './components/PaymentModal';
 import SupportRequestModal from './components/SupportRequestModal';
 import Logo from './components/Logo';
-import LandscapePrompt from './components/LandscapePrompt';
 import CloudSelectionModal from './components/CloudSelectionModal';
 import { useCloudUploads, markCloudUploadsProcessed, uploadToCloud, prepareImageForCloud, deleteStorageAndMarkProcessed } from './hooks/useCloudUploads';
 import { useAuth } from './contexts/AuthContext';
@@ -1103,7 +1102,6 @@ const App: React.FC = () => {
 
   return (
     <>
-      <LandscapePrompt show={view === 'app' && !showSupportModal && activeTab !== 'reviews'} />
       <CloudSelectionModal
         open={showCloudModal}
         onClose={() => {
