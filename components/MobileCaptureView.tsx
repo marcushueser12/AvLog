@@ -61,7 +61,7 @@ const MobileCaptureView: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] p-6 text-center">
         <p className="text-[#003366]/80 font-medium">Sign in to sync scans to the cloud.</p>
-        <p className="text-sm text-[#003366]/60 mt-2">Then open the app on desktop to extract and review.</p>
+        <p className="text-sm text-[#003366]/60 mt-2">Sign in to sync and extract on this device or any other.</p>
       </div>
     );
   }
@@ -71,7 +71,7 @@ const MobileCaptureView: React.FC = () => {
       <div className="text-center space-y-2">
         <h2 className="text-lg font-bold text-[#003366]">Capture & Sync</h2>
         <p className="text-sm text-[#003366]/70">
-          Take a photo or choose from your gallery. Syncs to the cloud for extraction on desktop.
+          Take a photo or choose from your gallery. Sync to the cloud or extract on this device.
         </p>
       </div>
 
@@ -160,7 +160,7 @@ const MobileCaptureView: React.FC = () => {
 
       <div className="flex items-center gap-2 text-[#003366]/60 text-xs mt-4">
         <Cloud className="w-4 h-4" />
-        <span>Open LogExtract on desktop → Import from Cloud, then click Extract on the dashboard.</span>
+        <span>Photos sync to the cloud. Use Scanner Dashboard to import from cloud and extract here or on another device.</span>
       </div>
     </div>
   );

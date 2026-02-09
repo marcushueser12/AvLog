@@ -431,14 +431,6 @@ const App: React.FC = () => {
     }
   };
 
-  // On mobile, Permanent Log and Aircraft Profiles are hidden; redirect to dashboard if user lands on those tabs
-  useEffect(() => {
-    if (isMobile && (activeTab === 'permanent-log' || activeTab === 'aircraft')) {
-      setActiveTab('dashboard');
-      if (user) loadLogbookStats();
-    }
-  }, [isMobile, activeTab, user]);
-
   // Refresh stats when switching to dashboard or permanent-log
   useEffect(() => {
     if (user && (activeTab === 'dashboard' || activeTab === 'permanent-log')) {
@@ -1672,20 +1664,36 @@ const App: React.FC = () => {
               aria-expanded={mobileMenuOpen}
               aria-haspopup="listbox"
             >
-              {activeTab === 'dashboard' ? 'Scanner' : activeTab === 'tutorial' ? 'Help' : 'Reviews'}
+              {activeTab === 'dashboard' ? 'Scanner' : activeTab === 'permanent-log' ? 'Permanent Log' : activeTab === 'aircraft' ? 'Aircraft' : activeTab === 'tutorial' ? 'Help' : activeTab === 'reviews' ? 'Reviews' : 'Menu'}
               <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${mobileMenuOpen ? 'rotate-180' : ''}`} />
             </button>
             {mobileMenuOpen && (
               <>
                 <div className="fixed inset-0 z-40" aria-hidden="true" onClick={() => setMobileMenuOpen(false)} />
-                <div className="absolute left-0 top-full mt-1 z-50 min-w-[140px] py-1 bg-white rounded-xl border border-[#E2E8F0] shadow-lg" role="listbox">
+                <div className="absolute left-0 top-full mt-1 z-50 min-w-[160px] py-1 bg-white rounded-xl border border-[#E2E8F0] shadow-lg max-h-[70vh] overflow-y-auto" role="listbox">
                   <button
                     type="button"
                     role="option"
                     onClick={() => { setActiveTab('dashboard'); if (user) loadLogbookStats(); setMobileMenuOpen(false); }}
                     className={`w-full text-left px-4 py-2.5 text-sm font-semibold ${activeTab === 'dashboard' ? 'bg-[#007BFF]/10 text-[#007BFF]' : 'text-[#003366]'}`}
                   >
-                    Scanner
+                    Scanner Dashboard
+                  </button>
+                  <button
+                    type="button"
+                    role="option"
+                    onClick={() => { setActiveTab('permanent-log'); loadPermanentLogForExport(); setMobileMenuOpen(false); }}
+                    className={`w-full text-left px-4 py-2.5 text-sm font-semibold ${activeTab === 'permanent-log' ? 'bg-[#007BFF]/10 text-[#007BFF]' : 'text-[#003366]'}`}
+                  >
+                    Permanent Log
+                  </button>
+                  <button
+                    type="button"
+                    role="option"
+                    onClick={() => { setActiveTab('aircraft'); setMobileMenuOpen(false); }}
+                    className={`w-full text-left px-4 py-2.5 text-sm font-semibold ${activeTab === 'aircraft' ? 'bg-[#007BFF]/10 text-[#007BFF]' : 'text-[#003366]'}`}
+                  >
+                    Aircraft Profiles
                   </button>
                   <button
                     type="button"
@@ -1738,112 +1746,17 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Mobile Main Content - Permanent Log and Aircraft tabs hidden on mobile; show dashboard for those */}
+      {/* Mobile Main Content - Full app: Scanner, Permanent Log, Aircraft, Review, Support */}
       <main className="lg:hidden flex-1 min-h-0 flex flex-col min-w-0 bg-[#F4F7FA] overflow-hidden">
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-2 sm:p-4 overscroll-contain touch-pan-y">
           {(() => {
-            const mobileTab = isMobile && (activeTab === 'permanent-log' || activeTab === 'aircraft') ? 'dashboard' : activeTab;
-            return mobileTab === 'reviews' ? (
+            return activeTab === 'reviews' ? (
               <ReviewsTab />
-            ) : mobileTab === 'tutorial' ? (
+            ) : activeTab === 'tutorial' ? (
               <TutorialTab />
-            ) : mobileTab === 'permanent-log' ? (
+            ) : activeTab === 'permanent-log' ? (
               <PermanentLogTab onPermanentLogChange={() => { loadLogbookStats(); loadPermanentLogForExport(); }} />
-            ) : mobileTab === 'dashboard' ? (
-            isMobile ? (
-              <div className="space-y-4">
-                <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="grid grid-cols-3 gap-2">
-                  <motion.div className="p-3 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-xl shadow-sm">
-                    <div className="flex items-center justify-between mb-1"><span className="text-[9px] font-semibold text-[#003366]/70">Total</span><Clock className="w-3 h-3 text-[#007BFF]" /></div>
-                    <p className="text-lg font-black text-[#003366]">{stats.totalTime.toFixed(1)}</p>
-                    <p className="text-[8px] text-[#003366]/60">hrs</p>
-                  </motion.div>
-                  <motion.div className="p-3 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-xl shadow-sm">
-                    <div className="flex items-center justify-between mb-1"><span className="text-[9px] font-semibold text-[#003366]/70">PIC</span><Plane className="w-3 h-3 text-[#007BFF]" /></div>
-                    <p className="text-lg font-black text-[#003366]">{stats.pic.toFixed(1)}</p>
-                    <p className="text-[8px] text-[#003366]/60">hrs</p>
-                  </motion.div>
-                  <motion.div className="p-3 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-xl shadow-sm">
-                    <div className="flex items-center justify-between mb-1"><span className="text-[9px] font-semibold text-[#003366]/70">XC</span><Plane className="w-3 h-3 text-[#007BFF]" /></div>
-                    <p className="text-lg font-black text-[#003366]">{stats.crossCountry.toFixed(1)}</p>
-                    <p className="text-[8px] text-[#003366]/60">hrs</p>
-                  </motion.div>
-                </motion.section>
-                <section className="space-y-3">
-                  <div>
-                    <h3 className="text-sm font-bold text-[#003366]">Staging Area</h3>
-                    <p className="text-[10px] text-[#003366]/70">Add photos to the cards below, then upload to the cloud. Open on desktop to extract.</p>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex gap-2">
-                      <motion.button onClick={() => addStagingSlot('single')} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white/80 hover:bg-white border border-[#E2E8F0] text-[#003366] rounded-lg text-[10px] font-semibold transition-all shadow-sm hover:shadow-md min-h-[44px]" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}><Plus className="w-3.5 h-3.5" /> Single</motion.button>
-                      <motion.button onClick={() => addStagingSlot('spread')} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white/80 hover:bg-white border border-[#E2E8F0] text-[#003366] rounded-lg text-[10px] font-semibold transition-all shadow-sm hover:shadow-md min-h-[44px]" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}><Plus className="w-3.5 h-3.5" /> Spread</motion.button>
-                    </div>
-                    <motion.button
-                      onClick={handleUploadScansToCloud}
-                      disabled={uploadingToCloud || !user || !scans.some((s) => s.status !== 'verified' && (s.mode === 'single' ? s.images.length >= 1 : s.images.length === 2))}
-                      className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#007BFF] hover:bg-[#007BFF]/90 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-lg text-[11px] font-bold transition-all shadow-lg shadow-[#007BFF]/20 min-h-[44px] w-full"
-                      whileHover={{ scale: uploadingToCloud || !user ? 1 : 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      {uploadingToCloud ? (
-                        <><span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" /> Uploading…</>
-                      ) : (
-                        <><Cloud className="w-4 h-4" /> Upload to cloud</>
-                      )}
-                    </motion.button>
-                  </div>
-                </section>
-                {scans.filter(s => s.status !== 'verified').length === 0 ? (
-                  <div className="h-32 border-2 border-dashed border-[#E2E8F0] rounded-xl flex flex-col items-center justify-center gap-2 text-[#003366]/60 bg-white/50 backdrop-blur-sm">
-                    <div className="p-3 bg-[#F4F7FA] rounded-xl"><Upload className="w-6 h-6 text-[#007BFF]" /></div>
-                    <p className="text-[11px] font-medium">Create a scan slot and add your logbook photos. Then upload to the cloud.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    {scans.filter(s => s.status !== 'verified').map(scan => {
-                      const justUploaded = uploadedToCloudIds.has(scan.id);
-                      return (
-                      <motion.div key={scan.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`relative flex flex-col backdrop-blur-sm rounded-xl overflow-hidden group transition-all shadow-sm ${justUploaded ? 'bg-emerald-50 border-2 border-emerald-500 shadow-emerald-200' : 'bg-white/80 border border-[#E2E8F0] hover:border-[#007BFF]/30 hover:shadow-lg'}`}>
-                        <div className={`p-2 border-b flex items-center justify-between ${justUploaded ? 'border-emerald-300 bg-emerald-100/50' : 'border-[#E2E8F0] bg-[#F4F7FA]/50'}`}>
-                          <div className="flex items-center gap-1.5">
-                            <div className={`w-1.5 h-1.5 rounded-full ${justUploaded ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                            <span className="text-[8px] font-bold uppercase tracking-widest text-[#003366]/70">{justUploaded ? 'Uploaded' : (scan.mode === 'single' ? 'Single' : 'Spread')}</span>
-                          </div>
-                          {!justUploaded && (
-                            <button onClick={() => deleteScan(scan.id)} className="p-0.5 text-[#003366]/60 hover:text-red-500 transition-colors"><Trash2 className="w-3 h-3" /></button>
-                          )}
-                        </div>
-                        <div className="flex-1 p-2 grid gap-2" style={{ gridTemplateColumns: scan.mode === 'spread' ? '1fr 1fr' : '1fr' }}>
-                          {[...Array(scan.mode === 'spread' ? 2 : 1)].map((_, i) => (
-                            <div key={i} className="relative aspect-[3/4] bg-[#F4F7FA] border border-[#E2E8F0] rounded-lg overflow-hidden flex flex-col items-center justify-center">
-                              {scan.images[i] ? (
-                                <img src={scan.images[i]} className="w-full h-full object-cover opacity-90" alt="" />
-                              ) : (
-                                <>
-                                  <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => e.target.files?.[0] && handleImageUpload(scan.id, i, e.target.files[0])} />
-                                  <div className="text-[#007BFF] mb-1"><Plus className="w-4 h-4" /></div>
-                                  <span className="text-[8px] font-bold text-[#003366]/70 uppercase">Page {i + 1}</span>
-                                </>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </motion.div>
-                    );})}
-                  </div>
-                )}
-                <div className="flex items-center gap-2 text-[#003366]/60 text-xs">
-                  <Cloud className="w-4 h-4 shrink-0" />
-                  <span>Photos upload to the cloud. Open LogExtract on desktop → Import from Cloud, then click Extract on the dashboard.</span>
-                </div>
-                {!user && (
-                  <div className="text-center p-3 bg-white/80 rounded-xl border border-[#E2E8F0]">
-                    <p className="text-[11px] text-[#003366]/70">Sign in to upload photos to the cloud.</p>
-                  </div>
-                )}
-              </div>
-            ) : (
+            ) : activeTab === 'dashboard' ? (
               <div className="space-y-4">
                 <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="grid grid-cols-3 gap-2">
                   <motion.div className="p-3 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-xl shadow-sm">
@@ -1939,7 +1852,7 @@ const App: React.FC = () => {
                             {isExpanded && (
                               <>
                                 <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden p-1">
-                                  <EntryEditor entries={scanEntries} readOnly={!(scan.creditApproved ?? true)} images={scan.images} rotations={scan.imageRotations} onUpdate={handleUpdateEntry} onAircraftIdChange={handleAircraftIdChange} forceTableOnMobile={true} onRotationChange={(imageIndex, newRotation) => { setScans(prev => prev.map(s => { if (s.id === scan.id) { const newRotations = [...(s.imageRotations || [0, 0])]; newRotations[imageIndex] = newRotation; return { ...s, imageRotations: newRotations }; } return s; })); }} onDelete={(id) => { setEntries(prev => prev.filter(e => e.id !== id)); }} onAdd={() => { const newEntry: LogbookEntry = { id: `manual-${Date.now()}`, scanId: scan.id, date: scanEntries.length > 0 ? scanEntries[scanEntries.length - 1].date : new Date().toISOString().slice(0, 10), aircraftId: "", aircraftType: "", from: "", to: "", route: "", totalTime: "0.0", day: "0.0", night: "0.0", crossCountry: "", pic: "", solo: "", sic: "", dualReceived: "", dualGiven: "", instrument: "", simulatedInstrument: "", approaches: "", landingsDay: "", landingsNight: "", groundReceived: "", groundGiven: "", comments: "", isVerified: false }; setEntries(prev => [...prev, newEntry]); }} onUpdateApproaches={handleUpdateApproaches} />
+                                  <EntryEditor entries={scanEntries} readOnly={!(scan.creditApproved ?? true)} images={scan.images} rotations={scan.imageRotations} onUpdate={handleUpdateEntry} onAircraftIdChange={handleAircraftIdChange} forceTableOnMobile={false} twoColumnCards={isMobile} onRotationChange={(imageIndex, newRotation) => { setScans(prev => prev.map(s => { if (s.id === scan.id) { const newRotations = [...(s.imageRotations || [0, 0])]; newRotations[imageIndex] = newRotation; return { ...s, imageRotations: newRotations }; } return s; })); }} onDelete={(id) => { setEntries(prev => prev.filter(e => e.id !== id)); }} onAdd={() => { const newEntry: LogbookEntry = { id: `manual-${Date.now()}`, scanId: scan.id, date: scanEntries.length > 0 ? scanEntries[scanEntries.length - 1].date : new Date().toISOString().slice(0, 10), aircraftId: "", aircraftType: "", from: "", to: "", route: "", totalTime: "0.0", day: "0.0", night: "0.0", crossCountry: "", pic: "", solo: "", sic: "", dualReceived: "", dualGiven: "", instrument: "", simulatedInstrument: "", approaches: "", landingsDay: "", landingsNight: "", groundReceived: "", groundGiven: "", comments: "", isVerified: false }; setEntries(prev => [...prev, newEntry]); }} onUpdateApproaches={handleUpdateApproaches} />
                                   <div className="p-2 bg-slate-950/50 flex justify-between items-center">
                                     {(scan.creditApproved ?? true) ? (
                                       <label className="flex items-center gap-1.5 cursor-pointer">
@@ -1966,10 +1879,9 @@ const App: React.FC = () => {
                   </div>
                 )}
               </div>
-            )
-          ) : mobileTab === 'aircraft' ? (
-            <AircraftProfilesTab />
-          ) : null;
+            ) : activeTab === 'aircraft' ? (
+              <AircraftProfilesTab />
+            ) : null;
           })()}
         </div>
       </main>

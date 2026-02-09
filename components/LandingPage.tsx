@@ -5,7 +5,6 @@ import SupportRequestModal from './SupportRequestModal';
 import SoftwareApplicationSchema from './SoftwareApplicationSchema';
 import Logo from './Logo';
 import { useAuth } from '../contexts/AuthContext';
-import { useMobile } from '../utils/useMobile';
 import { supabase } from '../lib/supabase';
 import { Plane, FileText, CloudUpload, Clock, Menu, X, ChevronRight, Shield, CheckCircle2, Grid3x3, MessageSquare, Star, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -25,7 +24,6 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
   const { user } = useAuth();
-  const isMobile = useMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
@@ -90,8 +88,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
     { id: 'tutorial', label: 'App Tutorial', icon: FileText, desc: 'Learn how to use LogExtract' },
     { id: 'reviews', label: 'Reviews', icon: MessageSquare, desc: 'See what pilots are saying' },
   ];
-  // On mobile only: hide Permanent Log and Aircraft Profiles from nav
-  const navItems = isMobile ? menuItems.filter((i) => i.id !== 'permanent-log' && i.id !== 'aircraft') : menuItems;
+  const navItems = menuItems;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -120,13 +117,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
       {/* Background decoration - subtle blue gradient */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-gradient-to-b from-[#007BFF]/10 to-transparent blur-[120px] pointer-events-none rounded-full"></div>
       
-      {/* Mobile Notice Banner - Only visible on mobile */}
-      <div className="relative z-50 bg-[#007BFF]/10 border-b border-[#007BFF]/20 px-4 py-2 text-center md:hidden">
-        <p className="text-xs text-[#003366]/80 font-medium">
-          💻 Best on desktop
-        </p>
-      </div>
-      
       {/* Navigation Bar with Glassmorphism */}
       <nav className="relative z-50 px-4 sm:px-6 py-6 md:px-12 backdrop-blur-md bg-white/70 border-b border-[#E2E8F0] shadow-sm">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
@@ -149,18 +139,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
           </motion.div>
 
           <div className="flex items-center gap-4">
-            {/* My Log only on desktop (Permanent Log not on mobile); Sign In on both */}
-            {isMobile ? (
-              !user && (
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-xl font-semibold transition-all text-sm min-h-[48px] min-w-[48px]"
-                  aria-label="Sign in to your account"
-                >
-                  Sign In
-                </button>
-              )
-            ) : user ? (
+            {/* Sign In / My Log */}
+            {!user ? (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="flex items-center gap-2 px-5 py-2.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-xl font-semibold transition-all text-sm min-h-[48px] min-w-[48px]"
+                aria-label="Sign in to your account"
+              >
+                Sign In
+              </button>
+            ) : (
               <button
                 onClick={() => onStart('permanent-log')}
                 className="flex items-center gap-2 px-5 py-2.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-xl font-semibold transition-all text-sm min-h-[48px] min-w-[48px]"
@@ -168,14 +156,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
               >
                 <FileText className="w-4 h-4" aria-hidden="true" />
                 My Log
-              </button>
-            ) : (
-              <button
-                onClick={() => setShowAuthModal(true)}
-                className="flex items-center gap-2 px-5 py-2.5 bg-[#007BFF]/10 hover:bg-[#007BFF]/20 border border-[#007BFF]/30 text-[#007BFF] rounded-xl font-semibold transition-all text-sm min-h-[48px] min-w-[48px]"
-                aria-label="Sign in to your account"
-              >
-                Sign In
               </button>
             )}
             
