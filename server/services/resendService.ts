@@ -70,7 +70,7 @@ export async function sendEmail(params: {
  * Used by the no-logbook cron (3+ days, no scans) and by the one-time mobile-beta blast.
  */
 export async function sendNoLogbookReminderEmail(toEmail: string): Promise<{ success: boolean; id?: string; error?: string }> {
-  const subject = `${appName}: Come try the app — mobile beta is here`;
+  const subject = `${appName}: Mobile is live — use it on your phone`;
   const html = `
 <!DOCTYPE html>
 <html>
@@ -80,8 +80,8 @@ export async function sendNoLogbookReminderEmail(toEmail: string): Promise<{ suc
   <title>${subject}</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 560px; margin: 0 auto; padding: 24px;">
-  <h1 style="color: #003366; font-size: 1.5rem;">Time to use ${appName}</h1>
-  <p>We wanted to remind you to jump in and use ${appName}. You can scan and digitize your logbook on your <strong>laptop, iPad, or phone</strong> — our <strong>mobile beta</strong> is now live.</p>
+  <h1 style="color: #003366; font-size: 1.5rem;">${appName} mobile is live</h1>
+  <p>You can now use ${appName} on your <strong>phone</strong> as well as laptop and iPad. Scan and digitize your logbook from any device.</p>
   <p>What you can do:</p>
   <ul>
     <li>Open ${appName} in your browser on any device</li>
