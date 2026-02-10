@@ -262,55 +262,71 @@ export const validateExpectedCount = (req: Request, res: Response, next: NextFun
  * Request logging middleware for security monitoring
  * Sanitizes sensitive data before logging
  */
-// Track rate limit errors to avoid log spam
-let rateLimitErrorCount = 0;
+// Track rate limit (429) occurrences for throttled logging
+let rateLimitCountInWindow = 0;
 let lastRateLimitLogTime = 0;
-const RATE_LIMIT_LOG_INTERVAL = 5000; // Only log rate limit errors every 5 seconds
+const RATE_LIMIT_LOG_INTERVAL = 5000; // Only log rate limit summary every 5 seconds
 
 export const securityLogger = (req: Request, res: Response, next: NextFunction) => {
   const startTime = Date.now();
-  
-  // Log request details (without sensitive data)
+
   res.on('finish', () => {
     const duration = Date.now() - startTime;
-    const logData = {
-      method: req.method,
-      path: req.path,
-      ip: req.ip || req.socket.remoteAddress,
-      statusCode: res.statusCode,
-      duration: `${duration}ms`,
-      timestamp: new Date().toISOString(),
-      // Sanitize body and headers to prevent logging sensitive data
-      // Exclude body for image processing endpoints to prevent log bloat
-      body: (req.path.includes('/extract') || req.path.includes('/image')) 
-        ? '[IMAGE_PROCESSING_REQUEST]' 
-        : (req.body ? sanitizeForLogging(req.body) : undefined),
-      headers: req.headers ? sanitizeForLogging(req.headers) : undefined,
-    };
+    const status = res.statusCode;
 
-    // Reduce logging for 429 errors to avoid Railway log rate limits
-    if (res.statusCode === 429) {
+    // Throttled logging for 429 (rate limit) - expected when users hit limits
+    if (status === 429) {
       const now = Date.now();
-      if (now - lastRateLimitLogTime > RATE_LIMIT_LOG_INTERVAL) {
-        rateLimitErrorCount++;
-        console.warn(`Rate limit (429) - ${rateLimitErrorCount} occurrences in last ${RATE_LIMIT_LOG_INTERVAL}ms`);
+      rateLimitCountInWindow++;
+      if (now - lastRateLimitLogTime >= RATE_LIMIT_LOG_INTERVAL) {
+        console.log(`Rate limit (429): ${rateLimitCountInWindow} request(s) in last ${RATE_LIMIT_LOG_INTERVAL / 1000}s`);
         lastRateLimitLogTime = now;
+        rateLimitCountInWindow = 0;
       }
-      // Don't log full request details for 429 errors
       return;
     }
 
-    // Only log errors and slow requests in production
+    // In production, only log actionable issues: server errors (5xx) and slow requests
+    // Skip logging expected client outcomes: 401 (auth), 404 (not found), 429 (handled above)
     if (process.env.NODE_ENV === 'production') {
-      if (res.statusCode >= 400) {
-        // Log actual errors as warnings
+      if (status >= 500) {
+        const logData = {
+          method: req.method,
+          path: req.path,
+          ip: req.ip || req.socket.remoteAddress,
+          statusCode: status,
+          duration: `${duration}ms`,
+          timestamp: new Date().toISOString(),
+          body: (req.path.includes('/extract') || req.path.includes('/image'))
+            ? '[IMAGE_PROCESSING_REQUEST]'
+            : (req.body ? sanitizeForLogging(req.body) : undefined),
+          headers: req.headers ? sanitizeForLogging(req.headers) : undefined,
+        };
         console.warn('Security/Performance Alert:', sanitizeForLogging(logData));
       } else if (duration > 10000) {
-        // Log very slow requests (>10s) as info, not error
-        console.log('Slow Request:', sanitizeForLogging(logData));
+        console.log('Slow Request:', {
+          method: req.method,
+          path: req.path,
+          ip: req.ip || req.socket.remoteAddress,
+          statusCode: status,
+          duration: `${duration}ms`,
+          timestamp: new Date().toISOString(),
+          body: '[IMAGE_PROCESSING_REQUEST]',
+        });
       }
-      // Don't log successful fast requests in production
     } else {
+      const logData = {
+        method: req.method,
+        path: req.path,
+        ip: req.ip || req.socket.remoteAddress,
+        statusCode: status,
+        duration: `${duration}ms`,
+        timestamp: new Date().toISOString(),
+        body: (req.path.includes('/extract') || req.path.includes('/image'))
+          ? '[IMAGE_PROCESSING_REQUEST]'
+          : (req.body ? sanitizeForLogging(req.body) : undefined),
+        headers: req.headers ? sanitizeForLogging(req.headers) : undefined,
+      };
       console.log('Request:', sanitizeForLogging(logData));
     }
   });
