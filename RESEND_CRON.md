@@ -7,8 +7,9 @@ This guide walks you through setting up **Resend** for sending emails and the **
 ## What’s included
 
 - **Resend** — transactional email (reusable for welcome emails, password resets, etc.).
-- **No-logbook reminder** — one-time email per user: “Try LogExtract on your laptop or iPad.” Sent only to users who are 3+ days old and have zero verified scans.
+- **No-logbook reminder** — one-time email per user: reminds them to use the app; mentions that the **mobile beta is now live** (laptop, iPad, or phone). Sent only to users who are 3+ days old and have zero verified scans.
 - **Cron endpoint** — `POST /api/cron/no-logbook-reminder`, protected by a secret, to be called once per day.
+- **One-time blast** — `POST /api/cron/blast-mobile-beta`: send the same "mobile beta is here" email to **every** user (manual trigger, not a cron). Use when you want to announce the mobile beta to everyone.
 
 ---
 
@@ -158,11 +159,36 @@ Set `CRON_SECRET` in that environment and use the same value as on your backend.
 
 ---
 
+## One-time blast (mobile beta announcement)
+
+To send a **one-time email to every user** (e.g. “mobile beta is live”), call the blast endpoint manually. This is **not** scheduled; you trigger it when you want.
+
+- **URL:** `POST https://<YOUR_BACKEND_URL>/api/cron/blast-mobile-beta`
+- **Auth:** Same as cron: `Authorization: Bearer <CRON_SECRET>` or `?secret=<CRON_SECRET>`
+
+**Test first** — send the same email to one address: `POST /api/cron/blast-mobile-beta-test?to=your@email.com`
+
+```bash
+curl -X POST "https://YOUR_BACKEND_URL/api/cron/blast-mobile-beta-test?to=your@email.com" \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
+```
+
+Then run the full blast:
+
+```bash
+curl -X POST "https://YOUR_BACKEND_URL/api/cron/blast-mobile-beta" \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
+```
+
+Response: `{ "ok": true, "sent": 42, "total": 42 }` (or partial success with `errors` array). Resend is throttled to avoid rate limits.
+
+---
+
 ## Reusing Resend for other emails
 
 All sending goes through **`server/services/resendService.ts`**:
 
 - **Generic:** `sendEmail({ to, subject, html, from?, replyTo? })` for any one-off or campaign email.
-- **No-logbook reminder:** `sendNoLogbookReminderEmail(toEmail)` — used by the cron.
+- **Use-the-app / mobile beta:** `sendNoLogbookReminderEmail(toEmail)` — used by the no-logbook cron and by the blast endpoint.
 
 You can add more helpers (e.g. `sendWelcomeEmail`, `sendPasswordReset`) in the same file and call them from your routes or jobs.

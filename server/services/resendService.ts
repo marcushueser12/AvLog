@@ -66,11 +66,11 @@ export async function sendEmail(params: {
 }
 
 /**
- * No-logbook reminder: for users who signed up 3+ days ago and have never uploaded a logbook page.
- * Gentle nudge to try on laptop or iPad (mobile phone experience still in the works).
+ * Use-the-app reminder: reminds users to go use the software. Mobile beta is now available.
+ * Used by the no-logbook cron (3+ days, no scans) and by the one-time mobile-beta blast.
  */
 export async function sendNoLogbookReminderEmail(toEmail: string): Promise<{ success: boolean; id?: string; error?: string }> {
-  const subject = `${appName}: Ready when you are — try it on your laptop or iPad`;
+  const subject = `${appName}: Come try the app — mobile beta is here`;
   const html = `
 <!DOCTYPE html>
 <html>
@@ -80,13 +80,13 @@ export async function sendNoLogbookReminderEmail(toEmail: string): Promise<{ suc
   <title>${subject}</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 560px; margin: 0 auto; padding: 24px;">
-  <h1 style="color: #003366; font-size: 1.5rem;">You’re all set — next step is on your laptop or iPad</h1>
-  <p>You created your ${appName} account a few days ago. We wanted to remind you that the best way to scan and digitize your logbook right now is on a <strong>laptop or iPad</strong> — it works great on both.</p>
-  <p>Our phone experience is still in the works, so if you signed up on your phone, open ${appName} on your laptop or iPad when you have a minute:</p>
+  <h1 style="color: #003366; font-size: 1.5rem;">Time to use ${appName}</h1>
+  <p>We wanted to remind you to jump in and use ${appName}. You can scan and digitize your logbook on your <strong>laptop, iPad, or phone</strong> — our <strong>mobile beta</strong> is now live.</p>
+  <p>What you can do:</p>
   <ul>
-    <li>Open ${appName} in your browser (Safari, Chrome, or any browser on laptop or iPad)</li>
+    <li>Open ${appName} in your browser on any device</li>
     <li>Upload or capture a photo of a logbook page</li>
-    <li>We’ll extract the entries and you can edit, export, and keep everything in one place</li>
+    <li>We'll extract the entries and you can edit, export, and keep everything in one place</li>
   </ul>
   <p style="margin-top: 28px;">
     <a href="${baseUrl}" style="display: inline-block; background: #003366; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600;">Open ${appName}</a>

@@ -145,4 +145,102 @@ router.post('/no-logbook-reminder-test', verifyCronSecret, async (req, res) => {
   }
 });
 
+/**
+ * POST /api/cron/blast-mobile-beta-test
+ *
+ * Send the mobile beta blast email to a single address (for testing).
+ * Same CRON_SECRET. Query or body: to=your@email.com
+ */
+router.post('/blast-mobile-beta-test', verifyCronSecret, async (req, res) => {
+  try {
+    if (!isResendConfigured()) {
+      return res.status(503).json({ ok: false, error: 'Resend not configured (RESEND_API_KEY)' });
+    }
+    const to = (req.query.to as string) || (req.body?.to as string);
+    if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+      return res.status(400).json({ error: 'Provide to=your@email.com in query or body' });
+    }
+    const result = await sendNoLogbookReminderEmail(to);
+    if (!result.success) {
+      return res.status(500).json({ ok: false, error: result.error });
+    }
+    res.json({ ok: true, message: `Mobile beta test email sent to ${to}` });
+  } catch (e: any) {
+    console.error('Cron blast-mobile-beta-test:', e);
+    res.status(500).json({ ok: false, error: e?.message || 'Internal error' });
+  }
+});
+
+/**
+ * POST /api/cron/blast-mobile-beta
+ *
+ * One-time blast: send the "mobile beta is here" email to every user with an email.
+ * Not a cron — call manually when you want to announce the mobile beta (e.g. curl with CRON_SECRET).
+ * Requires CRON_SECRET in Authorization: Bearer <CRON_SECRET> or ?secret=<CRON_SECRET>.
+ */
+router.post('/blast-mobile-beta', verifyCronSecret, async (req, res) => {
+  try {
+    if (!isResendConfigured()) {
+      return res.status(503).json({
+        ok: false,
+        error: 'Resend not configured (RESEND_API_KEY)',
+        sent: 0,
+      });
+    }
+
+    const emails: string[] = [];
+    const perPage = 1000;
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data, error } = await supabaseAdmin.auth.admin.listUsers({
+        page,
+        perPage,
+      });
+      if (error) {
+        console.error('Cron blast-mobile-beta: listUsers error', error);
+        return res.status(500).json({ ok: false, error: error.message, sent: 0 });
+      }
+      const users = data?.users ?? [];
+      for (const u of users) {
+        if (u.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.email)) {
+          emails.push(u.email);
+        }
+      }
+      hasMore = users.length >= perPage;
+      page += 1;
+    }
+
+    if (emails.length === 0) {
+      return res.json({ ok: true, sent: 0, total: 0, message: 'No users with email found' });
+    }
+
+    let sent = 0;
+    const errors: string[] = [];
+    const delayBetweenSends = 600;
+    const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+    for (const email of emails) {
+      const result = await sendNoLogbookReminderEmail(email);
+      if (result.success) {
+        sent += 1;
+      } else {
+        errors.push(`${email}: ${result.error || 'send failed'}`);
+      }
+      await delay(delayBetweenSends);
+    }
+
+    res.json({
+      ok: true,
+      sent,
+      total: emails.length,
+      errors: errors.length ? errors : undefined,
+    });
+  } catch (e: any) {
+    console.error('Cron blast-mobile-beta:', e);
+    res.status(500).json({ ok: false, error: e?.message || 'Internal error', sent: 0 });
+  }
+});
+
 export default router;
