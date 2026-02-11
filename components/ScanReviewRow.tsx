@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { PageTotals } from '../types';
 import { ChevronDown } from 'lucide-react';
 import { useMobile } from '../utils/useMobile';
@@ -143,4 +143,4 @@ const ScanReviewRow: React.FC<ScanReviewRowProps> = ({
   );
 };
 
-export default ScanReviewRow;
+export default memo(ScanReviewRow);

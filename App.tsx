@@ -1,15 +1,16 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { LogbookEntry, ScanDocument, ScanMode, AppTab, PageTotals, AircraftProfile, ApproachDetail } from './types';
 import { ICONS } from './constants';
 import EntryEditor from './components/EntryEditor';
 import ScanReviewRow from './components/ScanReviewRow';
 import LandingPage from './components/LandingPage';
-import TutorialTab from './components/TutorialTab';
-import PermanentLogTab from './components/PermanentLogTab';
-import AircraftProfilesTab from './components/AircraftProfilesTab';
-import ReviewsTab from './components/ReviewsTab';
 import AuthModal from './components/AuthModal';
+
+const TutorialTab = lazy(() => import('./components/TutorialTab'));
+const PermanentLogTab = lazy(() => import('./components/PermanentLogTab'));
+const AircraftProfilesTab = lazy(() => import('./components/AircraftProfilesTab'));
+const ReviewsTab = lazy(() => import('./components/ReviewsTab'));
 import PaymentModal from './components/PaymentModal';
 import SupportRequestModal from './components/SupportRequestModal';
 import ReviewPromptModal, { shouldShowReviewPrompt, getReviewPromptMilestone, setReviewPromptDismissed } from './components/ReviewPromptModal';
@@ -34,13 +35,14 @@ const App: React.FC = () => {
   const [view, setView] = useState<'landing' | 'app'>('landing');
   const [activeTab, setActiveTab] = useState<AppTab>('dashboard');
   const isMobile = useMobile();
-  
+  const reduceMotion = isMobile; // Lighter animations on mobile for performance
+
   // Load scans and entries from localStorage on mount
   const loadFromLocalStorage = (): { scans: ScanDocument[], entries: LogbookEntry[] } => {
     try {
       const savedScans = localStorage.getItem('logextract_scans');
       const savedEntries = localStorage.getItem('logextract_entries');
-      
+
       if (savedScans) {
         const parsedScans = JSON.parse(savedScans);
         // Filter out verified scans (they're saved to database)
@@ -55,9 +57,27 @@ const App: React.FC = () => {
     return { scans: [], entries: [] };
   };
 
-  const { scans: initialScans, entries: initialEntries } = loadFromLocalStorage();
-  const [scans, setScans] = useState<ScanDocument[]>(initialScans);
-  const [entries, setEntries] = useState<LogbookEntry[]>(initialEntries);
+  const [scans, setScans] = useState<ScanDocument[]>([]);
+  const [entries, setEntries] = useState<LogbookEntry[]>([]);
+
+  // Defer localStorage load to after first paint for faster initial render
+  useEffect(() => {
+    try {
+      const savedScans = localStorage.getItem('logextract_scans');
+      const savedEntries = localStorage.getItem('logextract_entries');
+      if (savedScans) {
+        const parsedScans = JSON.parse(savedScans);
+        const filteredScans = parsedScans.filter((s: ScanDocument) => s.status !== 'verified');
+        const filteredEntries = savedEntries
+          ? JSON.parse(savedEntries).filter((e: LogbookEntry) => !e.isVerified)
+          : [];
+        setScans(filteredScans);
+        setEntries(filteredEntries);
+      }
+    } catch (error) {
+      console.error('Error loading from localStorage:', error);
+    }
+  }, []);
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
   const [exportName, setExportName] = useState<string>(`Logbook_Export_${new Date().toISOString().slice(0, 10)}`);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -247,77 +267,81 @@ const App: React.FC = () => {
     }
   }, [exportAircraftProfiles]);
 
-  // Save scans and entries to localStorage whenever they change
+  // Save scans and entries to localStorage whenever they change (debounced to avoid main-thread blocking)
   // Note: We don't save images to localStorage to avoid quota issues
   useEffect(() => {
-    try {
-      // Only save non-verified scans and entries
-      const unverifiedScans = scans.filter(s => s.status !== 'verified');
-      const unverifiedEntries = entries.filter(e => !e.isVerified);
-      
-      if (unverifiedScans.length > 0 || unverifiedEntries.length > 0) {
-        // Remove images from scans before saving to localStorage (they're too large)
-        const scansWithoutImages = unverifiedScans.map(scan => ({
-          ...scan,
-          images: [] // Don't save images to localStorage
-        }));
-        
-        const scansJson = JSON.stringify(scansWithoutImages);
-        const entriesJson = JSON.stringify(unverifiedEntries);
-        
-        // Check size before saving (localStorage limit is ~5-10MB)
-        const totalSize = scansJson.length + entriesJson.length;
-        const maxSize = 4 * 1024 * 1024; // 4MB limit (conservative)
-        
-        if (totalSize > maxSize) {
-          console.warn('Data too large for localStorage, keeping only recent data');
-          // Keep only the most recent scans/entries
-          const maxScans = Math.max(1, Math.floor(unverifiedScans.length * 0.5)); // Keep 50%
-          const maxEntries = Math.max(10, Math.floor(unverifiedEntries.length * 0.5));
-          
-          const trimmedScans = scansWithoutImages.slice(0, maxScans);
-          const trimmedEntries = unverifiedEntries.slice(0, maxEntries);
-          
-          localStorage.setItem('logextract_scans', JSON.stringify(trimmedScans));
-          localStorage.setItem('logextract_entries', JSON.stringify(trimmedEntries));
+    const DEBOUNCE_MS = 400;
+    const timeoutId = setTimeout(() => {
+      try {
+        // Only save non-verified scans and entries
+        const unverifiedScans = scans.filter(s => s.status !== 'verified');
+        const unverifiedEntries = entries.filter(e => !e.isVerified);
+
+        if (unverifiedScans.length > 0 || unverifiedEntries.length > 0) {
+          // Remove images from scans before saving to localStorage (they're too large)
+          const scansWithoutImages = unverifiedScans.map(scan => ({
+            ...scan,
+            images: [] // Don't save images to localStorage
+          }));
+
+          const scansJson = JSON.stringify(scansWithoutImages);
+          const entriesJson = JSON.stringify(unverifiedEntries);
+
+          // Check size before saving (localStorage limit is ~5-10MB)
+          const totalSize = scansJson.length + entriesJson.length;
+          const maxSize = 4 * 1024 * 1024; // 4MB limit (conservative)
+
+          if (totalSize > maxSize) {
+            console.warn('Data too large for localStorage, keeping only recent data');
+            // Keep only the most recent scans/entries
+            const maxScans = Math.max(1, Math.floor(unverifiedScans.length * 0.5)); // Keep 50%
+            const maxEntries = Math.max(10, Math.floor(unverifiedEntries.length * 0.5));
+
+            const trimmedScans = scansWithoutImages.slice(0, maxScans);
+            const trimmedEntries = unverifiedEntries.slice(0, maxEntries);
+
+            localStorage.setItem('logextract_scans', JSON.stringify(trimmedScans));
+            localStorage.setItem('logextract_entries', JSON.stringify(trimmedEntries));
+          } else {
+            localStorage.setItem('logextract_scans', scansJson);
+            localStorage.setItem('logextract_entries', entriesJson);
+          }
         } else {
-          localStorage.setItem('logextract_scans', scansJson);
-          localStorage.setItem('logextract_entries', entriesJson);
-        }
-      } else {
-        // Clear localStorage if all scans are verified
-        localStorage.removeItem('logextract_scans');
-        localStorage.removeItem('logextract_entries');
-      }
-    } catch (error: any) {
-      // Handle quota exceeded error gracefully
-      if (error.name === 'QuotaExceededError' || error.message?.includes('quota')) {
-        console.warn('localStorage quota exceeded, clearing old data');
-        try {
-          // Clear old data and try again with reduced data
+          // Clear localStorage if all scans are verified
           localStorage.removeItem('logextract_scans');
           localStorage.removeItem('logextract_entries');
-          
-          // Save only the most recent 5 scans
-          const recentScans = scans
-            .filter(s => s.status !== 'verified')
-            .slice(0, 5)
-            .map(scan => ({ ...scan, images: [] }));
-          const recentEntries = entries
-            .filter(e => !e.isVerified)
-            .slice(0, 50);
-          
-          if (recentScans.length > 0 || recentEntries.length > 0) {
-            localStorage.setItem('logextract_scans', JSON.stringify(recentScans));
-            localStorage.setItem('logextract_entries', JSON.stringify(recentEntries));
-          }
-        } catch (retryError) {
-          console.error('Failed to save even after clearing:', retryError);
         }
-      } else {
-        console.error('Error saving to localStorage:', error);
+      } catch (error: any) {
+        // Handle quota exceeded error gracefully
+        if (error.name === 'QuotaExceededError' || error.message?.includes('quota')) {
+          console.warn('localStorage quota exceeded, clearing old data');
+          try {
+            // Clear old data and try again with reduced data
+            localStorage.removeItem('logextract_scans');
+            localStorage.removeItem('logextract_entries');
+
+            // Save only the most recent 5 scans
+            const recentScans = scans
+              .filter(s => s.status !== 'verified')
+              .slice(0, 5)
+              .map(scan => ({ ...scan, images: [] }));
+            const recentEntries = entries
+              .filter(e => !e.isVerified)
+              .slice(0, 50);
+
+            if (recentScans.length > 0 || recentEntries.length > 0) {
+              localStorage.setItem('logextract_scans', JSON.stringify(recentScans));
+              localStorage.setItem('logextract_entries', JSON.stringify(recentEntries));
+            }
+          } catch (retryError) {
+            console.error('Failed to save even after clearing:', retryError);
+          }
+        } else {
+          console.error('Error saving to localStorage:', error);
+        }
       }
-    }
+    }, DEBOUNCE_MS);
+    return () => clearTimeout(timeoutId);
   }, [scans, entries]);
 
   // Check for payment success redirect and reload credits
@@ -1102,12 +1126,18 @@ const App: React.FC = () => {
         if (tab === 'dashboard' && user) loadLogbookStats(); // Refresh totals every time dashboard is opened
       }}
       className={`flex items-center gap-3 px-4 py-3 sm:py-3 rounded-xl font-semibold text-sm transition-all border min-h-[44px] sm:min-h-0 ${activeTab === tab ? 'bg-[#007BFF]/10 text-[#007BFF] border-[#007BFF]/30 shadow-sm' : 'text-[#003366]/70 hover:text-[#003366] hover:bg-[#F4F7FA] border-transparent'}`}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={reduceMotion ? undefined : { scale: 1.02 }}
+      whileTap={reduceMotion ? undefined : { scale: 0.98 }}
     >
       <Icon />
       {label}
     </motion.button>
+  );
+
+  const TabFallback = () => (
+    <div className="flex items-center justify-center p-8 min-h-[200px]">
+      <div className="w-6 h-6 border-2 border-[#007BFF]/30 border-t-[#007BFF] rounded-full animate-spin" />
+    </div>
   );
 
   return (
@@ -1130,8 +1160,8 @@ const App: React.FC = () => {
         <motion.div 
           className="flex items-center gap-3 cursor-pointer group"
           onClick={() => setView('landing')}
-          whileHover={{ scale: 1.02 }}
-          transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          whileHover={reduceMotion ? undefined : { scale: 1.02 }}
+          transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 400, damping: 17 }}
         >
           <Logo size={32} />
           <span className="text-xl font-black text-[#003366] tracking-tight">LogExtract</span>
@@ -1147,8 +1177,8 @@ const App: React.FC = () => {
           <motion.button 
             onClick={() => setShowSupportModal(true)}
             className="flex items-center gap-3 px-4 py-3 text-[#003366]/70 hover:text-[#003366] hover:bg-[#F4F7FA] rounded-xl font-semibold text-sm transition-all border border-transparent"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={reduceMotion ? undefined : { scale: 1.02 }}
+            whileTap={reduceMotion ? undefined : { scale: 0.98 }}
           >
             <Headphones className="w-4 h-4" />
             Support {user && '(My Tickets)'}
@@ -1156,8 +1186,8 @@ const App: React.FC = () => {
           <motion.button 
             onClick={() => setView('landing')}
             className="flex items-center gap-3 px-4 py-3 text-[#003366]/70 hover:text-[#003366] hover:bg-[#F4F7FA] rounded-xl font-semibold text-sm transition-all border border-transparent"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={reduceMotion ? undefined : { scale: 1.02 }}
+            whileTap={reduceMotion ? undefined : { scale: 0.98 }}
           >
             <Home className="w-4 h-4" />
             Exit to Home
@@ -1242,8 +1272,8 @@ const App: React.FC = () => {
             <motion.button 
               onClick={handleExportModalOpen}
               className="px-3 py-2 sm:py-1.5 bg-[#003366] hover:bg-[#003366]/90 text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-[#003366]/20 flex items-center gap-1.5 min-h-[44px] sm:min-h-0 shiny-button"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={reduceMotion ? undefined : { scale: 1.05 }}
+              whileTap={reduceMotion ? undefined : { scale: 0.95 }}
             >
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Export</span>
@@ -1257,22 +1287,28 @@ const App: React.FC = () => {
         <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pb-8">
           {/* All tabs are now accessible without authentication */}
           {activeTab === 'reviews' ? (
-            <ReviewsTab />
+            <Suspense fallback={<TabFallback />}>
+              <ReviewsTab />
+            </Suspense>
           ) : activeTab === 'tutorial' ? (
-            <TutorialTab />
+            <Suspense fallback={<TabFallback />}>
+              <TutorialTab />
+            </Suspense>
           ) : activeTab === 'permanent-log' ? (
-            <PermanentLogTab onPermanentLogChange={() => { loadLogbookStats(); loadPermanentLogForExport(); }} />
+            <Suspense fallback={<TabFallback />}>
+              <PermanentLogTab onPermanentLogChange={() => { loadLogbookStats(); loadPermanentLogForExport(); }} />
+            </Suspense>
           ) : activeTab === 'dashboard' ? (
             <div className="space-y-10">
               {/* Bento Grid Stats */}
               <motion.section
-                initial={{ opacity: 0, y: 20 }}
+                initial={reduceMotion ? false : { opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+                transition={{ duration: reduceMotion ? 0 : 0.5 }}
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
               >
                 <motion.div
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={reduceMotion ? undefined : { scale: 1.02 }}
                   className="p-6 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl shadow-sm hover:shadow-md transition-all"
                 >
                   <div className="flex items-center justify-between mb-2">
@@ -1283,7 +1319,7 @@ const App: React.FC = () => {
                   <p className="text-xs text-[#003366]/60 mt-1">hours</p>
                 </motion.div>
                 <motion.div
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={reduceMotion ? undefined : { scale: 1.02 }}
                   className="p-6 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl shadow-sm hover:shadow-md transition-all"
                 >
                   <div className="flex items-center justify-between mb-2">
@@ -1294,7 +1330,7 @@ const App: React.FC = () => {
                   <p className="text-xs text-[#003366]/60 mt-1">hours</p>
                 </motion.div>
                 <motion.div
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={reduceMotion ? undefined : { scale: 1.02 }}
                   className="p-6 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl shadow-sm hover:shadow-md transition-all"
                 >
                   <div className="flex items-center justify-between mb-2">
@@ -1318,16 +1354,16 @@ const App: React.FC = () => {
                         <motion.button 
                           onClick={() => addStagingSlot('single')}
                           className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-3 bg-white/80 hover:bg-white border border-[#E2E8F0] text-[#003366] rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md min-h-[44px]"
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
+                          whileHover={reduceMotion ? undefined : { scale: 1.02 }}
+                          whileTap={reduceMotion ? undefined : { scale: 0.98 }}
                         >
                           <Plus className="w-4 h-4" /> <span className="hidden sm:inline">New</span> Single
                         </motion.button>
                         <motion.button 
                           onClick={() => addStagingSlot('spread')}
                           className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-3 bg-white/80 hover:bg-white border border-[#E2E8F0] text-[#003366] rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md min-h-[44px]"
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
+                          whileHover={reduceMotion ? undefined : { scale: 1.02 }}
+                          whileTap={reduceMotion ? undefined : { scale: 0.98 }}
                         >
                           <Plus className="w-4 h-4" /> <span className="hidden sm:inline">New</span> Spread
                         </motion.button>
@@ -1339,8 +1375,8 @@ const App: React.FC = () => {
                       disabled={isBatchProcessing || !user || (userCredits !== null && userCredits < 1) || !scans.some(s => s.status === 'pending' && (s.mode === 'single' ? s.images.length >= 1 : s.images.length === 2))}
                       className="flex items-center justify-center gap-2 px-6 py-3 bg-[#003366] hover:bg-[#003366]/90 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-[#003366]/20 min-h-[44px] shiny-button w-full sm:w-auto"
                       title={!user ? 'Sign in required' : (userCredits !== null && userCredits < 1) ? 'Insufficient credits' : 'Start extraction (1 credit when you approve results)'}
-                      whileHover={{ scale: isBatchProcessing || !user || (userCredits !== null && userCredits < 1) ? 1 : 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                      whileHover={reduceMotion ? undefined : (isBatchProcessing || !user || (userCredits !== null && userCredits < 1) ? { scale: 1 } : { scale: 1.05 })}
+                      whileTap={reduceMotion ? undefined : { scale: 0.95 }}
                     >
                       {isBatchProcessing ? (
                         <><span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></span> Reconciling...</>
@@ -1363,8 +1399,9 @@ const App: React.FC = () => {
                     {scans.filter(s => s.status !== 'verified').map(scan => (
                       <motion.div
                         key={scan.id}
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={reduceMotion ? false : { opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: reduceMotion ? 0 : 0.3 }}
                         className="relative flex flex-col bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl overflow-hidden group hover:border-[#007BFF]/30 hover:shadow-lg transition-all shadow-sm"
                       >
                         <div className="p-3 border-b border-[#E2E8F0] flex items-center justify-between bg-[#F4F7FA]/50">
@@ -1634,7 +1671,9 @@ const App: React.FC = () => {
               )}
             </div>
           ) : activeTab === 'aircraft' ? (
-            <AircraftProfilesTab />
+            <Suspense fallback={<TabFallback />}>
+              <AircraftProfilesTab />
+            </Suspense>
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-center p-12 space-y-4">
                <div className="w-20 h-20 bg-slate-800 rounded-3xl flex items-center justify-center text-slate-600">
@@ -1759,14 +1798,20 @@ const App: React.FC = () => {
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-2 sm:p-4 overscroll-contain touch-pan-y">
           {(() => {
             return activeTab === 'reviews' ? (
-              <ReviewsTab />
+              <Suspense fallback={<TabFallback />}>
+                <ReviewsTab />
+              </Suspense>
             ) : activeTab === 'tutorial' ? (
-              <TutorialTab />
+              <Suspense fallback={<TabFallback />}>
+                <TutorialTab />
+              </Suspense>
             ) : activeTab === 'permanent-log' ? (
-              <PermanentLogTab onPermanentLogChange={() => { loadLogbookStats(); loadPermanentLogForExport(); }} />
+              <Suspense fallback={<TabFallback />}>
+                <PermanentLogTab onPermanentLogChange={() => { loadLogbookStats(); loadPermanentLogForExport(); }} />
+              </Suspense>
             ) : activeTab === 'dashboard' ? (
               <div className="space-y-4">
-                <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="grid grid-cols-3 gap-2">
+                <motion.section initial={reduceMotion ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduceMotion ? 0 : 0.5 }} className="grid grid-cols-3 gap-2">
                   <motion.div className="p-3 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-xl shadow-sm">
                     <div className="flex items-center justify-between mb-1"><span className="text-[9px] font-semibold text-[#003366]/70">Total</span><Clock className="w-3 h-3 text-[#007BFF]" /></div>
                     <p className="text-lg font-black text-[#003366]">{stats.totalTime.toFixed(1)}</p>
@@ -1787,10 +1832,10 @@ const App: React.FC = () => {
                   <div><h3 className="text-sm font-bold text-[#003366]">Staging Area</h3><p className="text-[10px] text-[#003366]/70">The software verifies row alignment and image clarity before extraction.</p></div>
                   <div className="space-y-2">
                     <div className="flex gap-2">
-                      <motion.button onClick={() => addStagingSlot('single')} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white/80 hover:bg-white border border-[#E2E8F0] text-[#003366] rounded-lg text-[10px] font-semibold transition-all shadow-sm hover:shadow-md min-h-[44px]" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}><Plus className="w-3.5 h-3.5" /> Single</motion.button>
-                      <motion.button onClick={() => addStagingSlot('spread')} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white/80 hover:bg-white border border-[#E2E8F0] text-[#003366] rounded-lg text-[10px] font-semibold transition-all shadow-sm hover:shadow-md min-h-[44px]" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}><Plus className="w-3.5 h-3.5" /> Spread</motion.button>
+                      <motion.button onClick={() => addStagingSlot('single')} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white/80 hover:bg-white border border-[#E2E8F0] text-[#003366] rounded-lg text-[10px] font-semibold transition-all shadow-sm hover:shadow-md min-h-[44px]" whileHover={reduceMotion ? undefined : { scale: 1.02 }} whileTap={reduceMotion ? undefined : { scale: 0.98 }}><Plus className="w-3.5 h-3.5" /> Single</motion.button>
+                      <motion.button onClick={() => addStagingSlot('spread')} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white/80 hover:bg-white border border-[#E2E8F0] text-[#003366] rounded-lg text-[10px] font-semibold transition-all shadow-sm hover:shadow-md min-h-[44px]" whileHover={reduceMotion ? undefined : { scale: 1.02 }} whileTap={reduceMotion ? undefined : { scale: 0.98 }}><Plus className="w-3.5 h-3.5" /> Spread</motion.button>
                     </div>
-                    <motion.button onClick={processPendingScans} disabled={isBatchProcessing || !user || (userCredits !== null && userCredits < 1) || !scans.some(s => s.status === 'pending' && (s.mode === 'single' ? s.images.length >= 1 : s.images.length === 2))} className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#003366] hover:bg-[#003366]/90 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-lg text-[11px] font-bold transition-all shadow-lg shadow-[#003366]/20 min-h-[44px] shiny-button w-full" title={!user ? 'Sign in required' : (userCredits !== null && userCredits < 1) ? 'Insufficient credits' : 'Start extraction (1 credit when you approve results)'} whileHover={{ scale: isBatchProcessing || !user || (userCredits !== null && userCredits < 1) ? 1 : 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <motion.button onClick={processPendingScans} disabled={isBatchProcessing || !user || (userCredits !== null && userCredits < 1) || !scans.some(s => s.status === 'pending' && (s.mode === 'single' ? s.images.length >= 1 : s.images.length === 2))} className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#003366] hover:bg-[#003366]/90 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-lg text-[11px] font-bold transition-all shadow-lg shadow-[#003366]/20 min-h-[44px] shiny-button w-full" title={!user ? 'Sign in required' : (userCredits !== null && userCredits < 1) ? 'Insufficient credits' : 'Start extraction (1 credit when you approve results)'} whileHover={reduceMotion ? undefined : (isBatchProcessing || !user || (userCredits !== null && userCredits < 1) ? { scale: 1 } : { scale: 1.05 })} whileTap={reduceMotion ? undefined : { scale: 0.95 }}>
                       {isBatchProcessing ? (<><span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin"></span> Reconciling...</>) : (<><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Start Extraction</>)}
                     </motion.button>
                   </div>
@@ -1805,7 +1850,7 @@ const App: React.FC = () => {
                     {scans.filter(s => s.status !== 'verified').map(scan => {
                       const justUploaded = uploadedToCloudIds.has(scan.id);
                       return (
-                      <motion.div key={scan.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`relative flex flex-col backdrop-blur-sm rounded-xl overflow-hidden group transition-all shadow-sm ${justUploaded ? 'bg-emerald-50 border-2 border-emerald-500 shadow-emerald-200' : 'bg-white/80 border border-[#E2E8F0] hover:border-[#007BFF]/30 hover:shadow-lg'}`}>
+                      <motion.div key={scan.id} initial={reduceMotion ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduceMotion ? 0 : 0.3 }} className={`relative flex flex-col backdrop-blur-sm rounded-xl overflow-hidden group transition-all shadow-sm ${justUploaded ? 'bg-emerald-50 border-2 border-emerald-500 shadow-emerald-200' : 'bg-white/80 border border-[#E2E8F0] hover:border-[#007BFF]/30 hover:shadow-lg'}`}>
                         <div className={`p-2 border-b flex items-center justify-between ${justUploaded ? 'border-emerald-300 bg-emerald-100/50' : 'border-[#E2E8F0] bg-[#F4F7FA]/50'}`}>
                           <div className="flex items-center gap-1.5">
                             <div className={`w-1.5 h-1.5 rounded-full ${justUploaded ? 'bg-emerald-500' : scan.status === 'completed' ? 'bg-emerald-500' : scan.status === 'processing' ? 'bg-[#007BFF] animate-pulse' : 'bg-amber-500'}`}></div>
@@ -1895,7 +1940,9 @@ const App: React.FC = () => {
                 )}
               </div>
             ) : activeTab === 'aircraft' ? (
-              <AircraftProfilesTab />
+              <Suspense fallback={<TabFallback />}>
+                <AircraftProfilesTab />
+              </Suspense>
             ) : null;
           })()}
         </div>
