@@ -12,6 +12,7 @@ import ReviewsTab from './components/ReviewsTab';
 import AuthModal from './components/AuthModal';
 import PaymentModal from './components/PaymentModal';
 import SupportRequestModal from './components/SupportRequestModal';
+import ReviewPromptModal, { shouldShowReviewPrompt, getReviewPromptMilestone, setReviewPromptDismissed } from './components/ReviewPromptModal';
 import Logo from './components/Logo';
 import CloudSelectionModal from './components/CloudSelectionModal';
 import { useCloudUploads, markCloudUploadsProcessed, uploadToCloud, prepareImageForCloud, deleteStorageAndMarkProcessed } from './hooks/useCloudUploads';
@@ -82,6 +83,7 @@ const App: React.FC = () => {
   const [uploadingToCloud, setUploadingToCloud] = useState(false);
   const [uploadedToCloudIds, setUploadedToCloudIds] = useState<Set<string>>(new Set());
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showReviewPrompt, setShowReviewPrompt] = useState(false);
 
   const { pendingCount: cloudPendingCount, refetch: refetchCloudUploads } = useCloudUploads(user?.id);
 
@@ -437,6 +439,14 @@ const App: React.FC = () => {
       loadPermanentLogForExport(); // Still load for export modal
     }
   }, [user, activeTab]);
+
+  // Show review prompt once after 2 pages, and again after 10 pages in permanent log
+  useEffect(() => {
+    const count = permanentLogScans.length;
+    if (user && !loadingPermanentLog && shouldShowReviewPrompt(count)) {
+      setShowReviewPrompt(true);
+    }
+  }, [user, permanentLogScans.length, loadingPermanentLog]);
 
   const loadUserCredits = async () => {
     if (!user) {
@@ -2102,6 +2112,22 @@ const App: React.FC = () => {
 
       {/* Support Modal - access from sidebar/mobile */}
       <SupportRequestModal isOpen={showSupportModal} onClose={() => setShowSupportModal(false)} />
+
+      {/* Review prompt - once after 2 pages, again after 10 pages in permanent log */}
+      <ReviewPromptModal
+        isOpen={showReviewPrompt}
+        onClose={() => {
+          const milestone = getReviewPromptMilestone(permanentLogScans.length);
+          if (milestone != null) setReviewPromptDismissed(milestone);
+          setShowReviewPrompt(false);
+        }}
+        onLeaveReview={() => {
+          const milestone = getReviewPromptMilestone(permanentLogScans.length);
+          if (milestone != null) setReviewPromptDismissed(milestone);
+          setShowReviewPrompt(false);
+          setActiveTab('reviews');
+        }}
+      />
 
       {/* Terms of Service Modal */}
       {showTermsModal && (
