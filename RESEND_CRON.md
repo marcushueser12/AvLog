@@ -8,7 +8,8 @@ This guide walks you through setting up **Resend** for sending emails and the **
 
 - **Resend** — transactional email (reusable for welcome emails, password resets, etc.).
 - **No-logbook reminder** — one-time email per user: reminds them to use the app; mentions that the **mobile beta is now live** (laptop, iPad, or phone). Sent only to users who are 3+ days old and have zero verified scans.
-- **Cron endpoint** — `POST /api/cron/no-logbook-reminder`, protected by a secret, to be called once per day.
+- **Inactive reminder** — one-time email per user: reminds them they haven’t scanned a page in over a week; says the **mobile version is now live**. Sent to anyone who hasn’t scanned in 7+ days: users with scans (last scan 7+ days ago) or users with no scans (account 7+ days old).
+- **Cron endpoints** — `POST /api/cron/no-logbook-reminder` (daily 9:00 UTC) and `POST /api/cron/inactive-reminder` (daily 10:00 UTC), protected by a secret.
 - **One-time blast** — `POST /api/cron/blast-mobile-beta`: send the same "mobile beta is here" email to **every** user (manual trigger, not a cron). Use when you want to announce the mobile beta to everyone.
 
 ---
@@ -22,6 +23,7 @@ You need a column on `user_profiles` to record when we sent the reminder (so we 
 3. Open the file **`supabase/migration_no_logbook_reminder_sent.sql`** in this repo and copy its contents.
 4. Paste into the SQL Editor and click **Run**.
 5. Confirm there are no errors. This adds `no_logbook_reminder_sent_at` to `user_profiles`.
+6. Run the **inactive reminder** migration: open **`supabase/migration_inactive_reminder_sent.sql`**, paste into the SQL Editor, and run. This adds `inactive_reminder_sent_at` to `user_profiles` (for the “haven’t scanned in 7+ days” reminder).
 
 ---
 
@@ -115,9 +117,9 @@ If your **frontend** is on Vercel and your **API** is on Railway, the repo inclu
 1. In your Vercel project, add **Environment Variables** (Settings → Environment Variables):
    - **`CRON_SECRET`** — same value as on your Railway backend (you already added this).
    - **`CRON_TARGET_URL`** — your Railway backend URL, e.g. `https://your-app.railway.app` (no trailing slash).
-2. The API route **`api/cron/no-logbook-reminder.ts`** is already in the repo. Vercel Cron is configured in **`vercel.json`** to call it daily at 9:00 AM UTC.
+2. The API routes **`api/cron/no-logbook-reminder.ts`** and **`api/cron/inactive-reminder.ts`** are in the repo. Vercel Cron in **`vercel.json`** calls no-logbook at 9:00 AM UTC and inactive-reminder at 10:00 AM UTC daily.
 
-3. Deploy to Vercel. The cron runs only on **production** deployments. To change the schedule, edit the `crons` entry in **vercel.json** (e.g. `0 9 * * *` = 9:00 AM UTC daily).
+3. Deploy to Vercel. Crons run only on **production** deployments. To change schedules, edit the `crons` array in **vercel.json** (e.g. `0 9 * * *` = 9:00 AM UTC daily).
 
 ### Option C: Railway cron (if you use a cron add-on)
 
@@ -129,6 +131,12 @@ curl -X POST "https://your-app.railway.app/api/cron/no-logbook-reminder" \
 ```
 
 Set `CRON_SECRET` in that environment and use the same value as on your backend.
+
+**Inactive-reminder cron** (users who haven’t saved a scan in 7+ days):
+
+- **URL:** `POST https://<YOUR_BACKEND_URL>/api/cron/inactive-reminder`
+- **Auth:** Same (header or `?secret=`). Vercel runs this at 10:00 AM UTC if you use Option B.
+- **Test:** `POST /api/cron/inactive-reminder-test?to=your@email.com` (sends one email, no DB change).
 
 ---
 
@@ -156,6 +164,7 @@ Set `CRON_SECRET` in that environment and use the same value as on your backend.
 | `503` or “Resend not configured” | `RESEND_API_KEY` must be set on the **backend** and the server restarted/redeployed. |
 | Emails not received | Resend dashboard → Logs: check status (delivered / bounced / etc.). For production, ensure the “from” domain is verified and `RESEND_FROM_EMAIL` uses that domain. |
 | No users get the email | Migration must be run (`no_logbook_reminder_sent_at` column exists). Users only get the email if: (1) profile created ≥ 3 days ago, (2) they have **no** rows in `verified_scans`, (3) `no_logbook_reminder_sent_at` is still null. |
+| No users get inactive reminder | Run **`migration_inactive_reminder_sent.sql`**. Users are eligible if: they haven’t scanned in 7+ days (have scans and last scan was 7+ days ago, or have no scans and account is 7+ days old), and `inactive_reminder_sent_at` is still null. |
 
 ---
 
@@ -190,5 +199,9 @@ All sending goes through **`server/services/resendService.ts`**:
 
 - **Generic:** `sendEmail({ to, subject, html, from?, replyTo? })` for any one-off or campaign email.
 - **Use-the-app / mobile beta:** `sendNoLogbookReminderEmail(toEmail)` — used by the no-logbook cron and by the blast endpoint.
+- **Inactive reminder (7+ days no scan):** `sendInactiveReminderEmail(toEmail)` — used by the inactive-reminder cron.
+
+**Test inactive reminder** (no DB updates):  
+`POST /api/cron/inactive-reminder-test?to=your@email.com` with `Authorization: Bearer <CRON_SECRET>`.
 
 You can add more helpers (e.g. `sendWelcomeEmail`, `sendPasswordReset`) in the same file and call them from your routes or jobs.
