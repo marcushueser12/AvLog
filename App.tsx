@@ -23,6 +23,7 @@ import { generateForeFlightCSV, downloadCSV } from './utils/csvUtils';
 import { reconcileFlightTimes, reconcileIFRData, normalizeDateSeparator, normalizeAircraftId } from './utils/logbookUtils';
 import { fetchWithRetry, safeApiCall } from './utils/apiUtils';
 import { getExifOrientation } from './utils/exifUtils';
+import { heicToJpegIfNeeded } from './utils/heicUtils';
 import { useMobile } from './utils/useMobile';
 import { motion } from 'framer-motion';
 import { Plane, Grid3x3, FileText, Clock, Home, LogOut, Download, Plus, Trash2, Upload, X, MessageSquare, Headphones, Cloud, ChevronDown } from 'lucide-react';
@@ -225,13 +226,14 @@ const App: React.FC = () => {
   };
 
   const handleImageUpload = async (scanId: string, imageIndex: number, file: File) => {
+    const jpegFile = await heicToJpegIfNeeded(file);
     const reader = new FileReader();
     const base64 = await new Promise<string>((resolve) => {
       reader.onload = () => resolve(reader.result as string);
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(jpegFile);
     });
 
-    // Extract EXIF orientation and estimate clarity score in parallel
+    // Extract EXIF orientation (from original) and estimate clarity score in parallel
     const [exifRotation, clarityScore] = await Promise.all([
       getExifOrientation(file),
       estimateClarityScore(base64)

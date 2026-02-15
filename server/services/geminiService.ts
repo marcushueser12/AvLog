@@ -43,10 +43,13 @@ export const preprocessImage = async (base64Str: string): Promise<{ data: string
     const clarity = Math.min(100, Math.max(0, 100 - Math.abs(avgBrightness - 128)));
 
     return { data: processedBase64, clarity };
-  } catch (error) {
+  } catch (error: any) {
+    const msg = error?.message || String(error);
+    if (msg.includes('heif') || msg.includes('HEIF') || msg.includes('HEIC') || msg.includes('compression format')) {
+      throw new Error('HEIC/HEIF format is not supported. Please use JPG or PNG. On iPhone, go to Settings > Camera > Formats and choose "Most Compatible" to save as JPEG.');
+    }
     console.error('Image preprocessing error:', error);
-    // Return original if processing fails
-    return { data: base64Str, clarity: 50 };
+    throw new Error('Image could not be processed. Please use JPG or PNG format.');
   }
 };
 
@@ -164,13 +167,16 @@ const isRetryableError = (error: any): boolean => {
   }
   
   // Check error message for common retryable patterns
-  const message = error?.message || '';
-  if (message.includes('503') || message.includes('429') || 
+  const message = (error?.message || '').toLowerCase();
+  if (message.includes('503') || message.includes('429') ||
       message.includes('overloaded') || message.includes('rate limit') ||
-      message.includes('RESOURCE_EXHAUSTED') || message.includes('UNAVAILABLE')) {
+      message.includes('resource_exhausted') || message.includes('unavailable') ||
+      message.includes('fetch failed') || message.includes('econnreset') ||
+      message.includes('etimedout') || message.includes('enotfound') ||
+      message.includes('network') || message.includes('socket hang up')) {
     return true;
   }
-  
+  if (error?.name === 'TypeError' && message.includes('fetch')) return true;
   return false;
 };
 

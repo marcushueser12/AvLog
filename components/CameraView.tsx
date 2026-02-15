@@ -1,6 +1,7 @@
 
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { ICONS } from '../constants';
+import { heicToJpegIfNeeded } from '../utils/heicUtils';
 
 interface CameraViewProps {
   onCapture: (base64Image: string) => void;
@@ -55,16 +56,18 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture, onCancel }) => {
   };
 
   // If fallback is used from within camera view, we process one at a time for simplicity
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (!file) return;
+    try {
+      const jpegFile = await heicToJpegIfNeeded(file);
       const reader = new FileReader();
       reader.onload = (event) => {
-        if (event.target?.result) {
-          onCapture(event.target.result as string);
-        }
+        if (event.target?.result) onCapture(event.target.result as string);
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(jpegFile);
+    } catch (err) {
+      setError((err as Error).message || 'Failed to load image');
     }
   };
 
