@@ -355,18 +355,20 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
 
         {totalHours != null && totalHours > 0 && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, delay: 0.6 }}
-            className="flex items-center justify-center gap-2 mt-6 text-[#003366]/60 text-sm"
+            className="flex items-center justify-center gap-3 mt-8 px-6 py-4 bg-white/60 backdrop-blur-sm border border-[#007BFF]/20 rounded-2xl shadow-lg shadow-[#007BFF]/5"
           >
-            <Clock className="w-4 h-4" aria-hidden="true" />
-            <span>
-              <strong className="text-[#003366]/80 font-semibold">
+            <Clock className="w-8 h-8 text-[#007BFF] shrink-0" aria-hidden="true" />
+            <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-2">
+              <span className="text-3xl md:text-4xl font-black bg-gradient-to-r from-[#007BFF] to-[#003366] bg-clip-text text-transparent">
                 {totalHours.toLocaleString()}+
-              </strong>{' '}
-              flight hours digitized by pilots
-            </span>
+              </span>
+              <span className="text-base md:text-lg text-[#003366]/80 font-medium">
+                flight hours digitized by pilots
+              </span>
+            </div>
           </motion.div>
         )}
 
