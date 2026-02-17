@@ -23,6 +23,8 @@ interface LandingPageProps {
   onStart: (tab?: AppTab) => void;
 }
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
   const { user } = useAuth();
   const isMobile = useMobile();
@@ -33,7 +35,24 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [featuredReviews, setFeaturedReviews] = useState<Review[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
+  const [totalHours, setTotalHours] = useState<number | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Load total hours estimate (updates on page load, API caches for 5 min)
+  useEffect(() => {
+    const loadTotalHours = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/stats/total-hours`);
+        if (res.ok) {
+          const { totalHours: hours } = await res.json();
+          setTotalHours(hours);
+        }
+      } catch {
+        // Silently ignore - counter is optional
+      }
+    };
+    loadTotalHours();
+  }, []);
 
   // Load featured reviews (top 3 highest rated, most recent)
   useEffect(() => {
@@ -332,6 +351,23 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
           >
             No credit card required • 3 free credits to start
           </motion.p>
+        )}
+
+        {totalHours != null && totalHours > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.7, delay: 0.6 }}
+            className="flex items-center justify-center gap-2 mt-6 text-[#003366]/60 text-sm"
+          >
+            <Clock className="w-4 h-4" aria-hidden="true" />
+            <span>
+              <strong className="text-[#003366]/80 font-semibold">
+                {totalHours.toLocaleString()}+
+              </strong>{' '}
+              flight hours digitized by pilots
+            </span>
+          </motion.div>
         )}
 
         {/* Feature Grid */}

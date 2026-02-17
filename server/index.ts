@@ -272,6 +272,7 @@ import verifiedRoutes from './routes/verified.js';
 import paymentRoutes from './routes/payments.js';
 import aircraftRoutes from './routes/aircraft.js';
 import supportRoutes from './routes/support.js';
+import statsRoutes from './routes/stats.js';
 import cronRoutes from './routes/cron.js';
 import { adminLimiter, webhookLimiter, authenticatedLimiter } from './middleware/security.js';
 
@@ -289,6 +290,9 @@ app.use('/api/payments', paymentRoutes);
 
 // Support requests (auth optional - uses general rate limiting only)
 app.use('/api', supportRoutes);
+
+// Public stats (landing page counter - cached, no auth)
+app.use('/api', statsRoutes);
 
 // Aircraft profiles routes (protected by auth token + rate limiting)
 app.use('/api', authenticatedLimiter, aircraftRoutes);
