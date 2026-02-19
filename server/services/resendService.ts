@@ -141,3 +141,41 @@ export async function sendInactiveReminderEmail(toEmail: string): Promise<{ succ
 
   return sendEmail({ to: toEmail, subject, html });
 }
+
+/**
+ * Support reply notification: emails the user when an admin has replied to their support request.
+ */
+export async function sendSupportReplyNotificationEmail(params: {
+  toEmail: string;
+  ticketSubject: string;
+  adminResponse: string;
+}): Promise<{ success: boolean; id?: string; error?: string }> {
+  const { toEmail, ticketSubject, adminResponse } = params;
+  const subject = `${appName}: Reply to your support request — ${ticketSubject}`;
+  const escapedSubject = ticketSubject.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const escapedResponse = adminResponse.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${subject}</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 560px; margin: 0 auto; padding: 24px;">
+  <h1 style="color: #003366; font-size: 1.5rem;">We've replied to your support request</h1>
+  <p>Hi, we've responded to your request: <strong>${escapedSubject}</strong></p>
+  <div style="background: #f4f7fa; border-left: 4px solid #007BFF; padding: 16px; margin: 20px 0; border-radius: 0 8px 8px 0;">
+    ${escapedResponse}
+  </div>
+  <p style="margin-top: 28px;">
+    <a href="${baseUrl}" style="display: inline-block; background: #003366; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600;">View in ${appName}</a>
+  </p>
+  <p style="margin-top: 28px; font-size: 0.9rem; color: #666;">If you have more questions, just reply to this email.</p>
+  <p style="margin-top: 16px; font-size: 0.85rem; color: #999;">— The ${appName} team</p>
+</body>
+</html>
+`.trim();
+
+  return sendEmail({ to: toEmail, subject, html });
+}

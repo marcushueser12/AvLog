@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { ICONS } from '../constants';
-import { Star, MessageSquare, User, Calendar, CheckCircle2, XCircle, AlertCircle, X, Send, Loader2 } from 'lucide-react';
+import { Star, MessageSquare, User, Calendar, CheckCircle2, XCircle, AlertCircle, X, Send, Loader2, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface SupportTicket {
@@ -48,6 +48,7 @@ const ReviewsTab: React.FC = () => {
   const [supportStatusFilter, setSupportStatusFilter] = useState<string>('open');
   const [expandedTicket, setExpandedTicket] = useState<string | null>(null);
   const [respondTicketId, setRespondTicketId] = useState<string | null>(null);
+  const [resendingTicketId, setResendingTicketId] = useState<string | null>(null);
   const [respondText, setRespondText] = useState('');
   const [internalNotes, setInternalNotes] = useState('');
   const [submittingRespond, setSubmittingRespond] = useState(false);
@@ -218,6 +219,27 @@ const ReviewsTab: React.FC = () => {
       alert(error.message || 'Failed to respond to ticket');
     } finally {
       setSubmittingRespond(false);
+    }
+  };
+
+  const handleResendNotification = async (ticketId: string) => {
+    try {
+      setResendingTicketId(ticketId);
+      const token = getAccessToken();
+      if (!token) return;
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/admin/support-tickets/${ticketId}/resend-notification`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to send email');
+      }
+      alert('Notification email sent successfully.');
+    } catch (error: any) {
+      alert(error.message || 'Failed to send notification email');
+    } finally {
+      setResendingTicketId(null);
     }
   };
 
@@ -774,6 +796,17 @@ const ReviewsTab: React.FC = () => {
                               <Send className="w-4 h-4" />
                               {ticket.admin_response ? 'Edit Response' : 'Respond'}
                             </button>
+                            {ticket.admin_response && (ticket.user_email || ticket.user_id) && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleResendNotification(ticket.id); }}
+                                disabled={resendingTicketId === ticket.id}
+                                className="px-3 py-2 bg-emerald-100 text-emerald-700 rounded-lg font-semibold text-sm hover:bg-emerald-200 flex items-center gap-2 disabled:opacity-50"
+                                title="Email the user that you've replied"
+                              >
+                                {resendingTicketId === ticket.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                                Resend notification
+                              </button>
+                            )}
                             {(ticket.status === 'open' || ticket.status === 'in_progress') && (
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleUpdateTicketStatus(ticket.id, 'resolved'); }}

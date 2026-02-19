@@ -2,6 +2,7 @@ import express from 'express';
 import { verifyAdmin, verifyAuth, AuthRequest } from '../middleware/auth.js';
 import { supabaseAdmin } from '../lib/supabase.js';
 import { validateAndSanitizeBody, validateParams } from '../middleware/validation.js';
+import { sendSupportReplyNotificationEmail } from '../services/resendService.js';
 
 const router = express.Router();
 
@@ -412,11 +413,82 @@ router.post(
         .single();
       if (error) throw error;
       if (!data) return res.status(404).json({ error: 'Ticket not found' });
+
+      // Email user about the reply
+      let toEmail: string | null = data.user_email?.trim() || null;
+      if (!toEmail && data.user_id) {
+        const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(data.user_id);
+        toEmail = authUser?.user?.email?.trim() || null;
+      }
+      if (toEmail) {
+        const sendResult = await sendSupportReplyNotificationEmail({
+          toEmail,
+          ticketSubject: data.subject,
+          adminResponse: response,
+        });
+        if (!sendResult.success) {
+          console.warn('Support reply email failed:', sendResult.error);
+        }
+      }
+
       res.json({ success: true, ticket: data });
     } catch (error: any) {
       console.error('Admin respond to ticket error:', error);
       res.status(500).json({
         error: 'Failed to respond to ticket',
+        ...(process.env.NODE_ENV === 'development' && { details: error.message }),
+      });
+    }
+  }
+);
+
+/**
+ * POST /api/admin/support-tickets/:id/resend-notification
+ * Manually send the "reply" notification email for a ticket that already has an admin response.
+ * Use for backfilling emails to users who were replied to before this feature existed.
+ */
+router.post(
+  '/support-tickets/:id/resend-notification',
+  verifyAuth,
+  validateParams({ id: 'id' }),
+  async (req: AuthRequest, res) => {
+    try {
+      if (!(await checkIsAdmin(req))) {
+        return res.status(403).json({ error: 'Unauthorized - Admin access required' });
+      }
+      const { id } = req.params;
+      const { data: ticket, error } = await supabaseAdmin
+        .from('support_requests')
+        .select('*')
+        .eq('id', id)
+        .single();
+      if (error || !ticket) {
+        return res.status(404).json({ error: 'Ticket not found' });
+      }
+      if (!ticket.admin_response) {
+        return res.status(400).json({ error: 'Ticket has no admin response to send' });
+      }
+      let toEmail: string | null = ticket.user_email?.trim() || null;
+      if (!toEmail && ticket.user_id) {
+        const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(ticket.user_id);
+        toEmail = authUser?.user?.email?.trim() || null;
+      }
+      if (!toEmail) {
+        return res.status(400).json({ error: 'No email address for this ticket' });
+      }
+      const sendResult = await sendSupportReplyNotificationEmail({
+        toEmail,
+        ticketSubject: ticket.subject,
+        adminResponse: ticket.admin_response,
+      });
+      if (!sendResult.success) {
+        return res.status(500).json({ error: sendResult.error || 'Failed to send email' });
+      }
+      res.json({ success: true, message: 'Notification email sent' });
+    } catch (error: any) {
+      console.error('Admin resend support notification error:', error);
+      res.status(500).json({
+        error: 'Failed to send notification',
         ...(process.env.NODE_ENV === 'development' && { details: error.message }),
       });
     }
