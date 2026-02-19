@@ -8,16 +8,11 @@ let cachedTotalHours: number | null = null;
 let cacheExpiry = 0;
 
 /**
- * Round up to a "nice" number for display (e.g., 1,234 -> 1,500, 12,345 -> 15,000)
+ * Round up to nearest 10 hours for display (e.g., 2543 -> 2550, 2551 -> 2560)
  */
 function roundUpForDisplay(hours: number): number {
-  const h = Math.ceil(hours);
-  if (h <= 0) return 0;
-  if (h < 100) return Math.ceil(h / 10) * 10;
-  if (h < 1000) return Math.ceil(h / 100) * 100;
-  if (h < 10000) return Math.ceil(h / 1000) * 1000;
-  if (h < 100000) return Math.ceil(h / 5000) * 5000;
-  return Math.ceil(h / 10000) * 10000;
+  if (hours <= 0) return 0;
+  return Math.ceil(hours / 10) * 10;
 }
 
 /**
