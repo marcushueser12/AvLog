@@ -141,6 +141,7 @@ const SYSTEM_INSTRUCTION = `
   5. FORMAT: Produce a single compact JSON object.
   6. ROW ORDER: Output entries in strict rowAnchor numeric order (1, 2, 3...). Do not mix rows.
   7. AIRCRAFT: Extract aircraftType when present (e.g. C172, SR22). Some logbooks omit type and make—leave blank if not visible.
+  8. HOURS/TENTHS: Some logbooks write "1/5" for 1.5 hrs (hours + tenths). The slash is a decimal separator, not concatenation. Output "1.5", not "15".
 `;
 
 const EXTRACTION_MODEL = 'gemini-3-flash-preview';
