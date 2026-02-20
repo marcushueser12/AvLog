@@ -162,6 +162,39 @@ router.get(
 );
 
 /**
+ * GET /api/admin/total-hours-scanned
+ * Get exact total hours scanned across all verified entries (admin only)
+ */
+router.get('/total-hours-scanned', verifyAuth, async (req: AuthRequest, res) => {
+  try {
+    if (!(await checkIsAdmin(req))) {
+      return res.status(403).json({ error: 'Unauthorized - Admin access required' });
+    }
+    const { data, error } = await supabaseAdmin
+      .from('verified_entries')
+      .select('total_time');
+    if (error) throw error;
+    const entries = data || [];
+    const totalHours = entries.reduce((sum: number, row: { total_time: number | string | null }) => {
+      const val = row.total_time;
+      if (val == null) return sum;
+      const n = typeof val === 'string' ? parseFloat(val) : Number(val);
+      return sum + (isNaN(n) ? 0 : n);
+    }, 0);
+    res.json({
+      totalHours: Math.round(totalHours * 10) / 10,
+      entryCount: entries.length,
+    });
+  } catch (error: any) {
+    console.error('Admin total hours scanned error:', error);
+    res.status(500).json({
+      error: 'Failed to fetch total hours',
+      ...(process.env.NODE_ENV === 'development' && { details: error.message }),
+    });
+  }
+});
+
+/**
  * GET /api/admin/check
  * Check if authenticated user is admin
  * Uses BOTH database (user_profiles.is_admin) AND ADMIN_EMAILS - either grants admin

@@ -52,7 +52,9 @@ const ReviewsTab: React.FC = () => {
   const [respondText, setRespondText] = useState('');
   const [internalNotes, setInternalNotes] = useState('');
   const [submittingRespond, setSubmittingRespond] = useState(false);
-  
+  const [totalHoursScanned, setTotalHoursScanned] = useState<{ totalHours: number; entryCount: number } | null>(null);
+  const [loadingTotalHours, setLoadingTotalHours] = useState(false);
+
   // Form state
   const [formData, setFormData] = useState({
     reviewer_name: user?.user_metadata?.full_name || '',
@@ -78,9 +80,11 @@ const ReviewsTab: React.FC = () => {
     if (isAdmin) {
       loadPendingReviews(true);
       loadSupportTickets();
+      loadTotalHoursScanned();
     } else {
       setPendingReviews([]);
       setSupportTickets([]);
+      setTotalHoursScanned(null);
     }
   }, [isAdmin]);
 
@@ -262,6 +266,28 @@ const ReviewsTab: React.FC = () => {
       loadSupportTickets();
     } catch (error: any) {
       alert(error.message || 'Failed to update status');
+    }
+  };
+
+  const loadTotalHoursScanned = async () => {
+    if (!isAdmin) return;
+    const token = getAccessToken();
+    if (!token) return;
+    setLoadingTotalHours(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/admin/total-hours-scanned`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setTotalHoursScanned({ totalHours: data.totalHours ?? 0, entryCount: data.entryCount ?? 0 });
+      } else {
+        setTotalHoursScanned(null);
+      }
+    } catch {
+      setTotalHoursScanned(null);
+    } finally {
+      setLoadingTotalHours(false);
     }
   };
 
@@ -662,6 +688,31 @@ const ReviewsTab: React.FC = () => {
                 </div>
               </motion.div>
             ))}
+          </div>
+        )}
+
+        {/* Admin Stats - Total Hours Scanned */}
+        {isAdmin && (
+          <div className="mb-6 bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
+            <h2 className="text-sm font-bold text-[#003366] mb-2 uppercase tracking-wide">Admin Stats</h2>
+            {loadingTotalHours ? (
+              <div className="flex items-center gap-2 text-[#003366]/70">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Loading...</span>
+              </div>
+            ) : totalHoursScanned ? (
+              <div className="flex flex-wrap gap-4">
+                <div>
+                  <span className="text-2xl font-black text-emerald-600">{totalHoursScanned.totalHours.toLocaleString()}</span>
+                  <span className="text-[#003366]/70 ml-1 text-sm">total hours scanned</span>
+                </div>
+                <div className="text-[#003366]/60 text-sm">
+                  ({totalHoursScanned.entryCount.toLocaleString()} entries)
+                </div>
+              </div>
+            ) : (
+              <p className="text-[#003366]/60 text-sm">Unable to load stats</p>
+            )}
           </div>
         )}
 

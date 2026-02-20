@@ -65,7 +65,7 @@ const ApproachModal: React.FC<ApproachModalProps> = ({
             className="p-2 hover:bg-[#E2E8F0] rounded-full transition-colors"
             title="Close"
           >
-            <ICONS.Close className="w-5 h-5 text-[#003366]" />
+            <ICONS.Close />
           </button>
         </div>
 
@@ -87,7 +87,7 @@ const ApproachModal: React.FC<ApproachModalProps> = ({
                       className="p-1 text-red-600 hover:text-red-700 transition-colors"
                       title="Delete approach"
                     >
-                      <ICONS.Close className="w-4 h-4" />
+                      <ICONS.Close />
                     </button>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -159,7 +159,7 @@ const ApproachModal: React.FC<ApproachModalProps> = ({
             className="flex items-center gap-2 px-4 py-2 bg-[#007BFF] text-white rounded-lg font-semibold hover:bg-[#007BFF]/90 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             title="Add Instrument Approach Procedure"
           >
-            <ICONS.Plus className="w-4 h-4" />
+            <ICONS.Plus />
             Add Approach {localApproaches.length > 0 && `(${localApproaches.length}/6)`}
           </button>
           <div className="flex items-center gap-3">
