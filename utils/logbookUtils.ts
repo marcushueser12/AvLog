@@ -244,6 +244,36 @@ export const reconcileIFRData = (entry: Partial<LogbookEntry>): Partial<LogbookE
 };
 
 /**
+ * Parse rowAnchor as numeric for sorting. Returns a number for comparison; null/empty = Infinity (sort last).
+ */
+export const parseRowAnchor = (rowAnchor: string | null | undefined): number => {
+  if (!rowAnchor || typeof rowAnchor !== 'string') return Infinity;
+  const n = parseInt(rowAnchor.trim(), 10);
+  return isNaN(n) ? Infinity : n;
+};
+
+/**
+ * Sort entries by rowAnchor (numeric order 1, 2, 3...) then by date. Ensures rows display in physical page order.
+ */
+export const sortEntriesByRowOrder = <T extends { rowAnchor?: string; date?: string }>(entries: T[], parseDateFn?: (d: string) => number): T[] => {
+  const getDate = parseDateFn || ((d: string) => {
+    if (!d) return 0;
+    const parts = d.split('/');
+    if (parts.length === 3) {
+      const [m, day, y] = parts;
+      return new Date(parseInt(y), parseInt(m) - 1, parseInt(day)).getTime();
+    }
+    return new Date(d).getTime() || 0;
+  });
+  return [...entries].sort((a, b) => {
+    const ra = parseRowAnchor(a.rowAnchor);
+    const rb = parseRowAnchor(b.rowAnchor);
+    if (ra !== rb) return ra - rb;
+    return getDate(a.date || '') - getDate(b.date || '');
+  });
+};
+
+/**
  * Validates if the row's time math is consistent.
  */
 export const isTimeConsistent = (entry: LogbookEntry): boolean => {

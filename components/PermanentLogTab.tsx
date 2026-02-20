@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { LogbookEntry } from '../types';
+import { LogbookEntry, ApproachDetail } from '../types';
 import { ICONS } from '../constants';
 import AuthModal from './AuthModal';
 import EntryEditor from './EntryEditor';
 import NewAircraftModal from './NewAircraftModal';
-import { reconcileFlightTimes, reconcileIFRData, normalizeAircraftId } from '../utils/logbookUtils';
+import { reconcileFlightTimes, reconcileIFRData, normalizeAircraftId, sortEntriesByRowOrder } from '../utils/logbookUtils';
+import { typeCodeToMake } from '../utils/aircraftUtils';
 import { fetchWithRetry } from '../utils/apiUtils';
 import { useMobile } from '../utils/useMobile';
 
@@ -37,7 +38,7 @@ const PermanentLogTab: React.FC<PermanentLogTabProps> = ({ onPermanentLogChange 
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [expandedScans, setExpandedScans] = useState<Set<string>>(new Set());
   const [showNewAircraftModal, setShowNewAircraftModal] = useState(false);
-  const [newAircraftData, setNewAircraftData] = useState<{ aircraftId: string; aircraftType?: string; entryId?: string } | null>(null);
+  const [newAircraftData, setNewAircraftData] = useState<{ aircraftId: string; aircraftType?: string; aircraftModel?: string; make?: string; entryId?: string } | null>(null);
   const [existingAircraftIds, setExistingAircraftIds] = useState<Set<string>>(new Set());
   const [editingPageNumber, setEditingPageNumber] = useState<Record<string, string>>({});
 
@@ -89,9 +90,13 @@ const PermanentLogTab: React.FC<PermanentLogTabProps> = ({ onPermanentLogChange 
       );
       const entry = scanId ? editableEntries[scanId]?.find(e => e.id === entryId) : null;
       
+      const typeCode = entry?.aircraftType?.trim() || '';
+      const model = (entry as any)?.aircraftModel?.trim() || typeCode;
       setNewAircraftData({
         aircraftId: normalized,
-        aircraftType: entry?.aircraftType || '',
+        aircraftType: typeCode,
+        aircraftModel: model,
+        make: typeCodeToMake(typeCode),
         entryId: entryId
       });
       setShowNewAircraftModal(true);
@@ -144,17 +149,21 @@ const PermanentLogTab: React.FC<PermanentLogTabProps> = ({ onPermanentLogChange 
         existingAircraft = (aircraftData.aircraft || []).map((a: any) => (a.aircraftId || a.aircraft_id || '').toUpperCase());
       }
 
-      // Extract unique aircraft from entries
-      const uniqueAircraft = new Map<string, { aircraftId: string; aircraftType: string }>();
+      // Extract unique aircraft from entries (use first occurrence for model/make)
+      const uniqueAircraft = new Map<string, { aircraftId: string; aircraftType: string; aircraftModel: string; make: string }>();
       entriesList.forEach(entry => {
         if (entry.aircraftId && entry.aircraftId.trim()) {
           const id = normalizeAircraftId(entry.aircraftId, false); // Permanent log always uses USA mode
           // Only add if not already in existing profiles
           if (!existingAircraft.includes(id)) {
             if (!uniqueAircraft.has(id)) {
+              const typeCode = entry.aircraftType?.trim() || '';
+              const model = (entry as any)?.aircraftModel?.trim() || typeCode;
               uniqueAircraft.set(id, {
                 aircraftId: id,
-                aircraftType: entry.aircraftType?.trim() || ''
+                aircraftType: typeCode,
+                aircraftModel: model,
+                make: typeCodeToMake(typeCode)
               });
             }
           }
@@ -175,8 +184,8 @@ const PermanentLogTab: React.FC<PermanentLogTabProps> = ({ onPermanentLogChange 
               typeCode: aircraftData.aircraftType,
               equipmentType: '',
               year: '',
-              make: '',
-              model: '',
+              make: aircraftData.make || '',
+              model: aircraftData.aircraftModel || aircraftData.aircraftType || '',
               gearType: '',
               engineType: '',
               categoryClass: '',
@@ -301,14 +310,10 @@ const PermanentLogTab: React.FC<PermanentLogTabProps> = ({ onPermanentLogChange 
       }
 
       const data = await response.json();
-      const loadedEntries = data.entries || [];
+      const loadedEntries: LogbookEntry[] = data.entries || [];
       
-      // Sort entries by date
-      const sortedEntries = [...loadedEntries].sort((a, b) => {
-        const dateA = parseDateForSort(a.date);
-        const dateB = parseDateForSort(b.date);
-        return dateA - dateB;
-      });
+      // Sort by rowAnchor (numeric) first, then date - ensures rows display in physical page order
+      const sortedEntries = sortEntriesByRowOrder(loadedEntries, parseDateForSort);
       
       setEntries(prev => ({
         ...prev,
@@ -954,6 +959,8 @@ const PermanentLogTab: React.FC<PermanentLogTabProps> = ({ onPermanentLogChange 
           isOpen={showNewAircraftModal}
           aircraftId={newAircraftData.aircraftId}
           aircraftType={newAircraftData.aircraftType}
+          aircraftModel={newAircraftData.aircraftModel}
+          make={newAircraftData.make}
           onClose={() => {
             setShowNewAircraftModal(false);
             setNewAircraftData(null);

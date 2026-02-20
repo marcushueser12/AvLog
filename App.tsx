@@ -20,7 +20,7 @@ import { useCloudUploads, markCloudUploadsProcessed, uploadToCloud, prepareImage
 import { useAuth } from './contexts/AuthContext';
 import { extractLogbookEntriesFromPair, extractLogbookEntriesSingle } from './services/geminiService';
 import { generateForeFlightCSV, downloadCSV } from './utils/csvUtils';
-import { reconcileFlightTimes, reconcileIFRData, normalizeDateSeparator, normalizeAircraftId } from './utils/logbookUtils';
+import { reconcileFlightTimes, reconcileIFRData, normalizeDateSeparator, normalizeAircraftId, sortEntriesByRowOrder } from './utils/logbookUtils';
 import { fetchWithRetry, safeApiCall } from './utils/apiUtils';
 import { getExifOrientation } from './utils/exifUtils';
 import { heicToJpegIfNeeded } from './utils/heicUtils';
@@ -1090,13 +1090,9 @@ const App: React.FC = () => {
         map[e.scanId].push(e);
       }
     });
-    // Sort entries within each scan by date
+    // Sort entries by rowAnchor (numeric) first, then date - ensures rows display in physical page order
     Object.keys(map).forEach(scanId => {
-      map[scanId].sort((a, b) => {
-        const dateA = new Date(a.date).getTime();
-        const dateB = new Date(b.date).getTime();
-        return isNaN(dateA) || isNaN(dateB) ? 0 : dateA - dateB;
-      });
+      map[scanId] = sortEntriesByRowOrder(map[scanId]);
     });
     return map;
   }, [entries]);

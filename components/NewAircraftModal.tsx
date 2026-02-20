@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { normalizeAircraftId } from '../utils/logbookUtils';
 import { ICONS } from '../constants';
@@ -71,6 +71,8 @@ interface NewAircraftModalProps {
   isOpen: boolean;
   aircraftId: string;
   aircraftType?: string;
+  aircraftModel?: string;
+  make?: string;
   onClose: () => void;
   onCreated: (createdProfile?: { aircraftId: string; typeCode: string }) => void;
 }
@@ -79,6 +81,8 @@ const NewAircraftModal: React.FC<NewAircraftModalProps> = ({
   isOpen,
   aircraftId,
   aircraftType = '',
+  aircraftModel = '',
+  make = '',
   onClose,
   onCreated
 }) => {
@@ -90,8 +94,8 @@ const NewAircraftModal: React.FC<NewAircraftModalProps> = ({
     typeCode: aircraftType || '',
     equipmentType: '',
     year: '',
-    make: '',
-    model: '',
+    make: make || '',
+    model: aircraftModel || aircraftType || '',
     gearType: '',
     engineType: '',
     categoryClass: '',
@@ -100,6 +104,27 @@ const NewAircraftModal: React.FC<NewAircraftModalProps> = ({
     pressurized: false,
     taa: false
   });
+
+  // Sync form when modal opens with new aircraft data
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        aircraftId: normalizeAircraftId(aircraftId),
+        typeCode: aircraftType || '',
+        equipmentType: '',
+        year: '',
+        make: make || '',
+        model: aircraftModel || aircraftType || '',
+        gearType: '',
+        engineType: '',
+        categoryClass: '',
+        complex: false,
+        highPerformance: false,
+        pressurized: false,
+        taa: false
+      });
+    }
+  }, [isOpen, aircraftId, aircraftType, aircraftModel, make]);
 
   const handleCreate = async () => {
     if (!user) return;

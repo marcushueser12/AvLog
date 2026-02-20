@@ -498,8 +498,22 @@ router.get(
       return dateStr;
     };
 
+    // Sort by row_anchor (numeric) first, then date - ensures rows display in physical page order
+    const sortByRowOrder = (a: any, b: any) => {
+      const parseAnchor = (v: string | null) => {
+        if (!v || !v.trim()) return Infinity;
+        const n = parseInt(v.trim(), 10);
+        return isNaN(n) ? Infinity : n;
+      };
+      const ra = parseAnchor(a.row_anchor);
+      const rb = parseAnchor(b.row_anchor);
+      if (ra !== rb) return ra - rb;
+      return (a.date || '').localeCompare(b.date || '');
+    };
+    const sortedEntries = [...(entries || [])].sort(sortByRowOrder);
+
     // Transform back to frontend format
-    const transformedEntries = (entries || []).map((entry: any) => ({
+    const transformedEntries = sortedEntries.map((entry: any) => ({
       id: entry.id,
       scanId: entry.scan_id,
       date: formatDateForDisplay(entry.date),

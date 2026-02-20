@@ -48,6 +48,7 @@ export interface LogbookEntry {
   date: string;
   aircraftId: string;
   aircraftType: string;
+  aircraftModel?: string; // Model from logbook (e.g. 172S). Often same as aircraftType.
   from: string;
   to: string;
   route: string;

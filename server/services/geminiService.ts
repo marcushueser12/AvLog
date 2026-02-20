@@ -1,6 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { LogbookEntry, PageTotals } from "../../types.js";
-import { reconcileFlightTimes, reconcileIFRData } from "../../utils/logbookUtils.js";
+import { reconcileFlightTimes, reconcileIFRData, sortEntriesByRowOrder } from "../../utils/logbookUtils.js";
 import sharp from 'sharp';
 import pRetry from 'p-retry';
 
@@ -67,7 +67,8 @@ const LOGBOOK_RESPONSE_SCHEMA = {
           reconciliationConfidence: { type: Type.STRING, enum: ["high", "low"], description: "Confidence that the left and right page fragments for this row truly belong together." },
           date: { type: Type.STRING },
           aircraftId: { type: Type.STRING },
-          aircraftType: { type: Type.STRING },
+          aircraftType: { type: Type.STRING, description: "Type code from logbook (e.g. C172, SR22). Optional; some logbooks omit this." },
+          aircraftModel: { type: Type.STRING, description: "Model from logbook (e.g. 172S). Optional; often same as aircraftType." },
           from: { type: Type.STRING },
           to: { type: Type.STRING },
           comments: { type: Type.STRING },
@@ -138,6 +139,8 @@ const SYSTEM_INSTRUCTION = `
   3. ARTIFACT REJECTION: Ignore ink bleeding.
   4. CHECKSUM: Count entries first.
   5. FORMAT: Produce a single compact JSON object.
+  6. ROW ORDER: Output entries in strict rowAnchor numeric order (1, 2, 3...). Do not mix rows.
+  7. AIRCRAFT: Extract aircraftType when present (e.g. C172, SR22). Some logbooks omit type and make—leave blank if not visible.
 `;
 
 const EXTRACTION_MODEL = 'gemini-3-flash-preview';
@@ -250,27 +253,27 @@ export const extractLogbookEntriesFromPair = async (leftImage: string, rightImag
   const rawText = response.text?.trim() || "";
   try {
     const parsed = JSON.parse(rawText || '{"entries": [], "rowChecksum": 0, "pageTotals": {}}');
-    return {
-      entries: (parsed.entries || []).map((r: any, i: number) => {
-        let entry = {
-          ...r, 
-          id: `s-${Date.now()}-${i}`, 
-          route: r.route || "", 
-          comments: r.comments || "",
-          solo: r.solo || "",
-          groundReceived: r.groundReceived || "",
-          groundGiven: r.groundGiven || "",
-          uncertainFields: r.uncertainFields || []
-        };
-        
-        // Apply website-side reconciliation
-        entry = { ...entry, ...reconcileFlightTimes(entry) } as any;
-        entry = { ...entry, ...reconcileIFRData(entry) } as any;
-        
-        return entry;
-      }),
-      pageTotals: parsed.pageTotals || {}
-    };
+    let mapped = (parsed.entries || []).map((r: any, i: number) => {
+      let entry = {
+        ...r,
+        aircraftModel: r.aircraftModel || r.aircraftType || "",
+        id: `s-${Date.now()}-${i}`,
+        route: r.route || "",
+        comments: r.comments || "",
+        solo: r.solo || "",
+        groundReceived: r.groundReceived || "",
+        groundGiven: r.groundGiven || "",
+        uncertainFields: r.uncertainFields || []
+      };
+
+      // Apply website-side reconciliation
+      entry = { ...entry, ...reconcileFlightTimes(entry) } as any;
+      entry = { ...entry, ...reconcileIFRData(entry) } as any;
+
+      return entry;
+    });
+    mapped = sortEntriesByRowOrder(mapped);
+    return { entries: mapped, pageTotals: parsed.pageTotals || {} };
   } catch (e) {
     console.error("Failed to parse AI response as JSON. Raw output length:", rawText.length);
     throw new Error(`Extraction failed: The AI response was incomplete or malformed. (Len: ${rawText.length})`);
@@ -321,27 +324,27 @@ export const extractLogbookEntriesSingle = async (image: string, expectedCount?:
   const rawText = response.text?.trim() || "";
   try {
     const parsed = JSON.parse(rawText || '{"entries": [], "rowChecksum": 0, "pageTotals": {}}');
-    return {
-      entries: (parsed.entries || []).map((r: any, i: number) => {
-        let entry = {
-          ...r, 
-          id: `p-${Date.now()}-${i}`, 
-          route: r.route || "", 
-          comments: r.comments || "",
-          solo: r.solo || "",
-          groundReceived: r.groundReceived || "",
-          groundGiven: r.groundGiven || "",
-          uncertainFields: r.uncertainFields || []
-        };
-        
-        // Apply website-side reconciliation
-        entry = { ...entry, ...reconcileFlightTimes(entry) } as any;
-        entry = { ...entry, ...reconcileIFRData(entry) } as any;
-        
-        return entry;
-      }),
-      pageTotals: parsed.pageTotals || {}
-    };
+    let mapped = (parsed.entries || []).map((r: any, i: number) => {
+      let entry = {
+        ...r,
+        aircraftModel: r.aircraftModel || r.aircraftType || "",
+        id: `p-${Date.now()}-${i}`,
+        route: r.route || "",
+        comments: r.comments || "",
+        solo: r.solo || "",
+        groundReceived: r.groundReceived || "",
+        groundGiven: r.groundGiven || "",
+        uncertainFields: r.uncertainFields || []
+      };
+
+      // Apply website-side reconciliation
+      entry = { ...entry, ...reconcileFlightTimes(entry) } as any;
+      entry = { ...entry, ...reconcileIFRData(entry) } as any;
+
+      return entry;
+    });
+    mapped = sortEntriesByRowOrder(mapped);
+    return { entries: mapped, pageTotals: parsed.pageTotals || {} };
   } catch (e) {
     console.error("Failed to parse AI response as JSON. Raw output length:", rawText.length);
     throw new Error(`Extraction failed: The AI response was incomplete or malformed. (Len: ${rawText.length})`);
