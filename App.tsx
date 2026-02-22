@@ -557,9 +557,9 @@ const App: React.FC = () => {
         // Process scan first - no credit deduction yet. Credit is deducted when user approves results.
         let result;
         if (scan.mode === 'single') {
-          result = await extractLogbookEntriesSingle(scan.images[0], scan.expectedEntries);
+          result = await extractLogbookEntriesSingle(scan.images[0], scan.expectedEntries, token);
         } else {
-          result = await extractLogbookEntriesFromPair(scan.images[0], scan.images[1], scan.expectedEntries);
+          result = await extractLogbookEntriesFromPair(scan.images[0], scan.images[1], scan.expectedEntries, token);
         }
 
         // Check if extraction returned any entries (no credit was charged, so no refund needed)

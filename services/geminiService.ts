@@ -3,16 +3,20 @@
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
+const authHeaders = (token?: string | null): Record<string, string> => {
+  const h: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) h['Authorization'] = `Bearer ${token}`;
+  return h;
+};
+
 /**
- * Preprocess image - calls backend API
+ * Preprocess image - calls backend API (requires auth)
  */
-export const preprocessImage = async (base64Str: string): Promise<{ data: string; clarity: number }> => {
+export const preprocessImage = async (base64Str: string, token?: string | null): Promise<{ data: string; clarity: number }> => {
   try {
     const response = await fetch(`${API_BASE_URL}/api/preprocess-image`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: authHeaders(token),
       body: JSON.stringify({ base64Image: base64Str }),
     });
 
@@ -30,18 +34,17 @@ export const preprocessImage = async (base64Str: string): Promise<{ data: string
 };
 
 /**
- * Extract logbook entries from a pair of images - calls backend API
+ * Extract logbook entries from a pair of images - calls backend API (requires auth)
  */
 export const extractLogbookEntriesFromPair = async (
   leftImage: string,
   rightImage: string,
-  expectedCount?: number
+  expectedCount?: number,
+  token?: string | null
 ): Promise<any> => {
   const response = await fetch(`${API_BASE_URL}/api/extract-pair`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: authHeaders(token),
     body: JSON.stringify({
       leftImage,
       rightImage,
@@ -58,17 +61,16 @@ export const extractLogbookEntriesFromPair = async (
 };
 
 /**
- * Extract logbook entries from a single image - calls backend API
+ * Extract logbook entries from a single image - calls backend API (requires auth)
  */
 export const extractLogbookEntriesSingle = async (
   image: string,
-  expectedCount?: number
+  expectedCount?: number,
+  token?: string | null
 ): Promise<any> => {
   const response = await fetch(`${API_BASE_URL}/api/extract-single`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: authHeaders(token),
     body: JSON.stringify({
       image,
       expectedCount,
@@ -83,14 +85,15 @@ export const extractLogbookEntriesSingle = async (
   return await response.json();
 };
 
-/** Extract from cloud: backend fetches image from signed URL and runs extraction. */
+/** Extract from cloud: backend fetches image from signed URL and runs extraction (requires auth). */
 export const extractFromCloudUrl = async (
   imageUrl: string,
-  expectedCount?: number
+  expectedCount?: number,
+  token?: string | null
 ): Promise<any> => {
   const response = await fetch(`${API_BASE_URL}/api/extract-from-url`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders(token),
     body: JSON.stringify({ imageUrl, expectedCount }),
   });
   if (!response.ok) {
@@ -100,15 +103,16 @@ export const extractFromCloudUrl = async (
   return await response.json();
 };
 
-/** Extract pair from cloud: backend fetches both images from signed URLs. */
+/** Extract pair from cloud: backend fetches both images from signed URLs (requires auth). */
 export const extractPairFromCloudUrls = async (
   leftImageUrl: string,
   rightImageUrl: string,
-  expectedCount?: number
+  expectedCount?: number,
+  token?: string | null
 ): Promise<any> => {
   const response = await fetch(`${API_BASE_URL}/api/extract-from-url`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders(token),
     body: JSON.stringify({
       leftImageUrl,
       rightImageUrl,

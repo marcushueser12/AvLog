@@ -14,6 +14,7 @@ import {
   validateExpectedCount,
   securityLogger,
 } from './middleware/security.js';
+import { verifyAuth } from './middleware/auth.js';
 
 dotenv.config();
 
@@ -97,9 +98,10 @@ app.get('/health', (req, res) => {
 // OPTIONS requests are automatically skipped by the rate limiter's skip function
 app.use('/api', generalLimiter);
 
-// Preprocess image endpoint - image processing rate limiter
+// Preprocess image endpoint - requires auth, image processing rate limiter
 app.post(
   '/api/preprocess-image',
+  verifyAuth,
   imageProcessingLimiter,
   validateBase64Image,
   async (req, res) => {
@@ -119,9 +121,10 @@ app.post(
   }
 );
 
-// Extract entries from pair of images - extraction rate limiter
+// Extract entries from pair of images - requires auth, extraction rate limiter
 app.post(
   '/api/extract-pair',
+  verifyAuth,
   extractionLimiter,
   validateBase64Image,
   validateExpectedCount,
@@ -167,9 +170,10 @@ app.post(
   }
 );
 
-// Extract entries from single image - extraction rate limiter
+// Extract entries from single image - requires auth, extraction rate limiter
 app.post(
   '/api/extract-single',
+  verifyAuth,
   extractionLimiter,
   validateBase64Image,
   validateExpectedCount,
@@ -221,9 +225,10 @@ async function fetchImageAsBase64(url: string): Promise<string> {
   return `data:${contentType};base64,${base64}`;
 }
 
-// Extract from cloud: fetch image(s) from signed URL(s), then run extraction
+// Extract from cloud: fetch image(s) from signed URL(s), then run extraction - requires auth
 app.post(
   '/api/extract-from-url',
+  verifyAuth,
   extractionLimiter,
   async (req, res) => {
     try {
