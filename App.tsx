@@ -418,6 +418,7 @@ const App: React.FC = () => {
       
       loadUserCredits();
       loadExistingAircraft();
+      loadPermanentLogForExport();
     } else {
       setUserCredits(0); // Show 0 credits when not logged in
       setExistingAircraftIds(new Set<string>());
@@ -612,10 +613,11 @@ const App: React.FC = () => {
           }
         }
         
-        // Assign page number - count completed scans before this one
+        // Assign page number - use max page number from saved permanent log + session scans
         setScans(prev => {
-          const completedScans = prev.filter(s => s.status === 'completed').length;
-          const pageNumber = completedScans + 1; // Start at 1
+          const maxSavedPage = permanentLogScans.reduce((max: number, s: any) => Math.max(max, s.page_number || 0), 0);
+          const maxSessionPage = prev.filter(s => s.status === 'completed').reduce((max, s) => Math.max(max, s.pageNumber || 0), 0);
+          const pageNumber = Math.max(maxSavedPage, maxSessionPage) + 1;
           
           return prev.map(s => s.id === scan.id ? { 
             ...s, 
@@ -1615,6 +1617,7 @@ const App: React.FC = () => {
                                       approaches: "",
                                       landingsDay: "",
                                       landingsNight: "",
+                                      mel: "",
                                       groundReceived: "",
                                       groundGiven: "",
                                       comments: "",
@@ -1920,7 +1923,7 @@ const App: React.FC = () => {
                                     </div>
                                   </div>
                                   <div className="p-1">
-                                    <EntryEditor entries={scanEntries} readOnly={!(scan.creditApproved ?? true)} images={scan.images} rotations={scan.imageRotations} onUpdate={handleUpdateEntry} onAircraftIdChange={handleAircraftIdChange} forceTableOnMobile={false} twoColumnCards={isMobile} onRotationChange={(imageIndex, newRotation) => { setScans(prev => prev.map(s => { if (s.id === scan.id) { const newRotations = [...(s.imageRotations || [0, 0])]; newRotations[imageIndex] = newRotation; return { ...s, imageRotations: newRotations }; } return s; })); }} onDelete={(id) => { setEntries(prev => prev.filter(e => e.id !== id)); }} onAdd={() => { const newEntry: LogbookEntry = { id: `manual-${Date.now()}`, scanId: scan.id, date: scanEntries.length > 0 ? scanEntries[scanEntries.length - 1].date : new Date().toISOString().slice(0, 10), aircraftId: "", aircraftType: "", from: "", to: "", route: "", totalTime: "0.0", day: "0.0", night: "0.0", crossCountry: "", pic: "", solo: "", sic: "", dualReceived: "", dualGiven: "", instrument: "", simulatedInstrument: "", approaches: "", landingsDay: "", landingsNight: "", groundReceived: "", groundGiven: "", comments: "", isVerified: false }; setEntries(prev => [...prev, newEntry]); }} onUpdateApproaches={handleUpdateApproaches} />
+                                    <EntryEditor entries={scanEntries} readOnly={!(scan.creditApproved ?? true)} images={scan.images} rotations={scan.imageRotations} onUpdate={handleUpdateEntry} onAircraftIdChange={handleAircraftIdChange} forceTableOnMobile={false} twoColumnCards={isMobile} onRotationChange={(imageIndex, newRotation) => { setScans(prev => prev.map(s => { if (s.id === scan.id) { const newRotations = [...(s.imageRotations || [0, 0])]; newRotations[imageIndex] = newRotation; return { ...s, imageRotations: newRotations }; } return s; })); }} onDelete={(id) => { setEntries(prev => prev.filter(e => e.id !== id)); }} onAdd={() => { const newEntry: LogbookEntry = { id: `manual-${Date.now()}`, scanId: scan.id, date: scanEntries.length > 0 ? scanEntries[scanEntries.length - 1].date : new Date().toISOString().slice(0, 10), aircraftId: "", aircraftType: "", from: "", to: "", route: "", totalTime: "0.0", day: "0.0", night: "0.0", crossCountry: "", pic: "", solo: "", sic: "", dualReceived: "", dualGiven: "", instrument: "", simulatedInstrument: "", approaches: "", landingsDay: "", landingsNight: "", mel: "", groundReceived: "", groundGiven: "", comments: "", isVerified: false }; setEntries(prev => [...prev, newEntry]); }} onUpdateApproaches={handleUpdateApproaches} />
                                   </div>
                                 </div>
                               </>

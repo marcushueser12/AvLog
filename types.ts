@@ -66,6 +66,7 @@ export interface LogbookEntry {
   approaches: string;
   landingsDay: string;
   landingsNight: string;
+  mel: string;
   groundReceived: string;
   groundGiven: string;
   comments: string;

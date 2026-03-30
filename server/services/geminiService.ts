@@ -86,6 +86,7 @@ const LOGBOOK_RESPONSE_SCHEMA = {
           approaches: { type: Type.STRING },
           landingsDay: { type: Type.STRING },
           landingsNight: { type: Type.STRING },
+          mel: { type: Type.STRING, description: "Multi-Engine Land time (MEL). Time flown in multi-engine land aircraft. Some logbooks label this column 'MEL', 'M.E.', 'Multi', or 'Multi-Engine'." },
           groundReceived: { type: Type.STRING, description: "Ground instruction received (training time)" },
           groundGiven: { type: Type.STRING, description: "Ground instruction given (as instructor)" },
           uncertainFields: { type: Type.ARRAY, items: { type: Type.STRING } }
@@ -142,6 +143,7 @@ const SYSTEM_INSTRUCTION = `
   6. ROW ORDER: Output entries in strict rowAnchor numeric order (1, 2, 3...). Do not mix rows.
   7. AIRCRAFT: Extract aircraftType when present (e.g. C172, SR22). Some logbooks omit type and make—leave blank if not visible.
   8. HOURS/TENTHS: Some logbooks write "1/5" for 1.5 hrs (hours + tenths). The slash is a decimal separator, not concatenation. Output "1.5", not "15".
+  9. MEL (MULTI-ENGINE LAND): Some logbooks have a column labeled "MEL", "M.E.", "Multi", or "Multi-Engine". This records time flown in multi-engine land aircraft. Extract this value into the "mel" field. Do not confuse with "Minimum Equipment List".
 `;
 
 const EXTRACTION_MODEL = 'gemini-3-flash-preview';
@@ -262,6 +264,7 @@ export const extractLogbookEntriesFromPair = async (leftImage: string, rightImag
         route: r.route || "",
         comments: r.comments || "",
         solo: r.solo || "",
+        mel: r.mel || "",
         groundReceived: r.groundReceived || "",
         groundGiven: r.groundGiven || "",
         uncertainFields: r.uncertainFields || []
@@ -333,6 +336,7 @@ export const extractLogbookEntriesSingle = async (image: string, expectedCount?:
         route: r.route || "",
         comments: r.comments || "",
         solo: r.solo || "",
+        mel: r.mel || "",
         groundReceived: r.groundReceived || "",
         groundGiven: r.groundGiven || "",
         uncertainFields: r.uncertainFields || []

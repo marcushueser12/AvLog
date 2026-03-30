@@ -540,6 +540,7 @@ const PermanentLogTab: React.FC<PermanentLogTabProps> = ({ onPermanentLogChange 
         approaches: '',
         landingsDay: '',
         landingsNight: '',
+        mel: '',
         groundReceived: '',
         groundGiven: '',
         comments: '',
