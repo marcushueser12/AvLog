@@ -15,13 +15,16 @@ interface ScanReviewRowProps {
   userCredits?: number | null;
 }
 
-const TOTALS_ITEMS: { key: keyof PageTotals; label: string; highlight?: 'primary' | 'emerald' | 'cyan' | 'amber' }[] = [
+const TOTALS_ITEMS: { key: keyof PageTotals; label: string; highlight?: 'primary' | 'emerald' | 'cyan' | 'amber' | 'sky' | 'violet' }[] = [
   { key: 'totalTime', label: 'Total', highlight: 'primary' },
   { key: 'day', label: 'Day' },
   { key: 'night', label: 'Night' },
   { key: 'crossCountry', label: 'XC' },
   { key: 'pic', label: 'PIC' },
   { key: 'sic', label: 'SIC' },
+  { key: 'mel', label: 'MEL' },
+  { key: 'seaplaneTime', label: 'SES', highlight: 'sky' },
+  { key: 'simulatorTime', label: 'Sim Dev', highlight: 'violet' },
   { key: 'dualReceived', label: 'Dual Rec' },
   { key: 'dualGiven', label: 'Dual Giv' },
   { key: 'instrument', label: 'Inst', highlight: 'emerald' },
@@ -55,6 +58,8 @@ const ScanReviewRow: React.FC<ScanReviewRowProps> = ({
     if (highlight === 'emerald') return 'text-emerald-600';
     if (highlight === 'cyan') return 'text-cyan-600';
     if (highlight === 'amber') return 'text-amber-600';
+    if (highlight === 'sky') return 'text-sky-700';
+    if (highlight === 'violet') return 'text-violet-700';
     return 'text-[#003366]';
   };
 

@@ -62,6 +62,8 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
   const sumInst = entries.reduce((acc, e) => acc + (parseFloat(e.instrument) || 0), 0);
   const sumSim = entries.reduce((acc, e) => acc + (parseFloat(e.simulatedInstrument) || 0), 0);
   const sumAppr = entries.reduce((acc, e) => acc + (parseInt(e.approaches) || 0), 0);
+  const sumSeaplane = entries.reduce((acc, e) => acc + (parseFloat(e.seaplaneTime || '') || 0), 0);
+  const sumSimulator = entries.reduce((acc, e) => acc + (parseFloat(e.simulatorTime || '') || 0), 0);
 
   // Approach management functions
   const handleOpenApproachModal = (entryId: string) => {
@@ -514,6 +516,28 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                     />
                   </div>
                   <div className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] p-1.5">
+                    <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-[#003366]/70 uppercase tracking-wide font-semibold block mb-0.5`} title="Seaplane / sea class (ASES, AMES, floats)">SES</label>
+                    <input
+                      type="text"
+                      value={entry.seaplaneTime || ''}
+                      onChange={(e) => !cellMovementMode && onUpdate(entry.id, 'seaplaneTime', e.target.value)}
+                      onClick={(e) => { if (cellMovementMode) { e.preventDefault(); (e.target as HTMLInputElement).blur(); handleCellClick(entry.id, 'seaplaneTime'); } }}
+                      readOnly={readOnly || cellMovementMode}
+                      className={getFieldClass(entry, 'seaplaneTime', `w-full bg-white border border-[#E2E8F0] rounded-md ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF] min-h-[40px]`)}
+                    />
+                  </div>
+                  <div className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] p-1.5">
+                    <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-[#003366]/70 uppercase tracking-wide font-semibold block mb-0.5`} title="FFS / FTD / ATD (not hood time)">Sim Dev</label>
+                    <input
+                      type="text"
+                      value={entry.simulatorTime || ''}
+                      onChange={(e) => !cellMovementMode && onUpdate(entry.id, 'simulatorTime', e.target.value)}
+                      onClick={(e) => { if (cellMovementMode) { e.preventDefault(); (e.target as HTMLInputElement).blur(); handleCellClick(entry.id, 'simulatorTime'); } }}
+                      readOnly={readOnly || cellMovementMode}
+                      className={getFieldClass(entry, 'simulatorTime', `w-full bg-white border border-[#E2E8F0] rounded-md ${twoColumnCards ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} text-center outline-none focus:ring-2 focus:ring-[#007BFF] focus:border-[#007BFF] min-h-[40px]`)}
+                    />
+                  </div>
+                  <div className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] p-1.5">
                     <label className={`${twoColumnCards ? 'text-[9px]' : 'text-[10px]'} text-[#003366]/70 uppercase tracking-wide font-semibold block mb-0.5`}>Dual Rec</label>
                     <input
                       type="text"
@@ -691,7 +715,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
             WebkitTapHighlightColor: 'transparent'
           }}
         >
-        <table className="w-full text-left border-collapse min-w-[3000px] text-[11px] sm:text-xs" style={{ width: 'max-content' }}>
+        <table className="w-full text-left border-collapse min-w-[3180px] text-[11px] sm:text-xs" style={{ width: 'max-content' }}>
           <thead>
             <tr className="bg-[#003366] backdrop-blur-sm text-white text-[10px] uppercase tracking-wider font-bold">
               <th className="px-2 py-4 sticky left-0 bg-[#003366] z-40 border-r border-[#003366]/50 text-center whitespace-nowrap" style={{ width: 'auto', minWidth: '40px' }}>#</th>
@@ -710,6 +734,8 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
               <th className="px-2 py-4 text-center whitespace-nowrap">Solo</th>
               <th className="px-2 py-4 text-center whitespace-nowrap">SIC</th>
               <th className="px-2 py-4 text-center whitespace-nowrap">MEL</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap" title="Seaplane / sea class (ASES, AMES)">SES</th>
+              <th className="px-2 py-4 text-center whitespace-nowrap" title="Approved training device (FFS/FTD/ATD)">Sim Dev</th>
               <th className="px-2 py-4 text-center whitespace-nowrap">Dual Rec</th>
               <th className="px-2 py-4 text-center whitespace-nowrap">Dual Giv</th>
               <th className="px-2 py-4 text-center whitespace-nowrap text-emerald-300 bg-emerald-600/20">Actual Inst</th>
@@ -726,7 +752,7 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
           <tbody className="divide-y divide-[#E2E8F0]">
             {entries.length === 0 ? (
               <tr>
-                <td colSpan={23} className="px-4 py-20 text-center text-[#003366]/70 italic font-medium">
+                <td colSpan={27} className="px-4 py-20 text-center text-[#003366]/70 italic font-medium">
                   <div className="flex flex-col items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                     Ready for consistent digital logs.
@@ -922,6 +948,28 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                       className={getFieldClass(entry, 'mel', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-[#E2E8F0]")} 
                     />
                   </td>
+                  <td className="p-1 bg-sky-50/80">
+                    <input 
+                      type="text" 
+                      value={entry.seaplaneTime || ''} 
+                      onChange={(e) => !cellMovementMode && onUpdate(entry.id, 'seaplaneTime', e.target.value)} 
+                      onClick={() => cellMovementMode && handleCellClick(entry.id, 'seaplaneTime')}
+                      readOnly={readOnly || cellMovementMode}
+                      title="Seaplane / sea class time"
+                      className={getFieldClass(entry, 'seaplaneTime', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-sky-200")} 
+                    />
+                  </td>
+                  <td className="p-1 bg-violet-50/80">
+                    <input 
+                      type="text" 
+                      value={entry.simulatorTime || ''} 
+                      onChange={(e) => !cellMovementMode && onUpdate(entry.id, 'simulatorTime', e.target.value)} 
+                      onClick={() => cellMovementMode && handleCellClick(entry.id, 'simulatorTime')}
+                      readOnly={readOnly || cellMovementMode}
+                      title="Simulator / ATD (not hood)"
+                      className={getFieldClass(entry, 'simulatorTime', "bg-white w-full outline-none text-xs font-mono text-center rounded py-1.5 text-black font-semibold border border-transparent hover:border-violet-200")} 
+                    />
+                  </td>
                   <td className="p-1 bg-white">
                     <input 
                       type="text" 
@@ -1049,11 +1097,14 @@ const EntryEditor: React.FC<EntryEditorProps> = ({
                 <td colSpan={2} className="px-3 py-3 bg-white"></td>
                 <td className="p-3 text-center text-[#007BFF] font-bold bg-[#007BFF]/10 border-r border-[#E2E8F0] ring-1 ring-inset ring-[#007BFF]/20">{sumTotal.toFixed(1)}</td>
                 <td className="bg-[#F4F7FA]"></td>
-                <td colSpan={8} className="bg-white"></td>
+                <td colSpan={6} className="bg-white"></td>
+                <td className="p-3 text-center text-sky-900 font-bold bg-sky-50/90 border-r border-[#E2E8F0] ring-1 ring-inset ring-sky-200">{sumSeaplane.toFixed(1)}</td>
+                <td className="p-3 text-center text-violet-900 font-bold bg-violet-50/90 border-r border-[#E2E8F0] ring-1 ring-inset ring-violet-200">{sumSimulator.toFixed(1)}</td>
+                <td colSpan={2} className="bg-white"></td>
                 <td className="p-3 text-center text-black font-bold bg-emerald-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-emerald-200">{sumInst.toFixed(1)}</td>
                 <td className="p-3 text-center text-black font-bold bg-cyan-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-cyan-200">{sumSim.toFixed(1)}</td>
                 <td className="p-3 text-center text-black font-bold bg-amber-50 border-r border-[#E2E8F0] ring-1 ring-inset ring-amber-200">{sumAppr}</td>
-                <td colSpan={3} className="bg-white"></td>
+                <td colSpan={6} className="bg-white"></td>
             </tr>
           </tbody>
         </table>

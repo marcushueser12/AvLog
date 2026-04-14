@@ -6,6 +6,9 @@ export interface PageTotals {
   crossCountry?: string;
   pic?: string;
   sic?: string;
+  mel?: string;
+  seaplaneTime?: string;
+  simulatorTime?: string;
   dualReceived?: string;
   dualGiven?: string;
   instrument?: string;
@@ -67,6 +70,10 @@ export interface LogbookEntry {
   landingsDay: string;
   landingsNight: string;
   mel: string;
+  /** Airplane Single/Multi Engine Sea, floatplane, or other seaplane-class aircraft time (not simulator). */
+  seaplaneTime: string;
+  /** FFS, FTD, or ATD session time per 14 CFR 61.51—not hood/simulated IFR in an aircraft (use simulatedInstrument). */
+  simulatorTime: string;
   groundReceived: string;
   groundGiven: string;
   comments: string;

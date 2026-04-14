@@ -56,6 +56,8 @@ CREATE TABLE IF NOT EXISTS verified_entries (
   landings_day TEXT,
   landings_night TEXT,
   mel TEXT,
+  seaplane_time TEXT,
+  simulator_time TEXT,
   ground_received TEXT,
   ground_given TEXT,
   comments TEXT,

@@ -87,6 +87,8 @@ const LOGBOOK_RESPONSE_SCHEMA = {
           landingsDay: { type: Type.STRING },
           landingsNight: { type: Type.STRING },
           mel: { type: Type.STRING, description: "Multi-Engine Land time (MEL). Time flown in multi-engine land aircraft. Some logbooks label this column 'MEL', 'M.E.', 'Multi', or 'Multi-Engine'." },
+          seaplaneTime: { type: Type.STRING, description: "Seaplane / sea-class aircraft time: ASES, AMES, SES, floats, skiplane-on-water, or columns labeled Sea, Float, Seaplane. Real aircraft time, not simulator." },
+          simulatorTime: { type: Type.STRING, description: "Approved training device time: FFS, FTD, ATD, BATD, AATD, Redbird, etc. per 14 CFR 61.51. Not hood/simulated IFR in an airplane (that is simulatedInstrument)." },
           groundReceived: { type: Type.STRING, description: "Ground instruction received (training time)" },
           groundGiven: { type: Type.STRING, description: "Ground instruction given (as instructor)" },
           uncertainFields: { type: Type.ARRAY, items: { type: Type.STRING } }
@@ -107,6 +109,8 @@ const LOGBOOK_RESPONSE_SCHEMA = {
 const SYSTEM_INSTRUCTION = `
   IDENTITY: Forensic Aviation Logbook Digitizer.
   MISSION: 1:1 Literal Transcription augmented by Remark Cross-Referencing.
+  
+  OUTPUT KEYS (STRICT NAMES): Use JSON fields "seaplaneTime" for sea-class / float / ASES / AMES aircraft time from printed columns or remarks; use "simulatorTime" only for FFS / FTD / ATD / certified device time. Hood/simulated IFR in a real airplane goes in "simulatedInstrument", never in "simulatorTime".
   
   SPECIAL FOCUS: IFR CATEGORIES (Actual, Simulated, Approaches)
   1. IFR DATA: These columns are high-priority.
@@ -144,6 +148,16 @@ const SYSTEM_INSTRUCTION = `
   7. AIRCRAFT: Extract aircraftType when present (e.g. C172, SR22). Some logbooks omit type and make—leave blank if not visible.
   8. HOURS/TENTHS: Some logbooks write "1/5" for 1.5 hrs (hours + tenths). The slash is a decimal separator, not concatenation. Output "1.5", not "15".
   9. MEL (MULTI-ENGINE LAND): Some logbooks have a column labeled "MEL", "M.E.", "Multi", or "Multi-Engine". This records time flown in multi-engine land aircraft. Extract this value into the "mel" field. Do not confuse with "Minimum Equipment List".
+  
+  10. SEAPLANE TIME (SEA / FLOAT / ASES / AMES):
+     - Time flown in the seaplane category/class: columns or remarks may say "ASES", "AMES", "SES", "Sea", "Float", "Seaplane", "Skiplane" (when water operations), or show type codes like PA-18 on floats.
+     - This is real aircraft flight time (often logged alongside or instead of SEL time for that flight). Put values in "seaplaneTime".
+     - Do NOT put seaplane time in "simulatorTime" or "simulatedInstrument".
+  
+  11. SIMULATOR / TRAINING DEVICE TIME (NOT SIMULATED INSTRUMENT IN AIRCRAFT):
+     - Time in FAA-approved Full Flight Simulator (FFS), Flight Training Device (FTD), or Aviation Training Device (ATD / BATD / AATD). Logbooks may label "Simulator", "Sim", "Device", "ATD", "FFS", "FTD", "Ground Trainer", "Redbird", or list a device ID instead of an N-number.
+     - Put decimal hours in "simulatorTime". Remarks-only device sessions should still populate "simulatorTime" when the duration is clear.
+     - CRITICAL: "Simulated Instrument" / "Sim Inst" / hood or foggles time in a real airplane belongs in "simulatedInstrument", NOT in "simulatorTime". Simulator device time is never logged as simulated instrument flight in the aircraft sense.
 `;
 
 const EXTRACTION_MODEL = 'gemini-3-flash-preview';
@@ -228,7 +242,7 @@ export const extractLogbookEntriesFromPair = async (leftImage: string, rightImag
         model: EXTRACTION_MODEL,
         contents: { 
           parts: [
-            { text: `TRANSCRIBE PAIR: Match row numbers. Apply ADDITIVE-ONLY IFR cross-referencing from remarks. Blank = "".${countHint}` },
+            { text: `TRANSCRIBE PAIR: Match row numbers. Map printed Sea/SES/Float/ASES columns to JSON "seaplaneTime". Map simulator/ATD/FFS/FTD/device session time to JSON "simulatorTime" (not hood time). Apply ADDITIVE-ONLY IFR cross-referencing from remarks. Blank = "".${countHint}` },
             { inlineData: { mimeType: 'image/jpeg', data: leftBase64 } },
             { inlineData: { mimeType: 'image/jpeg', data: rightBase64 } }
           ] 
@@ -265,6 +279,8 @@ export const extractLogbookEntriesFromPair = async (leftImage: string, rightImag
         comments: r.comments || "",
         solo: r.solo || "",
         mel: r.mel || "",
+        seaplaneTime: r.seaplaneTime || "",
+        simulatorTime: r.simulatorTime || "",
         groundReceived: r.groundReceived || "",
         groundGiven: r.groundGiven || "",
         uncertainFields: r.uncertainFields || []
@@ -301,7 +317,7 @@ export const extractLogbookEntriesSingle = async (image: string, expectedCount?:
         model: EXTRACTION_MODEL,
         contents: { 
           parts: [
-            { text: `TRANSCRIBE SINGLE: Apply ADDITIVE-ONLY IFR cross-referencing from remarks. Blank = "".${countHint}` },
+            { text: `TRANSCRIBE SINGLE: Map printed Sea/SES/Float/ASES columns to JSON "seaplaneTime". Map simulator/ATD/FFS/FTD/device session time to JSON "simulatorTime" (not hood time). Apply ADDITIVE-ONLY IFR cross-referencing from remarks. Blank = "".${countHint}` },
             { inlineData: { mimeType: 'image/jpeg', data: imageBase64 } }
           ] 
         },
@@ -337,6 +353,8 @@ export const extractLogbookEntriesSingle = async (image: string, expectedCount?:
         comments: r.comments || "",
         solo: r.solo || "",
         mel: r.mel || "",
+        seaplaneTime: r.seaplaneTime || "",
+        simulatorTime: r.simulatorTime || "",
         groundReceived: r.groundReceived || "",
         groundGiven: r.groundGiven || "",
         uncertainFields: r.uncertainFields || []

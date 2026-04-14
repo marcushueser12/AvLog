@@ -251,6 +251,7 @@ export const generateForeFlightCSV = (entries: LogbookEntry[], aircraftProfiles:
         }
         case "DualGiven": return formatNumeric(entry.dualGiven);
         case "DualReceived": return formatNumeric(entry.dualReceived);
+        case "SimulatedFlight": return formatNumeric(entry.simulatorTime);
         case "PilotComments": return escapeCSV(entry.comments);
         default: return ""; // Everything else empty
       }

@@ -4,18 +4,35 @@ import { Request, Response, NextFunction } from 'express';
 import { sanitizeForLogging } from '../utils/sanitize.js';
 
 /**
- * General API rate limiter - applies to all API routes
- * Allows 300 requests per 15 minutes per IP (increased for users with many pages)
+ * Paths that mount `authenticatedLimiter` — do not also count against `generalLimiter`
+ * when the client sends a Bearer token, or logged-in users hit two buckets and the
+ * global cap (formerly 300/15m) became the real bottleneck.
+ */
+const AUTH_RATE_LIMITED_PREFIXES = ['/api/verified', '/api/aircraft'] as const;
+
+const shouldSkipGeneralForAuthenticatedAppRoutes = (req: Request): boolean => {
+  const auth = req.headers.authorization;
+  const hasBearer =
+    typeof auth === 'string' && auth.trim().toLowerCase().startsWith('bearer ') && auth.length > 24;
+  if (!hasBearer) return false;
+  const p = req.path || '';
+  return AUTH_RATE_LIMITED_PREFIXES.some((prefix) => p === prefix || p.startsWith(`${prefix}/`));
+};
+
+/**
+ * General API rate limiter - applies to routes that are not covered by a dedicated limiter.
+ * Authenticated /verified and /aircraft traffic uses `authenticatedLimiter` only.
  */
 export const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // Limit each IP to 300 requests per windowMs (increased from 100)
+  max: 1500, // Per IP; unauthenticated + extract/support/stats/etc. (raised so it is not the UX bottleneck)
   message: {
     error: 'Too many requests from this IP, please try again later.',
   },
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  skip: (req) => req.method === 'OPTIONS', // Skip rate limiting for preflight requests
+  skip: (req) =>
+    req.method === 'OPTIONS' || shouldSkipGeneralForAuthenticatedAppRoutes(req),
 });
 
 /**
@@ -84,13 +101,12 @@ export const webhookLimiter = rateLimit({
 });
 
 /**
- * Rate limiter for authenticated API endpoints
- * Applied to routes that require authentication
- * Increased limit for users loading many pages
+ * Rate limiter for authenticated API endpoints (/api/verified, /api/aircraft)
+ * High ceiling so normal use (many scans, entry loads, saves) stays under the cap.
  */
 export const authenticatedLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500, // Limit each IP to 500 authenticated requests per windowMs (increased from 200)
+  max: 8000, // Per IP; only these routes after general skip for Bearer traffic
   message: {
     error: 'Too many requests. Please wait before trying again.',
   },
