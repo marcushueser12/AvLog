@@ -279,7 +279,7 @@ import aircraftRoutes from './routes/aircraft.js';
 import supportRoutes from './routes/support.js';
 import statsRoutes from './routes/stats.js';
 import cronRoutes from './routes/cron.js';
-import { adminLimiter, webhookLimiter, authenticatedLimiter } from './middleware/security.js';
+import { adminLimiter, webhookLimiter } from './middleware/security.js';
 
 // Cron routes (protected by CRON_SECRET; call from Vercel Cron or Railway cron)
 app.use('/api/cron', cronRoutes);
@@ -287,8 +287,8 @@ app.use('/api/cron', cronRoutes);
 // Admin routes (protected by secret token + rate limiting)
 app.use('/api/admin', adminLimiter, adminRoutes);
 
-// Verified entries routes (protected by auth token + rate limiting)
-app.use('/api/verified', authenticatedLimiter, verifiedRoutes);
+// Verified entries routes (protected by auth token + rate limiting; see verified router)
+app.use('/api/verified', verifiedRoutes);
 
 // Payment routes (checkout session requires auth, webhook is public with rate limiting)
 app.use('/api/payments', paymentRoutes);
@@ -299,8 +299,8 @@ app.use('/api', supportRoutes);
 // Public stats (landing page counter - cached, no auth)
 app.use('/api', statsRoutes);
 
-// Aircraft profiles routes (protected by auth token + rate limiting)
-app.use('/api', authenticatedLimiter, aircraftRoutes);
+// Aircraft profiles routes (protected by auth token + rate limiting; see aircraft router)
+app.use('/api', aircraftRoutes);
 
 // Serve frontend for all non-API routes (SPA routing)
 if (process.env.NODE_ENV === 'production') {

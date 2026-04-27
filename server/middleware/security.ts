@@ -1,7 +1,44 @@
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { Request, Response, NextFunction } from 'express';
+import type { AuthRequest } from './auth.js';
 import { sanitizeForLogging } from '../utils/sanitize.js';
+
+const parseUuidSet = (raw: string | undefined): Set<string> => {
+  if (!raw) return new Set();
+  return new Set(
+    raw
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => /^[0-9a-f-]{36}$/i.test(s))
+  );
+};
+
+/** Comma-separated Supabase auth user UUIDs that get higher per-route rate limits (set in server env). */
+const elevatedRateUserIds = parseUuidSet(process.env.ELEVATED_RATE_LIMIT_USER_IDS);
+
+const isElevatedRateUser = (req: Request): boolean => {
+  if (elevatedRateUserIds.size === 0) return false;
+  const uid = (req as AuthRequest).userId;
+  return Boolean(uid && elevatedRateUserIds.has(uid));
+};
+
+const rateLimitKey = (req: Request): string => {
+  if (isElevatedRateUser(req)) {
+    return `elevated:${(req as AuthRequest).userId!}`;
+  }
+  return req.ip || req.socket?.remoteAddress || 'unknown';
+};
+
+/** Extraction: default 10 / 15m; elevated: 100 / 15m (cost-sensitive). */
+const EXTRACTION_MAX_DEFAULT = 10;
+const EXTRACTION_MAX_ELEVATED = 100;
+/** Image preprocessing: 20 / 15m; elevated: 200 / 15m. */
+const IMAGE_MAX_DEFAULT = 20;
+const IMAGE_MAX_ELEVATED = 200;
+/** Authenticated /verified + /aircraft: 8000 / 15m; elevated: 50_000 / 15m. */
+const AUTHENTICATED_MAX_DEFAULT = 8000;
+const AUTHENTICATED_MAX_ELEVATED = 50_000;
 
 /**
  * Paths that mount `authenticatedLimiter` — do not also count against `generalLimiter`
@@ -42,7 +79,8 @@ export const generalLimiter = rateLimit({
  */
 export const imageProcessingLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // Limit each IP to 20 image processing requests per windowMs
+  keyGenerator: rateLimitKey,
+  max: (req) => (isElevatedRateUser(req) ? IMAGE_MAX_ELEVATED : IMAGE_MAX_DEFAULT),
   message: {
     error: 'Too many image processing requests. Please wait before trying again.',
   },
@@ -59,7 +97,8 @@ export const imageProcessingLimiter = rateLimit({
  */
 export const extractionLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // Limit each IP to 10 extraction requests per windowMs
+  keyGenerator: rateLimitKey,
+  max: (req) => (isElevatedRateUser(req) ? EXTRACTION_MAX_ELEVATED : EXTRACTION_MAX_DEFAULT),
   message: {
     error: 'Too many extraction requests. Please wait before trying again.',
   },
@@ -106,7 +145,8 @@ export const webhookLimiter = rateLimit({
  */
 export const authenticatedLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 8000, // Per IP; only these routes after general skip for Bearer traffic
+  keyGenerator: rateLimitKey,
+  max: (req) => (isElevatedRateUser(req) ? AUTHENTICATED_MAX_ELEVATED : AUTHENTICATED_MAX_DEFAULT),
   message: {
     error: 'Too many requests. Please wait before trying again.',
   },

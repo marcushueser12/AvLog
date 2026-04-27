@@ -1,18 +1,20 @@
 import express from 'express';
 import { verifyAuth, AuthRequest } from '../middleware/auth.js';
+import { authenticatedLimiter } from '../middleware/security.js';
 import { supabaseAdmin } from '../lib/supabase.js';
 import type { LogbookEntry } from '../../types.js';
 import { validateParams } from '../middleware/validation.js';
 import { sanitizeString, sanitizeText, sanitizeStringArray } from '../utils/sanitize.js';
 
 const router = express.Router();
+router.use(verifyAuth, authenticatedLimiter);
 
 /**
  * POST /api/verified/save-scan
  * Save verified scan and entries to database
  * Requires: Authorization Bearer token
  */
-router.post('/save-scan', verifyAuth, async (req: AuthRequest, res) => {
+router.post('/save-scan', async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
     const {
@@ -193,7 +195,7 @@ router.post('/save-scan', verifyAuth, async (req: AuthRequest, res) => {
  * Update verified entries for a scan
  * Requires: Authorization Bearer token
  */
-router.put('/update-scan', verifyAuth, async (req: AuthRequest, res) => {
+router.put('/update-scan', async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
     const { scanId, entries, pageNumber } = req.body;
@@ -382,7 +384,7 @@ router.put('/update-scan', verifyAuth, async (req: AuthRequest, res) => {
  * Get aggregate logbook stats (total time, PIC, etc.) from verified_entries.
  * Single source of truth - computed in DB to match permanent log exactly.
  */
-router.get('/stats', verifyAuth, async (req: AuthRequest, res) => {
+router.get('/stats', async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
 
@@ -428,7 +430,7 @@ router.get('/stats', verifyAuth, async (req: AuthRequest, res) => {
  * GET /api/verified/scans
  * Get all verified scans for the authenticated user
  */
-router.get('/scans', verifyAuth, async (req: AuthRequest, res) => {
+router.get('/scans', async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
 
@@ -460,7 +462,6 @@ router.get('/scans', verifyAuth, async (req: AuthRequest, res) => {
  */
 router.get(
   '/entries/:scanId',
-  verifyAuth,
   validateParams({ scanId: 'id' }),
   async (req: AuthRequest, res) => {
   try {
@@ -571,7 +572,7 @@ router.get(
  * Get user credit balance
  * Requires: Authorization Bearer token
  */
-router.get('/credits', verifyAuth, async (req: AuthRequest, res) => {
+router.get('/credits', async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
 
@@ -606,7 +607,7 @@ router.get('/credits', verifyAuth, async (req: AuthRequest, res) => {
  * Requires: Authorization Bearer token
  * Body: { amount: number (optional, defaults to 1), reason?: string }
  */
-router.post('/deduct-credits', verifyAuth, async (req: AuthRequest, res) => {
+router.post('/deduct-credits', async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
     const { amount = 1, reason } = req.body;
@@ -693,7 +694,7 @@ router.post('/deduct-credits', verifyAuth, async (req: AuthRequest, res) => {
  * Requires: Authorization Bearer token
  * Body: { amount: number (optional, defaults to 1), reason?: string }
  */
-router.post('/refund-credits', verifyAuth, async (req: AuthRequest, res) => {
+router.post('/refund-credits', async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
     const { amount = 1, reason } = req.body;
@@ -771,7 +772,6 @@ router.post('/refund-credits', verifyAuth, async (req: AuthRequest, res) => {
  */
 router.delete(
   '/scan/:scanId',
-  verifyAuth,
   validateParams({ scanId: 'id' }),
   async (req: AuthRequest, res) => {
   try {

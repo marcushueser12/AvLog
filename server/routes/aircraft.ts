@@ -1,9 +1,11 @@
 import express from 'express';
 import { supabaseAdmin } from '../lib/supabase.js';
 import { verifyAuth, AuthRequest } from '../middleware/auth.js';
+import { authenticatedLimiter } from '../middleware/security.js';
 import { validateAndSanitizeBody, validateParams } from '../middleware/validation.js';
 
 const router = express.Router();
+router.use(verifyAuth, authenticatedLimiter);
 
 // Helper function to transform snake_case to camelCase
 const transformAircraftProfile = (dbProfile: any) => {
@@ -29,7 +31,7 @@ const transformAircraftProfile = (dbProfile: any) => {
 };
 
 // Get all aircraft profiles for the authenticated user
-router.get('/aircraft', verifyAuth, async (req: AuthRequest, res) => {
+router.get('/aircraft', async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
 
@@ -57,7 +59,6 @@ router.get('/aircraft', verifyAuth, async (req: AuthRequest, res) => {
 // Create or update an aircraft profile
 router.post(
   '/aircraft',
-  verifyAuth,
   validateAndSanitizeBody({
     aircraftId: { type: 'string', required: true, maxLength: 50 },
     equipmentType: { type: 'string', required: false, maxLength: 100 },
@@ -219,7 +220,6 @@ router.post(
 // Delete an aircraft profile
 router.delete(
   '/aircraft/:id',
-  verifyAuth,
   validateParams({ id: 'id' }),
   async (req: AuthRequest, res) => {
   try {
