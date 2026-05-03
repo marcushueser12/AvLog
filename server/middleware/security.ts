@@ -41,11 +41,20 @@ const AUTHENTICATED_MAX_DEFAULT = 8000;
 const AUTHENTICATED_MAX_ELEVATED = 50_000;
 
 /**
- * Paths that mount `authenticatedLimiter` — do not also count against `generalLimiter`
- * when the client sends a Bearer token, or logged-in users hit two buckets and the
- * global cap (formerly 300/15m) became the real bottleneck.
+ * With a Bearer token, skip `generalLimiter` for these URL paths **relative to the `/api` mount**
+ * (`req.path` inside `app.use('/api', generalLimiter)` is e.g. `/extract-pair`, not `/api/extract-pair`).
+ * Otherwise extract/preprocess burn the general IP cap and users see "Too many requests from this IP"
+ * even when `ELEVATED_RATE_LIMIT_USER_IDS` is set.
  */
-const AUTH_RATE_LIMITED_PREFIXES = ['/api/verified', '/api/aircraft'] as const;
+const GENERAL_SKIP_WITH_BEARER_PREFIXES = [
+  '/verified',
+  '/aircraft',
+  '/payments',
+  '/extract-pair',
+  '/extract-single',
+  '/extract-from-url',
+  '/preprocess-image',
+] as const;
 
 const shouldSkipGeneralForAuthenticatedAppRoutes = (req: Request): boolean => {
   const auth = req.headers.authorization;
@@ -53,7 +62,7 @@ const shouldSkipGeneralForAuthenticatedAppRoutes = (req: Request): boolean => {
     typeof auth === 'string' && auth.trim().toLowerCase().startsWith('bearer ') && auth.length > 24;
   if (!hasBearer) return false;
   const p = req.path || '';
-  return AUTH_RATE_LIMITED_PREFIXES.some((prefix) => p === prefix || p.startsWith(`${prefix}/`));
+  return GENERAL_SKIP_WITH_BEARER_PREFIXES.some((prefix) => p === prefix || p.startsWith(`${prefix}/`));
 };
 
 /**
