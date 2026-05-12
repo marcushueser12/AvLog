@@ -382,40 +382,41 @@ router.put('/update-scan', async (req: AuthRequest, res) => {
 /**
  * GET /api/verified/stats
  * Get aggregate logbook stats (total time, PIC, etc.) from verified_entries.
- * Single source of truth - computed in DB to match permanent log exactly.
+ * Uses DB aggregation (RPC) so totals are correct for users with >1000 entries
+ * (PostgREST default row cap on unbounded SELECT).
  */
 router.get('/stats', async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
 
-    const { data: entries, error } = await supabaseAdmin
-      .from('verified_entries')
-      .select('total_time, day, night, pic, instrument, simulated_instrument, cross_country, aircraft_type')
-      .eq('user_id', userId);
+    const { data, error } = await supabaseAdmin.rpc('get_logbook_stats_for_user', {
+      p_user_id: userId,
+    });
 
     if (error) {
-      console.error('Error fetching stats:', error);
+      console.error('Error fetching stats (rpc):', error);
       return res.status(500).json({ error: 'Failed to fetch stats' });
     }
 
-    const list = entries || [];
-    const totalTime = list.reduce((acc, e) => acc + (parseFloat(String(e.total_time)) || 0), 0);
-    const pic = list.reduce((acc, e) => acc + (parseFloat(String(e.pic)) || 0), 0);
-    const night = list.reduce((acc, e) => acc + (parseFloat(String(e.night)) || 0), 0);
-    const instrument = list.reduce((acc, e) => acc + (parseFloat(String(e.instrument)) || 0), 0);
-    const crossCountry = list.reduce((acc, e) => acc + (parseFloat(String(e.cross_country)) || 0), 0);
-    const multiEngine = list.filter((e: any) => {
-      const t = (e.aircraft_type || '').toLowerCase();
-      return t.includes('multi') || t.includes('twin');
-    }).length;
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row) {
+      return res.json({
+        totalTime: 0,
+        pic: 0,
+        night: 0,
+        instrument: 0,
+        crossCountry: 0,
+        multiEngine: 0,
+      });
+    }
 
     res.json({
-      totalTime,
-      pic,
-      night,
-      instrument,
-      crossCountry,
-      multiEngine,
+      totalTime: Number(row.total_time ?? 0),
+      pic: Number(row.pic ?? 0),
+      night: Number(row.night ?? 0),
+      instrument: Number(row.instrument ?? 0),
+      crossCountry: Number(row.cross_country ?? 0),
+      multiEngine: Number(row.multi_engine ?? 0),
     });
   } catch (error: any) {
     console.error('Get stats error:', error);
