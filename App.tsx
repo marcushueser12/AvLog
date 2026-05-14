@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
 import { LogbookEntry, ScanDocument, ScanMode, AppTab, PageTotals, AircraftProfile, ApproachDetail } from './types';
 import { ICONS } from './constants';
 import EntryEditor from './components/EntryEditor';
@@ -105,6 +105,9 @@ const App: React.FC = () => {
   const [uploadedToCloudIds, setUploadedToCloudIds] = useState<Set<string>>(new Set());
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showReviewPrompt, setShowReviewPrompt] = useState(false);
+
+  /** When export modal opens, select all permanent-log pages + all aircraft after loads finish (once per open). */
+  const exportDefaultsAppliedForOpenRef = useRef(false);
 
   const { pendingCount: cloudPendingCount, refetch: refetchCloudUploads } = useCloudUploads(user?.id);
 
@@ -261,13 +264,40 @@ const App: React.FC = () => {
     }));
   };
 
-  // Initialize aircraft selection when aircraft profiles are loaded
   useEffect(() => {
-    if (exportAircraftProfiles.length > 0 && selectedAircraftForExport.size === 0) {
-      // Auto-select all aircraft profiles by default
-      setSelectedAircraftForExport(new Set(exportAircraftProfiles.map(p => p.id)));
+    if (!showExportModal || exportDefaultsAppliedForOpenRef.current) return;
+
+    if (user && (loadingPermanentLog || loadingAircraftForExport)) return;
+
+    const sessionScanIds = new Set(
+      entries
+        .filter(
+          (e) =>
+            e.scanId &&
+            (e.isVerified || scans.find((s) => s.id === e.scanId)?.status === 'verified')
+        )
+        .map((e) => e.scanId as string)
+    );
+    const permanentIds = user ? permanentLogScans.map((s: { id: string }) => s.id) : [];
+    setSelectedScansForExport(new Set([...sessionScanIds, ...permanentIds]));
+
+    if (user && exportAircraftProfiles.length > 0) {
+      setSelectedAircraftForExport(new Set(exportAircraftProfiles.map((p) => p.id)));
+    } else {
+      setSelectedAircraftForExport(new Set());
     }
-  }, [exportAircraftProfiles]);
+
+    exportDefaultsAppliedForOpenRef.current = true;
+  }, [
+    showExportModal,
+    user,
+    loadingPermanentLog,
+    loadingAircraftForExport,
+    permanentLogScans,
+    exportAircraftProfiles,
+    entries,
+    scans,
+  ]);
 
   // Save scans and entries to localStorage whenever they change (debounced to avoid main-thread blocking)
   // Note: We don't save images to localStorage to avoid quota issues
@@ -948,54 +978,44 @@ const App: React.FC = () => {
   };
 
   const handleExportModalOpen = () => {
+    exportDefaultsAppliedForOpenRef.current = false;
     setShowExportModal(true);
     if (user) {
+      setLoadingPermanentLog(true);
+      setLoadingAircraftForExport(true);
       loadPermanentLogForExport();
       loadAircraftForExport();
     }
-    // Initialize selection with all current exportable entries' scan IDs
-    const currentScanIds = new Set(entries.filter(e => e.isVerified || scans.find(s => s.id === e.scanId)?.status === 'verified').map(e => e.scanId).filter(Boolean));
-    setSelectedScansForExport(currentScanIds);
   };
 
-  // Initialize aircraft selection when aircraft profiles are loaded
-  useEffect(() => {
-    if (exportAircraftProfiles.length > 0 && selectedAircraftForExport.size === 0) {
-      // Auto-select all aircraft profiles by default
-      setSelectedAircraftForExport(new Set(exportAircraftProfiles.map(p => p.id)));
-    }
-  }, [exportAircraftProfiles]);
-
   const handleExport = async () => {
-    // Ensure all selected scans have their entries loaded
+    let entriesMapForExport: Record<string, LogbookEntry[]> = { ...permanentLogEntries };
+
     const missingScans = Array.from(selectedScansForExport).filter(
-      scanId => !permanentLogEntries[scanId]
+      (scanId) => !entriesMapForExport[scanId]
     );
-    
+
     if (missingScans.length > 0) {
-      // Load missing entries before exporting
       const token = getAccessToken();
       if (token) {
-        const entriesMap: Record<string, LogbookEntry[]> = { ...permanentLogEntries };
         const batchSize = 2;
-        
+
         for (let i = 0; i < missingScans.length; i += batchSize) {
           const batch = missingScans.slice(i, i + batchSize);
           await Promise.all(
             batch.map(async (scanId) => {
               try {
                 const entriesResponse = await safeApiCall(
-                  () => fetchWithRetry(`${API_URL}/api/verified/entries/${scanId}`, {
-                    headers: {
-                      'Authorization': `Bearer ${token}`
-                    }
-                  }, 15000, 2),
+                  () =>
+                    fetchWithRetry(`${API_URL}/api/verified/entries/${scanId}`, {
+                      headers: { Authorization: `Bearer ${token}` },
+                    }, 15000, 2),
                   null as any,
                   `Error loading entries for scan ${scanId}`
                 );
                 if (entriesResponse && entriesResponse.ok) {
                   const entriesData = await entriesResponse.json();
-                  entriesMap[scanId] = entriesData.entries || [];
+                  entriesMapForExport[scanId] = entriesData.entries || [];
                 }
               } catch (err) {
                 console.error(`Error loading entries for scan ${scanId}:`, err);
@@ -1003,47 +1023,67 @@ const App: React.FC = () => {
             })
           );
           if (i + batchSize < missingScans.length) {
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await new Promise((resolve) => setTimeout(resolve, 200));
           }
         }
-        setPermanentLogEntries(entriesMap);
+        setPermanentLogEntries((prev) => {
+          const next = { ...prev };
+          for (const scanId of missingScans) {
+            if (entriesMapForExport[scanId]) {
+              next[scanId] = entriesMapForExport[scanId];
+            }
+          }
+          return next;
+        });
       }
     }
 
-    // Combine current verified entries with selected permanent log entries
-    const currentVerifiedEntries = entries.filter(e => {
+    const currentVerifiedEntries = entries.filter((e) => {
       const scanId = e.scanId;
       if (!scanId) return false;
-      // Include if verified in current session OR if scan ID is selected from permanent log
-      return (e.isVerified || scans.find(s => s.id === scanId)?.status === 'verified') || selectedScansForExport.has(scanId);
+      return (
+        e.isVerified ||
+        scans.find((s) => s.id === scanId)?.status === 'verified' ||
+        selectedScansForExport.has(scanId)
+      );
     });
 
-    // Add selected permanent log entries
     const permanentLogEntriesList: LogbookEntry[] = [];
-    selectedScansForExport.forEach(scanId => {
-      if (permanentLogEntries[scanId]) {
-        permanentLogEntriesList.push(...permanentLogEntries[scanId]);
+    selectedScansForExport.forEach((scanId) => {
+      const list = entriesMapForExport[scanId];
+      if (list) {
+        permanentLogEntriesList.push(...list);
       }
     });
 
-    // Combine and deduplicate by entry ID
     const allEntries = [...currentVerifiedEntries, ...permanentLogEntriesList];
-    const uniqueEntries = Array.from(new Map(allEntries.map(e => [e.id, e])).values());
-    
-    // Sort by date
+    const uniqueEntries = Array.from(new Map(allEntries.map((e) => [e.id, e])).values());
+
     const sortedEntries = uniqueEntries.sort((a, b) => {
       const dateA = new Date(a.date).getTime();
       const dateB = new Date(b.date).getTime();
       return isNaN(dateA) || isNaN(dateB) ? 0 : dateA - dateB;
     });
 
-    // Filter aircraft profiles to only selected ones
-    const selectedAircraftProfiles = exportAircraftProfiles.filter(profile => 
+    if (sortedEntries.length === 0) {
+      window.alert(
+        'No logbook entries to export. Select at least one page from your permanent log, or verify entries in your current session, then try again.'
+      );
+      return;
+    }
+
+    const selectedAircraftProfiles = exportAircraftProfiles.filter((profile) =>
       selectedAircraftForExport.has(profile.id)
     );
 
     const csvContent = generateForeFlightCSV(sortedEntries, selectedAircraftProfiles);
     downloadCSV(csvContent, `${exportName}.csv`);
+    exportDefaultsAppliedForOpenRef.current = false;
+    setShowExportModal(false);
+  };
+
+  const closeExportModal = () => {
+    exportDefaultsAppliedForOpenRef.current = false;
     setShowExportModal(false);
   };
 
@@ -1956,7 +1996,7 @@ const App: React.FC = () => {
 
       {showExportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowExportModal(false)}></div>
+          <div className="absolute inset-0 bg-black/50" onClick={closeExportModal}></div>
           <div className="relative bg-white/90 backdrop-blur-md border border-[#E2E8F0] rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95">
             <h3 className="text-xl font-bold mb-2 text-[#003366]">Export to Logbook CSV</h3>
             
@@ -2143,7 +2183,7 @@ const App: React.FC = () => {
             >
               Download Logbook CSV
             </button>
-            <button onClick={() => setShowExportModal(false)} className="w-full mt-4 py-2 text-[#003366]/70 hover:text-[#003366] font-medium">Cancel</button>
+            <button onClick={closeExportModal} className="w-full mt-4 py-2 text-[#003366]/70 hover:text-[#003366] font-medium">Cancel</button>
           </div>
         </div>
       )}
