@@ -23,6 +23,40 @@ const formatNumeric = (value: string): string => {
   return num.toFixed(1);
 };
 
+const hasPositiveHours = (value: string | undefined): boolean => {
+  const n = parseFloat(value || "");
+  return !isNaN(n) && n > 0;
+};
+
+/**
+ * ForeFlight credits ASES/AMES/AMEL from Aircraft Category/Class, not a flight SES/MEL column.
+ * Only fill when the profile left Category/Class blank — never overwrite a user-set value.
+ */
+const inferCategoryClass = (
+  aircraftEntries: LogbookEntry[],
+  profile?: AircraftProfile
+): string => {
+  const existing = (profile?.categoryClass || "").trim();
+  if (existing) return existing;
+
+  const hasSeaplane = aircraftEntries.some((e) => hasPositiveHours(e.seaplaneTime));
+  const hasMel = aircraftEntries.some((e) => hasPositiveHours(e.mel));
+  const engine = (profile?.engineType || "").toLowerCase();
+  const typeHint = aircraftEntries
+    .map((e) => (e.aircraftType || "").toLowerCase())
+    .join(" ");
+  const looksMulti =
+    hasMel ||
+    engine.includes("twin") ||
+    engine.includes("multi") ||
+    typeHint.includes("twin") ||
+    typeHint.includes("multi");
+
+  if (hasSeaplane) return looksMulti ? "AMES" : "ASES";
+  if (hasMel) return "AMEL";
+  return "";
+};
+
 /**
  * Creates a row with exactly 71 columns, padding with spaces (not empty strings) to match ForeFlight template
  */
@@ -112,11 +146,12 @@ export const generateForeFlightCSV = (entries: LogbookEntry[], aircraftProfiles:
   const uniqueAircraftIds = Array.from(new Set(entries.map(e => e.aircraftId).filter(id => id && id.trim())));
   
   uniqueAircraftIds.forEach(aircraftId => {
-    // Try to find saved profile first
     const profile = aircraftProfiles.find(p => p.aircraftId === aircraftId);
-    
+    const aircraftEntries = entries.filter((e) => e.aircraftId === aircraftId);
+    // ForeFlight ASES/AMES/AMEL totals: set Category/Class when blank; never overwrite user-set
+    const categoryClass = inferCategoryClass(aircraftEntries, profile);
+
     if (profile) {
-      // Use saved profile data
       const row = [
         escapeCSV(profile.aircraftId),
         escapeCSV(profile.equipmentType || ''),
@@ -126,7 +161,7 @@ export const generateForeFlightCSV = (entries: LogbookEntry[], aircraftProfiles:
         escapeCSV(profile.model || ''),
         escapeCSV(profile.gearType || ''),
         escapeCSV(profile.engineType || ''),
-        escapeCSV(profile.categoryClass || ''),
+        escapeCSV(categoryClass),
         profile.complex ? 'TRUE' : '',
         profile.highPerformance ? 'TRUE' : '',
         profile.pressurized ? 'TRUE' : '',
@@ -134,8 +169,7 @@ export const generateForeFlightCSV = (entries: LogbookEntry[], aircraftProfiles:
       ];
       csvRows.push(createRow(row));
     } else {
-      // Fall back to basic data from entries
-      const firstMatch = entries.find(e => e.aircraftId === aircraftId);
+      const firstMatch = aircraftEntries[0];
       const row = [
         escapeCSV(aircraftId),
         "", // EquipmentType
@@ -145,7 +179,7 @@ export const generateForeFlightCSV = (entries: LogbookEntry[], aircraftProfiles:
         "", // Model
         "", // GearType
         "", // EngineType
-        "", // Category/Class
+        escapeCSV(categoryClass), // Infer ASES/AMES/AMEL when no profile / blank class
         "", // Complex
         "", // High Performance
         "", // Pressurized
